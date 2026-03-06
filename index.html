@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>競馬AI期待値アナライザー | Horse Racing EV Analyzer</title>
+    <meta name="description" content="AI予測勝率と市場オッズを比較し、期待値の高い馬を自動抽出する競馬分析ツール" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Outfit:wght@300;400;600;700;900&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <!-- Background particles -->
+    <div class="bg-particles" id="bgParticles"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <div class="logo-icon">🏇</div>
+                <div class="logo-text">
+                    <span class="logo-main">RACE<span class="logo-accent">EV</span></span>
+                    <span class="logo-sub">AI期待値アナライザー</span>
+                </div>
+            </div>
+            <div class="header-meta">
+                <div class="live-badge">
+                    <span class="live-dot"></span>
+                    LIVE ANALYSIS
+                </div>
+                <div id="currentDate" class="date-display"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main content -->
+    <main class="main">
+
+        <!-- Race Setup Panel -->
+        <section class="panel race-setup-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">
+                    <span class="panel-icon">📋</span> レース情報入力
+                </h2>
+                <div class="panel-actions">
+                    <button id="loadSampleBtn" class="btn btn-ghost">
+                        <span>📊</span> サンプルデータ
+                    </button>
+                    <button id="clearAllBtn" class="btn btn-ghost btn-danger">
+                        <span>🗑</span> クリア
+                    </button>
+                </div>
+            </div>
+
+            <!-- レース検索UI -->
+            <div class="race-search-container">
+                <label class="form-label">レース検索</label>
+                <div class="search-input-wrapper">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="raceSearchInput" class="form-input" placeholder="レース名で検索（例: ダービー、天皇賞）..."
+                        autocomplete="off" />
+                    <div id="raceSearchDropdown" class="search-dropdown hidden"></div>
+                </div>
+            </div>
+            <hr class="panel-divider" />
+
+            <div class="race-info-grid">
+                <div class="form-group">
+                    <label class="form-label">レース名</label>
+                    <input type="text" id="raceName" class="form-input" placeholder="例: 第45回 大阪杯 G1" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">開催日</label>
+                    <input type="date" id="raceDate" class="form-input" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">競馬場</label>
+                    <select id="raceVenue" class="form-input form-select">
+                        <option value="">選択してください</option>
+                        <option>中央競馬場（東京）</option>
+                        <option>阪神競馬場</option>
+                        <option>中京競馬場</option>
+                        <option>京都競馬場</option>
+                        <option>小倉競馬場</option>
+                        <option>福島競馬場</option>
+                        <option>新潟競馬場</option>
+                        <option>札幌競馬場</option>
+                        <option>函館競馬場</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">距離</label>
+                    <input type="text" id="raceDistance" class="form-input" placeholder="例: 2000m 芝" />
+                </div>
+            </div>
+        </section>
+
+        <!-- Horse Input Panel -->
+        <section class="panel horse-input-panel">
+            <div class="panel-header">
+                <h2 class="panel-title">
+                    <span class="panel-icon">🐴</span> 出走馬データ入力
+                </h2>
+                <button id="addHorseBtn" class="btn btn-primary">
+                    <span>＋</span> 馬を追加
+                </button>
+            </div>
+
+            <!-- Column Labels -->
+            <div class="horse-header-row">
+                <div class="col-num">枠番</div>
+                <div class="col-name">馬名</div>
+                <div class="col-ai">AI勝率 (%)</div>
+                <div class="col-odds">市場オッズ (倍)</div>
+                <div class="col-ev">期待値</div>
+                <div class="col-edge">エッジ</div>
+                <div class="col-action"></div>
+            </div>
+
+            <!-- Horse Rows Container -->
+            <div id="horseList" class="horse-list"></div>
+
+            <!-- Analysis Button -->
+            <div class="analyze-bar">
+                <div class="analyze-info">
+                    <span id="horseCount">0頭</span> 入力済み
+                    <span class="separator">|</span>
+                    <span id="totalAiProb">合計AI勝率: 0%</span>
+                </div>
+                <button id="analyzeBtn" class="btn btn-analyze">
+                    <span class="btn-icon">⚡</span>
+                    期待値を分析する
+                </button>
+            </div>
+        </section>
+
+        <!-- Results Panel -->
+        <section class="panel results-panel" id="resultsPanel" style="display:none;">
+            <div class="panel-header">
+                <h2 class="panel-title">
+                    <span class="panel-icon">📈</span> 分析結果
+                </h2>
+                <div class="panel-actions">
+                    <button id="exportBtn" class="btn btn-ghost">
+                        <span>💾</span> CSVエクスポート
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="summary-card card-positive">
+                    <div class="summary-card-icon">✅</div>
+                    <div class="summary-card-body">
+                        <div class="summary-card-value" id="positiveEvCount">0</div>
+                        <div class="summary-card-label">期待値プラス馬</div>
+                    </div>
+                </div>
+                <div class="summary-card card-best">
+                    <div class="summary-card-icon">🏆</div>
+                    <div class="summary-card-body">
+                        <div class="summary-card-value" id="bestEvHorse">-</div>
+                        <div class="summary-card-label">最高期待値馬</div>
+                    </div>
+                </div>
+                <div class="summary-card card-info">
+                    <div class="summary-card-icon">📊</div>
+                    <div class="summary-card-body">
+                        <div class="summary-card-value" id="maxEv">-</div>
+                        <div class="summary-card-label">最高期待値</div>
+                    </div>
+                </div>
+                <div class="summary-card card-warning">
+                    <div class="summary-card-icon">⚠️</div>
+                    <div class="summary-card-body">
+                        <div class="summary-card-value" id="negativeEvCount">0</div>
+                        <div class="summary-card-label">期待値マイナス馬</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            <div class="results-table-wrapper">
+                <table class="results-table" id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th class="th-sort" data-col="num">枠番 <span class="sort-icon">↕</span></th>
+                            <th class="th-sort" data-col="name">馬名</th>
+                            <th class="th-sort" data-col="aiProb">AI勝率 <span class="sort-icon">↕</span></th>
+                            <th class="th-sort" data-col="impliedProb">市場勝率 <span class="sort-icon">↕</span></th>
+                            <th class="th-sort" data-col="odds">オッズ <span class="sort-icon">↕</span></th>
+                            <th class="th-sort" data-col="ev">期待値 <span class="sort-icon">↕</span></th>
+                            <th class="th-sort" data-col="edge">エッジ <span class="sort-icon">↕</span></th>
+                            <th>推奨</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="chart-section">
+                <h3 class="chart-title">📊 勝率比較チャート（AI予測 vs 市場）</h3>
+                <div class="chart-container" id="chartContainer"></div>
+            </div>
+
+            <!-- EV Explanation -->
+            <div class="ev-explanation">
+                <div class="ev-explain-title">💡 期待値の見方</div>
+                <div class="ev-explain-grid">
+                    <div class="ev-explain-item">
+                        <div class="ev-badge ev-positive">EV &gt; 1.0</div>
+                        <div>100円賭けた場合、平均的に利益が見込める</div>
+                    </div>
+                    <div class="ev-explain-item">
+                        <div class="ev-badge ev-neutral">EV = 1.0</div>
+                        <div>損益なし（ブレイクイーブン）</div>
+                    </div>
+                    <div class="ev-explain-item">
+                        <div class="ev-badge ev-negative">EV &lt; 1.0</div>
+                        <div>期待値がマイナス（推奨しない）</div>
+                    </div>
+                </div>
+                <div class="ev-formula">
+                    期待値 (EV) = AI予測勝率 × オッズ &nbsp;|&nbsp; エッジ = AI勝率 − 市場勝率
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast notification -->
+    <div class="toast" id="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
