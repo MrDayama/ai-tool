@@ -145,6 +145,46 @@ body {
   text-shadow: 0 0 5px var(--primary);
 }
 
+/* Task Panel Override for readability */
+.panel.task-panel {
+  background: #ffffff;
+  color: #222222;
+  border: 4px double #ccc;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.task-panel::before,
+.task-panel::after {
+  border-color: #999;
+}
+
+.task-panel .panel-title {
+  color: #222222;
+  border-bottom: 2px solid #333;
+  text-shadow: none;
+}
+
+.task-panel .prompt {
+  color: #666;
+}
+
+.task-panel .cyber-select {
+  background: #fff;
+  border: 1px solid #ccc;
+  color: #333;
+}
+
+.task-panel .cyber-btn {
+  background: #f0f0f0;
+  border: 1px solid #999;
+  color: #333;
+}
+
+.task-panel .cyber-btn:hover {
+  background: #333;
+  color: #fff;
+}
+
 /* Calendar styling */
 .cal-header {
   display: flex;
@@ -317,28 +357,29 @@ body {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-sans);
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   text-align: left;
 }
 
 .task-table th,
 .task-table td {
-  padding: 0.8rem;
-  border-bottom: 1px solid var(--dark-green);
+  padding: 1rem 0.8rem;
+  border-bottom: 1px solid #eee;
 }
 
 .task-table th {
   font-family: var(--font-mono);
-  color: var(--text-dim);
-  font-weight: normal;
+  color: #777;
+  font-weight: bold;
+  background: #f8f9fa;
 }
 
 .task-table tr:nth-child(even) {
-  background: rgba(0, 255, 65, 0.02);
+  background: #fcfcfc;
 }
 
 .task-table tr:hover {
-  background: rgba(0, 255, 65, 0.08);
+  background: #f0f4ff;
   cursor: pointer;
   transform: scale(1.005);
   transition: transform 0.1s;
@@ -411,6 +452,37 @@ body {
   width: 90%;
   max-width: 600px;
   background: #030a04;
+}
+
+/* Task Modal specific (cleaner look) */
+#taskModal .modal-content {
+  background: #ffffff;
+  color: #222;
+  border: 2px solid #333;
+}
+
+#taskModal .panel-title {
+  color: #222;
+  border-bottom: 2px solid #333;
+  text-shadow: none;
+}
+
+#taskModal .cyber-input,
+#taskModal .cyber-textarea {
+  background: #fff;
+  border: 1px solid #ccc;
+  color: #222;
+}
+
+#taskModal .cyber-select {
+  background: #fff;
+  border: 1px solid #ccc;
+  color: #222;
+}
+
+#taskModal .prompt {
+  color: #444;
+  font-weight: bold;
 }
 
 .form-group {
