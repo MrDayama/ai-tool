@@ -4,15 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SYSTEM_DASHBOARD_v2.0</title>
+    <title>Unified Dashboard v3.0</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+JP:wght@400;700&display=swap"
         rel="stylesheet">
 </head>
 
 <body>
-    <div class="crt-overlay"></div>
-    <div class="scanlines"></div>
+    <!-- Global effects removed for clarity -->
 
     <header class="header panel">
         <div class="sys-info">
@@ -22,9 +21,10 @@
     </header>
 
     <main class="dashboard-grid">
-        <!-- Calendar Panel -->
+        <!-- Calendar Panel (MONITORING THEME) -->
         <section class="panel calendar-panel">
-            <h2 class="panel-title">[MOD_CALENDAR]</h2>
+            <div class="scanline-local"></div>
+            <h2 class="panel-title">[MOD_CALENDAR_INTEL]</h2>
             <div class="cal-header">
                 <button id="prevBtn" class="cyber-btn">&lt;</button>
                 <span id="monthYear" class="month-year-display">YYYY-MM</span>
@@ -37,7 +37,7 @@
 
         <!-- GitHub Activity Panel -->
         <section class="panel github-panel">
-            <h2 class="panel-title">[MOD_GITHUB_LINK]</h2>
+            <h2 class="panel-title">GITHUB_ACTIVITY</h2>
             <div class="gh-input-group">
                 <span class="prompt">usr:</span>
                 <input type="text" id="ghUsername" class="cyber-input" placeholder="Enter GitHub User" value="MrDayama">
@@ -49,17 +49,18 @@
         </section>
 
         <!-- Task Tracker Panel -->
-        <section class="panel task-panel" style="grid-column: 1 / -1;">
+        <section class="panel task-panel">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                <h2 class="panel-title" style="margin: 0; border: none;">[MOD_ISSUE_TRACKER]</h2>
-                <div style="display: flex; gap: 1rem;">
-                    <select id="todoFilter" class="cyber-select">
+                <h2 class="panel-title" style="margin: 0; border: none;">ISSUE_TRACKER</h2>
+                <div style="display: flex; gap: 0.8rem;">
+                    <select id="todoFilter" class="cyber-select" style="max-width: 150px;">
                         <option value="All">ALL STATUS</option>
                         <option value="New">NEW</option>
                         <option value="In Progress">IN PROGRESS</option>
                         <option value="Resolved">RESOLVED</option>
                     </select>
-                    <button id="todoAddBtn" class="cyber-btn">+ NEW ISSUE</button>
+                    <button id="todoAddBtn" class="cyber-btn" style="background:#007bff; color:#fff; border:none;">+ NEW
+                        ISSUE</button>
                 </div>
             </div>
             <div class="task-table-wrapper">
@@ -82,7 +83,7 @@
 
         <!-- Notes Panel -->
         <section class="panel notes-panel">
-            <h2 class="panel-title">[MOD_DATA_LOG]</h2>
+            <h2 class="panel-title">DATA_LOG_STREAM</h2>
             <textarea id="notesArea" class="cyber-textarea" placeholder="INPUT DATA STREAM HERE..."></textarea>
         </section>
     </main>
@@ -123,11 +124,11 @@
                     placeholder="Detailed requirements or logs..."></textarea>
             </div>
             <div class="modal-actions">
-                <button id="taskCancelBtn" class="cyber-btn"
-                    style="border-color: var(--red); color: var(--red);">CANCEL</button>
+                <button id="taskCancelBtn" class="cyber-btn">CANCEL</button>
                 <button id="taskDelBtn" class="cyber-btn hidden"
-                    style="border-color: var(--red); color: var(--red);">DELETE</button>
-                <button id="taskSaveBtn" class="cyber-btn" style="background: rgba(0,255,65,0.2);">SAVE</button>
+                    style="border-color: #dc3545; color: #dc3545;">DELETE</button>
+                <button id="taskSaveBtn" class="cyber-btn" style="background: #007bff; color: #fff; border:none;">SAVE
+                    ISSUE</button>
             </div>
         </div>
     </div>
@@ -142,11 +143,11 @@
                 <input type="text" id="eventDescInput" class="cyber-input" placeholder="Enter plan / event...">
             </div>
             <div class="modal-actions">
-                <button id="eventCancelBtn" class="cyber-btn"
-                    style="border-color: var(--red); color: var(--red);">CANCEL</button>
+                <button id="eventCancelBtn" class="cyber-btn">CANCEL</button>
                 <button id="eventDelBtn" class="cyber-btn hidden"
-                    style="border-color: var(--red); color: var(--red);">DELETE</button>
-                <button id="eventSaveBtn" class="cyber-btn" style="background: rgba(0,255,65,0.2);">SAVE</button>
+                    style="border-color: #dc3545; color: #dc3545;">DELETE</button>
+                <button id="eventSaveBtn" class="cyber-btn"
+                    style="background: #28a745; color: #fff; border:none;">SAVE</button>
             </div>
         </div>
     </div>
