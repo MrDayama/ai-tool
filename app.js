@@ -102,70 +102,136 @@ function renderCalendar() {
     }
 }
 
-// ================= TO-DO =================
+// ================= TO-DO (ISSUE TRACKER) =================
 function initTodo() {
-    const todoInput = document.getElementById('todoInput');
-    const addBtn = document.getElementById('todoAddBtn');
+    document.getElementById('todoAddBtn').addEventListener('click', () => openTaskModal());
+    document.getElementById('taskCancelBtn').addEventListener('click', closeTaskModal);
+    document.getElementById('taskSaveBtn').addEventListener('click', saveTaskFromModal);
+    document.getElementById('taskDelBtn').addEventListener('click', deleteTaskFromModal);
 
-    addBtn.addEventListener('click', addTodo);
-    todoInput.addEventListener('keypress', e => { if (e.key === 'Enter') addTodo(); });
-
+    document.getElementById('todoFilter').addEventListener('change', renderTodos);
     renderTodos();
 }
 
 function getTodos() {
-    return JSON.parse(localStorage.getItem('sys_todos') || '[]');
+    return JSON.parse(localStorage.getItem('sys_todos_v2') || '[]');
 }
 
 function saveTodos(todos) {
-    localStorage.setItem('sys_todos', JSON.stringify(todos));
+    localStorage.setItem('sys_todos_v2', JSON.stringify(todos));
 }
 
-function addTodo() {
-    const el = document.getElementById('todoInput');
-    const text = el.value.trim();
-    if (!text) return;
+function openTaskModal(taskId = null) {
+    const modal = document.getElementById('taskModal');
+    const title = document.getElementById('modalTitle');
+    const idInput = document.getElementById('taskId');
+    const subInput = document.getElementById('taskSubject');
+    const statSelect = document.getElementById('taskStatus');
+    const prioSelect = document.getElementById('taskPriority');
+    const descInput = document.getElementById('taskDesc');
+    const delBtn = document.getElementById('taskDelBtn');
 
-    const todos = getTodos();
-    todos.push({ text, done: false, id: Date.now() });
+    if (taskId) {
+        const task = getTodos().find(t => t.id === taskId);
+        if (!task) return;
+        title.textContent = `EDIT ISSUE #${taskId.toString().slice(-4)}`;
+        idInput.value = task.id;
+        subInput.value = task.subject;
+        statSelect.value = task.status;
+        prioSelect.value = task.priority;
+        descInput.value = task.desc || '';
+        delBtn.classList.remove('hidden');
+    } else {
+        title.textContent = 'NEW ISSUE';
+        idInput.value = '';
+        subInput.value = '';
+        statSelect.value = 'New';
+        prioSelect.value = 'Normal';
+        descInput.value = '';
+        delBtn.classList.add('hidden');
+    }
+    modal.classList.remove('hidden');
+}
+
+function closeTaskModal() {
+    document.getElementById('taskModal').classList.add('hidden');
+}
+
+function saveTaskFromModal() {
+    const id = document.getElementById('taskId').value;
+    const subject = document.getElementById('taskSubject').value.trim();
+    if (!subject) return;
+
+    let todos = getTodos();
+    const newData = {
+        subject: subject,
+        status: document.getElementById('taskStatus').value,
+        priority: document.getElementById('taskPriority').value,
+        desc: document.getElementById('taskDesc').value,
+        updatedAt: new Date().toISOString()
+    };
+
+    if (id) {
+        const tIndex = todos.findIndex(t => t.id === parseInt(id));
+        if (tIndex > -1) {
+            todos[tIndex] = { ...todos[tIndex], ...newData };
+        }
+    } else {
+        todos.push({ id: Date.now(), createdAt: new Date().toISOString(), ...newData });
+    }
+
     saveTodos(todos);
-    el.value = '';
+    closeTaskModal();
     renderTodos();
 }
 
-function toggleTodo(id) {
-    const todos = getTodos();
-    const t = todos.find(t => t.id === id);
-    if (t) {
-        t.done = !t.done;
+function deleteTaskFromModal() {
+    const id = document.getElementById('taskId').value;
+    if (id) {
+        let todos = getTodos();
+        todos = todos.filter(t => t.id !== parseInt(id));
         saveTodos(todos);
-        renderTodos();
     }
-}
-
-function deleteTodo(id) {
-    let todos = getTodos();
-    todos = todos.filter(t => t.id !== id);
-    saveTodos(todos);
+    closeTaskModal();
     renderTodos();
 }
 
 function renderTodos() {
     const list = document.getElementById('todoList');
     list.innerHTML = '';
-    const todos = getTodos();
+    const filter = document.getElementById('todoFilter').value;
+    let todos = getTodos();
+
+    if (filter !== 'All') {
+        todos = todos.filter(t => t.status === filter);
+    }
+
+    // Sort by updated descending
+    todos.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    if (todos.length === 0) {
+        list.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:2rem;">[ NO ISSUES FOUND IN DATABASE ]</td></tr>`;
+        return;
+    }
 
     todos.forEach(t => {
-        const li = document.createElement('li');
-        li.className = 'todo-item' + (t.done ? ' done' : '');
+        const tr = document.createElement('tr');
+        tr.onclick = () => openTaskModal(t.id);
 
-        li.innerHTML = `
-            <span class="todo-text" onclick="toggleTodo(${t.id})">
-                ${t.done ? '[x]' : '[ ]'} ${escapeHTML(t.text)}
-            </span>
-            <button class="todo-del" onclick="deleteTodo(${t.id})">X</button>
+        const shortId = t.id.toString().slice(-4);
+        const dateStr = new Date(t.updatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+        const statClass = 'stat-' + t.status.replace(' ', '_');
+        const prioClass = 'prio-' + t.priority;
+
+        tr.innerHTML = `
+            <td>#${shortId}</td>
+            <td><span class="status-badge ${statClass}">${t.status.toUpperCase()}</span></td>
+            <td><span class="priority-badge ${prioClass}">${t.priority.toUpperCase()}</span></td>
+            <td class="task-subject">${escapeHTML(t.subject)}</td>
+            <td style="color:var(--text-dim); font-size:0.8rem;">${dateStr}</td>
         `;
-        list.appendChild(li);
+        list.appendChild(tr);
     });
 }
 

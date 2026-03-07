@@ -49,17 +49,36 @@
             </div>
         </section>
 
-        <!-- To-Do Panel -->
-        <section class="panel todo-panel">
-            <h2 class="panel-title">[MOD_TASKS_QUEUE]</h2>
-            <div class="todo-input-group">
-                <span class="prompt">cmd:</span>
-                <input type="text" id="todoInput" class="cyber-input" placeholder="Add new task...">
-                <button id="todoAddBtn" class="cyber-btn">ADD</button>
+        <!-- Task Tracker Panel -->
+        <section class="panel task-panel" style="grid-column: 1 / -1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <h2 class="panel-title" style="margin: 0; border: none;">[MOD_ISSUE_TRACKER]</h2>
+                <div style="display: flex; gap: 1rem;">
+                    <select id="todoFilter" class="cyber-select">
+                        <option value="All">ALL STATUS</option>
+                        <option value="New">NEW</option>
+                        <option value="In Progress">IN PROGRESS</option>
+                        <option value="Resolved">RESOLVED</option>
+                    </select>
+                    <button id="todoAddBtn" class="cyber-btn">+ NEW ISSUE</button>
+                </div>
             </div>
-            <ul id="todoList" class="todo-list">
-                <!-- JS will inject tasks -->
-            </ul>
+            <div class="task-table-wrapper">
+                <table class="task-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Status</th>
+                            <th>Priority</th>
+                            <th>Subject</th>
+                            <th>Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody id="todoList">
+                        <!-- JS injected tasks -->
+                    </tbody>
+                </table>
+            </div>
         </section>
 
         <!-- Notes Panel -->
@@ -70,6 +89,49 @@
     </main>
 
     <script src="app.js"></script>
+
+    <!-- Task Modal -->
+    <div id="taskModal" class="modal-overlay hidden">
+        <div class="modal-content panel">
+            <h2 class="panel-title" id="modalTitle">NEW ISSUE</h2>
+            <input type="hidden" id="taskId">
+            <div class="form-group">
+                <label class="prompt">SUBJECT</label>
+                <input type="text" id="taskSubject" class="cyber-input" placeholder="Enter task subject...">
+            </div>
+            <div class="form-group-row">
+                <div class="form-group">
+                    <label class="prompt">STATUS</label>
+                    <select id="taskStatus" class="cyber-select">
+                        <option value="New">New</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="prompt">PRIORITY</label>
+                    <select id="taskPriority" class="cyber-select">
+                        <option value="Low">Low</option>
+                        <option value="Normal" selected>Normal</option>
+                        <option value="High">High</option>
+                        <option value="Urgent">Urgent</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="prompt">DESCRIPTION</label>
+                <textarea id="taskDesc" class="cyber-textarea"
+                    placeholder="Detailed requirements or logs..."></textarea>
+            </div>
+            <div class="modal-actions">
+                <button id="taskCancelBtn" class="cyber-btn"
+                    style="border-color: var(--red); color: var(--red);">CANCEL</button>
+                <button id="taskDelBtn" class="cyber-btn hidden"
+                    style="border-color: var(--red); color: var(--red);">DELETE</button>
+                <button id="taskSaveBtn" class="cyber-btn" style="background: rgba(0,255,65,0.2);">SAVE</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>
