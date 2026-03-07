@@ -26,10 +26,9 @@
         <section class="panel calendar-panel">
             <h2 class="panel-title">[MOD_CALENDAR]</h2>
             <div class="cal-header">
-                <button id="prevBtn" class="cyber-btn">
-                    << /button>
-                        <span id="monthYear" class="month-year-display">YYYY-MM</span>
-                        <button id="nextBtn" class="cyber-btn">></button>
+                <button id="prevBtn" class="cyber-btn">&lt;</button>
+                <span id="monthYear" class="month-year-display">YYYY-MM</span>
+                <button id="nextBtn" class="cyber-btn">&gt;</button>
             </div>
             <div class="calendar-grid" id="calendarGrid">
                 <!-- JS will inject days -->
@@ -129,6 +128,25 @@
                 <button id="taskDelBtn" class="cyber-btn hidden"
                     style="border-color: var(--red); color: var(--red);">DELETE</button>
                 <button id="taskSaveBtn" class="cyber-btn" style="background: rgba(0,255,65,0.2);">SAVE</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Event Modal -->
+    <div id="eventModal" class="modal-overlay hidden">
+        <div class="modal-content panel" style="max-width: 400px;">
+            <h2 class="panel-title" id="eventModalTitle">EVENT LOG</h2>
+            <input type="hidden" id="eventDate">
+            <div class="form-group">
+                <label class="prompt">LOG ENTRY</label>
+                <input type="text" id="eventDescInput" class="cyber-input" placeholder="Enter plan / event...">
+            </div>
+            <div class="modal-actions">
+                <button id="eventCancelBtn" class="cyber-btn"
+                    style="border-color: var(--red); color: var(--red);">CANCEL</button>
+                <button id="eventDelBtn" class="cyber-btn hidden"
+                    style="border-color: var(--red); color: var(--red);">DELETE</button>
+                <button id="eventSaveBtn" class="cyber-btn" style="background: rgba(0,255,65,0.2);">SAVE</button>
             </div>
         </div>
     </div>

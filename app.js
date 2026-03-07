@@ -34,6 +34,11 @@ async function fetchHolidays() {
 function initCalendar() {
     document.getElementById('prevBtn').addEventListener('click', () => changeMonth(-1));
     document.getElementById('nextBtn').addEventListener('click', () => changeMonth(1));
+
+    document.getElementById('eventCancelBtn').addEventListener('click', closeEventModal);
+    document.getElementById('eventSaveBtn').addEventListener('click', saveEventFromModal);
+    document.getElementById('eventDelBtn').addEventListener('click', deleteEventFromModal);
+
     fetchHolidays();
 }
 
@@ -43,6 +48,63 @@ function changeMonth(dir) {
     else if (currentMonth > 11) { currentMonth = 0; currentYear++; }
     renderCalendar();
 }
+
+function getEvents() {
+    return JSON.parse(localStorage.getItem('sys_events') || '{}');
+}
+
+function saveEvents(eventsDict) {
+    localStorage.setItem('sys_events', JSON.stringify(eventsDict));
+}
+
+function openEventModal(dateStr) {
+    const events = getEvents();
+    const existing = events[dateStr];
+
+    document.getElementById('eventModalTitle').textContent = `LOG - ${dateStr}`;
+    document.getElementById('eventDate').value = dateStr;
+    const input = document.getElementById('eventDescInput');
+    const delBtn = document.getElementById('eventDelBtn');
+
+    if (existing) {
+        input.value = existing;
+        delBtn.classList.remove('hidden');
+    } else {
+        input.value = '';
+        delBtn.classList.add('hidden');
+    }
+
+    document.getElementById('eventModal').classList.remove('hidden');
+    input.focus();
+}
+
+function closeEventModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+}
+
+function saveEventFromModal() {
+    const dateStr = document.getElementById('eventDate').value;
+    const desc = document.getElementById('eventDescInput').value.trim();
+    if (!desc) { deleteEventFromModal(); return; }
+
+    const events = getEvents();
+    events[dateStr] = desc;
+    saveEvents(events);
+    closeEventModal();
+    renderCalendar();
+}
+
+function deleteEventFromModal() {
+    const dateStr = document.getElementById('eventDate').value;
+    const events = getEvents();
+    if (events[dateStr]) {
+        delete events[dateStr];
+        saveEvents(events);
+    }
+    closeEventModal();
+    renderCalendar();
+}
+
 
 function renderCalendar() {
     const grid = document.getElementById('calendarGrid');
@@ -66,6 +128,7 @@ function renderCalendar() {
     const today = new Date();
     const firstDay = new Date(currentYear, currentMonth, 1).getDay();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const eventsDict = getEvents();
 
     // Blanks
     for (let i = 0; i < firstDay; i++) {
@@ -94,9 +157,17 @@ function renderCalendar() {
             cell.classList.add('today');
         }
 
+        cell.onclick = () => openEventModal(dateStr);
+
+        let eventHtml = '';
+        if (eventsDict[dateStr]) {
+            eventHtml = `<div class="cal-event">${escapeHTML(eventsDict[dateStr])}</div>`;
+        }
+
         cell.innerHTML = `
             <span class="cal-day-num">${i}</span>
             ${holidayName ? `<span class="holiday-name">${holidayName}</span>` : ''}
+            ${eventHtml}
         `;
         grid.appendChild(cell);
     }
