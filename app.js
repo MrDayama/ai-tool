@@ -61,7 +61,7 @@ function openEventModal(dateStr) {
     const events = getEvents();
     const existing = events[dateStr];
 
-    document.getElementById('eventModalTitle').textContent = `LOG - ${dateStr}`;
+    document.getElementById('eventModalTitle').textContent = `ログ - ${dateStr}`;
     document.getElementById('eventDate').value = dateStr;
     const input = document.getElementById('eventDescInput');
     const delBtn = document.getElementById('eventDelBtn');
@@ -129,6 +129,7 @@ function renderCalendar() {
     const firstDay = new Date(currentYear, currentMonth, 1).getDay();
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
     const eventsDict = getEvents();
+    const todos = getTodos();
 
     // Blanks
     for (let i = 0; i < firstDay; i++) {
@@ -161,8 +162,14 @@ function renderCalendar() {
 
         let eventHtml = '';
         if (eventsDict[dateStr]) {
-            eventHtml = `<div class="cal-event">${escapeHTML(eventsDict[dateStr])}</div>`;
+            eventHtml += `<div class="cal-event">${escapeHTML(eventsDict[dateStr])}</div>`;
         }
+
+        // Add Task markers to calendar
+        const dayTasks = todos.filter(t => t.taskDueDate === dateStr);
+        dayTasks.forEach(t => {
+            eventHtml += `<div class="cal-event" style="background:rgba(0,123,255,0.3); border-left:2px solid #007bff;">[T] ${escapeHTML(t.subject)}</div>`;
+        });
 
         cell.innerHTML = `
             <span class="cal-day-num">${i}</span>
@@ -199,25 +206,31 @@ function openTaskModal(taskId = null) {
     const subInput = document.getElementById('taskSubject');
     const statSelect = document.getElementById('taskStatus');
     const prioSelect = document.getElementById('taskPriority');
+    const startInput = document.getElementById('taskStartDate');
+    const endInput = document.getElementById('taskDueDate');
     const descInput = document.getElementById('taskDesc');
     const delBtn = document.getElementById('taskDelBtn');
 
     if (taskId) {
         const task = getTodos().find(t => t.id === taskId);
         if (!task) return;
-        title.textContent = `EDIT ISSUE #${taskId.toString().slice(-4)}`;
+        title.textContent = `編集 #${taskId.toString().slice(-4)}`;
         idInput.value = task.id;
         subInput.value = task.subject;
         statSelect.value = task.status;
         prioSelect.value = task.priority;
+        startInput.value = task.taskStartDate || '';
+        endInput.value = task.taskDueDate || '';
         descInput.value = task.desc || '';
         delBtn.classList.remove('hidden');
     } else {
-        title.textContent = 'NEW ISSUE';
+        title.textContent = '新規チケット';
         idInput.value = '';
         subInput.value = '';
         statSelect.value = 'New';
         prioSelect.value = 'Normal';
+        startInput.value = '';
+        endInput.value = '';
         descInput.value = '';
         delBtn.classList.add('hidden');
     }
@@ -238,6 +251,8 @@ function saveTaskFromModal() {
         subject: subject,
         status: document.getElementById('taskStatus').value,
         priority: document.getElementById('taskPriority').value,
+        taskStartDate: document.getElementById('taskStartDate').value,
+        taskDueDate: document.getElementById('taskDueDate').value,
         desc: document.getElementById('taskDesc').value,
         updatedAt: new Date().toISOString()
     };
@@ -254,6 +269,7 @@ function saveTaskFromModal() {
     saveTodos(todos);
     closeTaskModal();
     renderTodos();
+    renderCalendar(); // Sync calendar
 }
 
 function deleteTaskFromModal() {
@@ -265,6 +281,7 @@ function deleteTaskFromModal() {
     }
     closeTaskModal();
     renderTodos();
+    renderCalendar();
 }
 
 function renderTodos() {
@@ -281,28 +298,106 @@ function renderTodos() {
     todos.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
     if (todos.length === 0) {
-        list.innerHTML = `<tr><td colspan="5" style="text-align:center;color:var(--text-dim);padding:2rem;">[ NO ISSUES FOUND IN DATABASE ]</td></tr>`;
+        list.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#999;padding:2rem;">チケットが見つかりません</td></tr>`;
+    } else {
+        todos.forEach(t => {
+            const tr = document.createElement('tr');
+            tr.onclick = () => openTaskModal(t.id);
+
+            const shortId = t.id.toString().slice(-4);
+            const dateStr = t.taskDueDate || '期限未設定';
+
+            const statMap = { 'New': '新規', 'In Progress': '進行中', 'Resolved': '完了' };
+            const prioMap = { 'Low': '低', 'Normal': '通常', 'High': '高', 'Urgent': '緊急' };
+
+            const statClass = 'stat-' + t.status.replace(' ', '_');
+            const prioClass = 'prio-' + t.priority;
+
+            tr.innerHTML = `
+                <td>#${shortId}</td>
+                <td><span class="status-badge ${statClass}">${statMap[t.status] || t.status}</span></td>
+                <td><span class="priority-badge ${prioClass}">${prioMap[t.priority] || t.priority}</span></td>
+                <td class="task-subject">${escapeHTML(t.subject)}</td>
+                <td style="color:#666; font-size:0.8rem;">${dateStr}</td>
+            `;
+            list.appendChild(tr);
+        });
+    }
+
+    renderGantt(todos);
+}
+
+function renderGantt(todos) {
+    const container = document.getElementById('ganttContainer');
+    if (!container) return;
+    container.innerHTML = '';
+
+    // Filter tasks with dates
+    const datedTasks = todos.filter(t => t.taskStartDate && t.taskDueDate);
+    if (datedTasks.length === 0) {
+        container.innerHTML = '<p style="color:#999; text-align:center; padding:1rem;">日程が設定されたチケットがありません</p>';
         return;
     }
 
-    todos.forEach(t => {
-        const tr = document.createElement('tr');
-        tr.onclick = () => openTaskModal(t.id);
+    // Find min/max dates for timeline
+    let minDate = new Date(Math.min(...datedTasks.map(t => new Date(t.taskStartDate))));
+    let maxDate = new Date(Math.max(...datedTasks.map(t => new Date(t.taskDueDate))));
 
-        const shortId = t.id.toString().slice(-4);
-        const dateStr = new Date(t.updatedAt).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    // Add margin to range
+    minDate.setDate(minDate.getDate() - 2);
+    maxDate.setDate(maxDate.getDate() + 5);
 
-        const statClass = 'stat-' + t.status.replace(' ', '_');
-        const prioClass = 'prio-' + t.priority;
+    const dayDiff = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
 
-        tr.innerHTML = `
-            <td>#${shortId}</td>
-            <td><span class="status-badge ${statClass}">${t.status.toUpperCase()}</span></td>
-            <td><span class="priority-badge ${prioClass}">${t.priority.toUpperCase()}</span></td>
-            <td class="task-subject">${escapeHTML(t.subject)}</td>
-            <td style="color:var(--text-dim); font-size:0.8rem;">${dateStr}</td>
-        `;
-        list.appendChild(tr);
+    // Create Gantt Header (Days)
+    const headerRow = document.createElement('div');
+    headerRow.className = 'gantt-header-row';
+    const labelPad = document.createElement('div');
+    labelPad.style.width = '200px';
+    headerRow.appendChild(labelPad);
+
+    for (let i = 0; i <= dayDiff; i++) {
+        const d = new Date(minDate);
+        d.setDate(d.getDate() + i);
+        const dayEl = document.createElement('div');
+        dayEl.className = 'gantt-header-day';
+        dayEl.textContent = d.getDate();
+        if (d.getDay() === 0) dayEl.style.color = 'var(--red)';
+        if (d.getDay() === 6) dayEl.style.color = 'var(--cyan)';
+        headerRow.appendChild(dayEl);
+    }
+    container.appendChild(headerRow);
+
+    // Create Gantt Task Rows
+    datedTasks.forEach(t => {
+        const row = document.createElement('div');
+        row.className = 'gantt-row';
+        row.onclick = () => openTaskModal(t.id);
+
+        const label = document.createElement('div');
+        label.className = 'gantt-label';
+        label.textContent = t.subject;
+        row.appendChild(label);
+
+        const timeline = document.createElement('div');
+        timeline.className = 'gantt-timeline';
+
+        const start = new Date(t.taskStartDate);
+        const end = new Date(t.taskDueDate);
+
+        const left = ((start - minDate) / (maxDate - minDate)) * 100;
+        const width = ((end - start) / (maxDate - minDate)) * 100 + (100 / dayDiff);
+
+        const bar = document.createElement('div');
+        bar.className = 'gantt-bar';
+        bar.style.left = left + '%';
+        bar.style.width = width + '%';
+        bar.textContent = t.status === 'Resolved' ? '✓' : '';
+        if (t.status === 'Resolved') bar.style.background = '#28a745';
+
+        timeline.appendChild(bar);
+        row.appendChild(timeline);
+        container.appendChild(row);
     });
 }
 
@@ -366,7 +461,7 @@ async function fetchGitHubEvents(username) {
             else if (ev.type === 'IssueCommentEvent') actionText = `${ev.payload.action} comment in`;
 
             div.innerHTML = `
-                <div class="gh-repo">${actionText} <a href="https://github.com/${escapeHTML(ev.repo.name)}" target="_blank" rel="noopener noreferrer" style="color:var(--primary); text-decoration:underline;"><b>${escapeHTML(ev.repo.name)}</b></a></div>
+                <div class="gh-repo">${actionText} <a href="https://github.com/${escapeHTML(ev.repo.name)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color); text-decoration:underline;"><b>${escapeHTML(ev.repo.name)}</b></a></div>
                 <div class="gh-date">${date}</div>
             `;
             container.appendChild(div);
