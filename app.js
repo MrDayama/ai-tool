@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initCalendar();
     initTodo();
     initNotes();
-    initGitHub();
 });
 
 // ================= CLOCK =================
@@ -187,7 +186,15 @@ function initTodo() {
     document.getElementById('taskSaveBtn').addEventListener('click', saveTaskFromModal);
     document.getElementById('taskDelBtn').addEventListener('click', deleteTaskFromModal);
 
+    const progressInput = document.getElementById('taskProgress');
+    const progressValue = document.getElementById('progressValue');
+    progressInput.addEventListener('input', () => {
+        progressValue.textContent = progressInput.value;
+    });
+
     document.getElementById('todoFilter').addEventListener('change', renderTodos);
+    document.getElementById('todoFilterAssignee').addEventListener('change', renderTodos);
+
     renderTodos();
 }
 
@@ -204,21 +211,41 @@ function openTaskModal(taskId = null) {
     const title = document.getElementById('modalTitle');
     const idInput = document.getElementById('taskId');
     const subInput = document.getElementById('taskSubject');
+    const parentSelect = document.getElementById('taskParentId');
     const statSelect = document.getElementById('taskStatus');
     const prioSelect = document.getElementById('taskPriority');
+    const assigneeInput = document.getElementById('taskAssignee');
+    const progressInput = document.getElementById('taskProgress');
+    const progressValueText = document.getElementById('progressValue');
     const startInput = document.getElementById('taskStartDate');
     const endInput = document.getElementById('taskDueDate');
     const descInput = document.getElementById('taskDesc');
     const delBtn = document.getElementById('taskDelBtn');
 
+    const todos = getTodos();
+
+    // Populate parent task options (don't allow self or nested children in a simple system)
+    parentSelect.innerHTML = '<option value="">(なし / 親チケットとして登録)</option>';
+    const availableParents = todos.filter(t => !t.parentId && (!taskId || t.id !== parseInt(taskId)));
+    availableParents.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = `#${t.id.toString().slice(-4)} ${t.subject}`;
+        parentSelect.appendChild(opt);
+    });
+
     if (taskId) {
-        const task = getTodos().find(t => t.id === taskId);
+        const task = todos.find(t => t.id === taskId);
         if (!task) return;
         title.textContent = `編集 #${taskId.toString().slice(-4)}`;
         idInput.value = task.id;
         subInput.value = task.subject;
+        parentSelect.value = task.parentId || '';
         statSelect.value = task.status;
         prioSelect.value = task.priority;
+        assigneeInput.value = task.assignee || '';
+        progressInput.value = task.progress || 0;
+        progressValueText.textContent = task.progress || 0;
         startInput.value = task.taskStartDate || '';
         endInput.value = task.taskDueDate || '';
         descInput.value = task.desc || '';
@@ -227,8 +254,12 @@ function openTaskModal(taskId = null) {
         title.textContent = '新規チケット';
         idInput.value = '';
         subInput.value = '';
+        parentSelect.value = '';
         statSelect.value = 'New';
         prioSelect.value = 'Normal';
+        assigneeInput.value = '';
+        progressInput.value = 0;
+        progressValueText.textContent = 0;
         startInput.value = '';
         endInput.value = '';
         descInput.value = '';
@@ -249,8 +280,11 @@ function saveTaskFromModal() {
     let todos = getTodos();
     const newData = {
         subject: subject,
+        parentId: document.getElementById('taskParentId').value ? parseInt(document.getElementById('taskParentId').value) : null,
         status: document.getElementById('taskStatus').value,
         priority: document.getElementById('taskPriority').value,
+        assignee: document.getElementById('taskAssignee').value.trim(),
+        progress: parseInt(document.getElementById('taskProgress').value),
         taskStartDate: document.getElementById('taskStartDate').value,
         taskDueDate: document.getElementById('taskDueDate').value,
         desc: document.getElementById('taskDesc').value,
@@ -267,15 +301,18 @@ function saveTaskFromModal() {
     }
 
     saveTodos(todos);
+    updateAssigneeFilter(todos);
     closeTaskModal();
     renderTodos();
-    renderCalendar(); // Sync calendar
+    renderCalendar();
 }
 
 function deleteTaskFromModal() {
     const id = document.getElementById('taskId').value;
     if (id) {
         let todos = getTodos();
+        // Also clean parentId for children
+        todos = todos.map(t => t.parentId === parseInt(id) ? { ...t, parentId: null } : t);
         todos = todos.filter(t => t.id !== parseInt(id));
         saveTodos(todos);
     }
@@ -284,44 +321,93 @@ function deleteTaskFromModal() {
     renderCalendar();
 }
 
+function updateAssigneeFilter(todos) {
+    const filter = document.getElementById('todoFilterAssignee');
+    const currentVal = filter.value;
+    const assignees = [...new Set(todos.map(t => t.assignee).filter(a => a))];
+
+    filter.innerHTML = '<option value="All">すべての担当者</option>';
+    assignees.sort().forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = a;
+        filter.appendChild(opt);
+    });
+    filter.value = assignees.includes(currentVal) ? currentVal : 'All';
+}
+
 function renderTodos() {
     const list = document.getElementById('todoList');
     list.innerHTML = '';
-    const filter = document.getElementById('todoFilter').value;
+    const statusFilter = document.getElementById('todoFilter').value;
+    const assigneeFilter = document.getElementById('todoFilterAssignee').value;
     let todos = getTodos();
 
-    if (filter !== 'All') {
-        todos = todos.filter(t => t.status === filter);
+    updateAssigneeFilter(todos);
+
+    // Filter
+    let filtered = todos;
+    if (statusFilter !== 'All') {
+        filtered = filtered.filter(t => t.status === statusFilter);
+    }
+    if (assigneeFilter !== 'All') {
+        filtered = filtered.filter(t => t.assignee === assigneeFilter);
     }
 
-    // Sort by updated descending
-    todos.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+    // Organization: Hierarchy
+    const parents = filtered.filter(t => !t.parentId);
+    const childrenMap = {};
+    filtered.forEach(t => {
+        if (t.parentId) {
+            if (!childrenMap[t.parentId]) childrenMap[t.parentId] = [];
+            childrenMap[t.parentId].push(t);
+        }
+    });
 
-    if (todos.length === 0) {
-        list.innerHTML = `<tr><td colspan="5" style="text-align:center;color:#999;padding:2rem;">チケットが見つかりません</td></tr>`;
+    // Sort parents by updated
+    parents.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    if (filtered.length === 0) {
+        list.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#999;padding:2rem;">チケットが見つかりません</td></tr>`;
     } else {
-        todos.forEach(t => {
+        const renderRow = (t, isChild = false) => {
             const tr = document.createElement('tr');
             tr.onclick = () => openTaskModal(t.id);
+            if (isChild) tr.classList.add('child-row');
 
             const shortId = t.id.toString().slice(-4);
-            const dateStr = t.taskDueDate || '期限未設定';
+            const dateStr = t.taskDueDate || '-';
+            const assignee = t.assignee || '-';
+            const progress = t.progress || 0;
 
             const statMap = { 'New': '新規', 'In Progress': '進行中', 'Resolved': '完了' };
-            const prioMap = { 'Low': '低', 'Normal': '通常', 'High': '高', 'Urgent': '緊急' };
-
             const statClass = 'stat-' + t.status.replace(' ', '_');
-            const prioClass = 'prio-' + t.priority;
 
             tr.innerHTML = `
                 <td>#${shortId}</td>
                 <td><span class="status-badge ${statClass}">${statMap[t.status] || t.status}</span></td>
-                <td><span class="priority-badge ${prioClass}">${prioMap[t.priority] || t.priority}</span></td>
-                <td class="task-subject">${escapeHTML(t.subject)}</td>
+                <td style="font-size:0.85rem;">${escapeHTML(assignee)}</td>
+                <td>
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: ${progress}%"></div>
+                    </div>
+                    <span class="progress-text">${progress}%</span>
+                </td>
+                <td class="task-subject ${isChild ? 'child-task-indent' : ''}">${escapeHTML(t.subject)}</td>
                 <td style="color:#666; font-size:0.8rem;">${dateStr}</td>
             `;
             list.appendChild(tr);
+        };
+
+        parents.forEach(p => {
+            renderRow(p);
+            const children = childrenMap[p.id] || [];
+            children.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            children.forEach(c => renderRow(c, true));
         });
+
+        // Render orpaned children (if parent is filtered out)
+        filtered.filter(t => t.parentId && !parents.find(p => p.id === t.parentId)).forEach(orph => renderRow(orph, true));
     }
 
     renderGantt(todos);
@@ -332,24 +418,19 @@ function renderGantt(todos) {
     if (!container) return;
     container.innerHTML = '';
 
-    // Filter tasks with dates
     const datedTasks = todos.filter(t => t.taskStartDate && t.taskDueDate);
     if (datedTasks.length === 0) {
         container.innerHTML = '<p style="color:#999; text-align:center; padding:1rem;">日程が設定されたチケットがありません</p>';
         return;
     }
 
-    // Find min/max dates for timeline
     let minDate = new Date(Math.min(...datedTasks.map(t => new Date(t.taskStartDate))));
     let maxDate = new Date(Math.max(...datedTasks.map(t => new Date(t.taskDueDate))));
-
-    // Add margin to range
     minDate.setDate(minDate.getDate() - 2);
     maxDate.setDate(maxDate.getDate() + 5);
 
     const dayDiff = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
 
-    // Create Gantt Header (Days)
     const headerRow = document.createElement('div');
     headerRow.className = 'gantt-header-row';
     const labelPad = document.createElement('div');
@@ -368,7 +449,10 @@ function renderGantt(todos) {
     }
     container.appendChild(headerRow);
 
-    // Create Gantt Task Rows
+    // Group tasks by person for Gantt if needed? User asked to "divide by person" (人でわける)
+    // Let's sort by assignee first
+    datedTasks.sort((a, b) => (a.assignee || '').localeCompare(b.assignee || ''));
+
     datedTasks.forEach(t => {
         const row = document.createElement('div');
         row.className = 'gantt-row';
@@ -376,7 +460,8 @@ function renderGantt(todos) {
 
         const label = document.createElement('div');
         label.className = 'gantt-label';
-        label.textContent = t.subject;
+        label.innerHTML = `<span style="color:#999;font-size:0.7rem;">${escapeHTML(t.assignee || '未設定')}</span><br>${escapeHTML(t.subject)}`;
+        label.style.lineHeight = "1.2";
         row.appendChild(label);
 
         const timeline = document.createElement('div');
@@ -392,8 +477,14 @@ function renderGantt(todos) {
         bar.className = 'gantt-bar';
         bar.style.left = left + '%';
         bar.style.width = width + '%';
-        bar.textContent = t.status === 'Resolved' ? '✓' : '';
-        if (t.status === 'Resolved') bar.style.background = '#28a745';
+        bar.textContent = `${t.progress}%`;
+
+        if (t.status === 'Resolved' || t.progress === 100) {
+            bar.style.background = '#28a745';
+        } else if (t.progress > 0) {
+            bar.style.background = 'linear-gradient(to right, var(--accent-color) ' + t.progress + '%, #ccc ' + t.progress + '%)';
+            bar.style.color = '#333';
+        }
 
         timeline.appendChild(bar);
         row.appendChild(timeline);
@@ -404,76 +495,18 @@ function renderGantt(todos) {
 // ================= NOTES =================
 function initNotes() {
     const area = document.getElementById('notesArea');
+    if (!area) return;
     area.value = localStorage.getItem('sys_notes') || '';
-
     area.addEventListener('input', () => {
         localStorage.setItem('sys_notes', area.value);
     });
 }
 
-// ================= GITHUB =================
-function initGitHub() {
-    const btn = document.getElementById('ghFetchBtn');
-    const input = document.getElementById('ghUsername');
-
-    // load last user
-    const lastUser = localStorage.getItem('sys_gh_user') || 'MrDayama';
-    input.value = lastUser;
-
-    btn.addEventListener('click', () => fetchGitHubEvents(input.value.trim()));
-    input.addEventListener('keypress', e => { if (e.key === 'Enter') fetchGitHubEvents(input.value.trim()); });
-
-    fetchGitHubEvents(lastUser);
-}
-
-async function fetchGitHubEvents(username) {
-    if (!username) return;
-    localStorage.setItem('sys_gh_user', username);
-    const container = document.getElementById('ghActivity');
-    container.innerHTML = `<div class="glitch-text" style="color:var(--text-dim);">FETCHING DATA FROM HUB...</div>`;
-
-    try {
-        const res = await fetch(`https://api.github.com/users/${encodeURIComponent(username)}/events/public`);
-        if (!res.ok) throw new Error('User not found or rate limit');
-        const events = await res.json();
-
-        if (events.length === 0) {
-            container.innerHTML = '<div>NO RECENT ACTIVITY DETECTED.</div>';
-            return;
-        }
-
-        container.innerHTML = '';
-        // limit to 8
-        events.slice(0, 8).forEach(ev => {
-            const div = document.createElement('div');
-            div.className = 'gh-event';
-            const date = new Date(ev.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-
-            let actionText = ev.type;
-            if (ev.type === 'PushEvent') actionText = `Pushed to`;
-            else if (ev.type === 'WatchEvent') actionText = `Starred`;
-            else if (ev.type === 'CreateEvent') actionText = `Created`;
-            else if (ev.type === 'ForkEvent') actionText = `Forked`;
-            else if (ev.type === 'IssuesEvent') actionText = `${ev.payload.action} issue in`;
-            else if (ev.type === 'PullRequestEvent') actionText = `${ev.payload.action} PR in`;
-            else if (ev.type === 'PullRequestReviewEvent') actionText = `${ev.payload.action} PR review in`;
-            else if (ev.type === 'DeleteEvent') actionText = `Deleted ${ev.payload.ref_type} in`;
-            else if (ev.type === 'IssueCommentEvent') actionText = `${ev.payload.action} comment in`;
-
-            div.innerHTML = `
-                <div class="gh-repo">${actionText} <a href="https://github.com/${escapeHTML(ev.repo.name)}" target="_blank" rel="noopener noreferrer" style="color:var(--accent-color); text-decoration:underline;"><b>${escapeHTML(ev.repo.name)}</b></a></div>
-                <div class="gh-date">${date}</div>
-            `;
-            container.appendChild(div);
-        });
-
-    } catch (e) {
-        container.innerHTML = `<div style="color:var(--red);">ERROR: ${e.message}</div>`;
-    }
-}
+function initGitHub() { /* Disabled */ }
 
 // Utility
 function escapeHTML(str) {
+    if (!str) return '';
     return str.replace(/[&<>'"]/g,
         tag => ({
             '&': '&amp;',

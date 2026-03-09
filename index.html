@@ -35,24 +35,15 @@
             </div>
         </section>
 
-        <!-- GitHub Activity Panel -->
-        <section class="panel github-panel">
-            <h2 class="panel-title">GITHUB_ACTIVITY</h2>
-            <div class="gh-input-group">
-                <span class="prompt">usr:</span>
-                <input type="text" id="ghUsername" class="cyber-input" placeholder="Enter GitHub User" value="MrDayama">
-                <button id="ghFetchBtn" class="cyber-btn">FETCH</button>
-            </div>
-            <div id="ghActivity" class="gh-activity-list">
-                <div class="glitch-text" style="text-align:center; margin-top: 2rem;">AWAITING SIGNAL...</div>
-            </div>
-        </section>
-
         <!-- Task Tracker Panel -->
         <section class="panel task-panel" style="grid-column: 1 / -1;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
                 <h2 class="panel-title" style="margin: 0; border: none;">チケット管理</h2>
-                <div style="display: flex; gap: 0.8rem;">
+                <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
+                    <select id="todoFilterAssignee" class="cyber-select" style="max-width: 150px;">
+                        <option value="All">すべての担当者</option>
+                    </select>
                     <select id="todoFilter" class="cyber-select" style="max-width: 150px;">
                         <option value="All">すべてのステータス</option>
                         <option value="New">新規</option>
@@ -69,7 +60,8 @@
                         <tr>
                             <th>#</th>
                             <th>ステータス</th>
-                            <th>優先度</th>
+                            <th>担当者</th>
+                            <th>進捗</th>
                             <th>題名</th>
                             <th>期限</th>
                         </tr>
@@ -107,6 +99,12 @@
                 <label class="prompt">題名</label>
                 <input type="text" id="taskSubject" class="cyber-input" placeholder="チケットの題名を入力...">
             </div>
+            <div class="form-group">
+                <label class="prompt">親チケット</label>
+                <select id="taskParentId" class="cyber-select">
+                    <option value="">(なし / 親チケットとして登録)</option>
+                </select>
+            </div>
             <div class="form-group-row">
                 <div class="form-group">
                     <label class="prompt">ステータス</label>
@@ -124,6 +122,16 @@
                         <option value="High">高め</option>
                         <option value="Urgent">緊急</option>
                     </select>
+                </div>
+            </div>
+            <div class="form-group-row">
+                <div class="form-group">
+                    <label class="prompt">担当者</label>
+                    <input type="text" id="taskAssignee" class="cyber-input" placeholder="名前を入力...">
+                </div>
+                <div class="form-group">
+                    <label class="prompt">進捗状況 (<span id="progressValue">0</span>%)</label>
+                    <input type="range" id="taskProgress" class="cyber-range" min="0" max="100" step="10" value="0">
                 </div>
             </div>
             <div class="form-group-row">
