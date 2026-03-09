@@ -3,7 +3,7 @@
  * Google Gemini API integration
  */
 
-const API_KEY = 'AIzaSyBPV172iGeSxu9XP3cjm96pdl_z_imf-j0'; // 設定済み
+const API_KEY = 'YOUR_GEMINI_API_KEY_HERE'; // 設定してください (GitHubへのコミット時は空にすることを推奨)
 
 async function generateContinuation(currentStory, latestInput) {
     if (API_KEY === 'YOUR_GEMINI_API_KEY_HERE') {
