@@ -1,22 +1,22 @@
 :root {
   --primary: #00ff41;
   /* Neon green for monitoring */
-  --bg-dark: #030a04;
+  --bg-dark: #0f0f0f;
   --dark-green: #00360a;
-  --red: #ff3366;
-  --cyan: #00eeff;
+  --red: #ff3e3e;
+  --cyan: #00e5ff;
   --text-dim: #008f11;
   --border-neon: #00ff41;
 
   /* Light Theme Colors */
   --bg-light: #f4f7f6;
   --panel-bg: #ffffff;
-  --text-main: #333333;
-  --text-sub: #666666;
-  --border-light: #dddddd;
+  --text-main: #222222;
+  --text-sub: #555555;
+  --border-light: #e0e0e0;
   --accent-color: #007bff;
 
-  --font-mono: 'Share Tech Mono', 'Consolas', monospace;
+  --font-mono: 'Share Tech Mono', monospace;
   --font-sans: 'Noto Sans JP', sans-serif;
 }
 
@@ -44,40 +44,47 @@ body {
 /* --- Navigation --- */
 .main-nav {
   display: flex;
-  background: #fff;
-  border-bottom: 1px solid var(--border-light);
-  padding: 0 1.5rem;
-  gap: 1.5rem;
+  background: var(--bg-dark);
+  /* Darker header for better contrast */
+  border-bottom: 2px solid var(--accent-color);
+  padding: 0 1rem;
+  gap: 0.5rem;
+  overflow-x: auto;
+  /* Allow scrolling on small screens */
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
 }
 
 .nav-btn {
   background: none;
   border: none;
-  padding: 1rem 0.5rem;
+  padding: 1.2rem 1rem;
   font-family: var(--font-sans);
   font-weight: bold;
-  font-size: 0.95rem;
-  color: var(--text-sub);
+  font-size: 1rem;
+  /* Slightly larger */
+  color: #ccc;
   cursor: pointer;
   position: relative;
-  transition: color 0.2s;
+  transition: all 0.2s;
 }
 
 .nav-btn:hover {
-  color: var(--accent-color);
+  color: #fff;
 }
 
 .nav-btn.active {
   color: var(--accent-color);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .nav-btn.active::after {
   content: "";
   position: absolute;
-  bottom: -1px;
+  bottom: 0;
   left: 0;
   width: 100%;
-  height: 3px;
+  height: 4px;
   background: var(--accent-color);
 }
 
@@ -128,11 +135,11 @@ body {
 }
 
 .panel-title {
-  font-size: 1.1rem;
-  font-weight: bold;
-  margin-bottom: 1.2rem;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid #eee;
+  font-family: var(--font-mono);
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  border-left: 4px solid var(--accent-color);
+  padding-left: 0.8rem;
   color: var(--text-main);
 }
 
@@ -254,6 +261,53 @@ body {
   border-bottom: 2px solid #eee;
   color: var(--text-sub);
   font-weight: bold;
+}
+
+/* Mobile Task Cards (Hidden on desktop) */
+.mobile-task-card {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .task-table-wrapper {
+    display: none;
+    /* Hide table on mobile */
+  }
+
+  .mobile-tasks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .mobile-task-card {
+    display: block;
+    background: #fff;
+    border: 1px solid var(--border-light);
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  }
+
+  .mtc-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.5rem;
+  }
+
+  .mtc-subject {
+    font-weight: bold;
+    font-size: 1.1rem;
+    display: block;
+    margin-bottom: 0.5rem;
+  }
+
+  .mtc-meta {
+    font-size: 0.85rem;
+    color: var(--text-sub);
+    display: flex;
+    justify-content: space-between;
+  }
 }
 
 .task-table td {
@@ -521,10 +575,11 @@ body {
 /* Range Input Styling */
 .cyber-range {
   -webkit-appearance: none;
+  appearance: none;
   width: 100%;
   height: 6px;
   background: #eee;
-  border-radius: 3px;
+  border-radius: 5px;
   outline: none;
   margin: 10px 0;
 }

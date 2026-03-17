@@ -363,7 +363,10 @@ function updateAssigneeFilter(todos) {
 
 function renderTodos() {
     const list = document.getElementById('todoList');
+    const mobileList = document.getElementById('todoMobileList');
     list.innerHTML = '';
+    if (mobileList) mobileList.innerHTML = '';
+
     const statusFilter = document.getElementById('todoFilter').value;
     const assigneeFilter = document.getElementById('todoFilterAssignee').value;
     let todos = getTodos();
@@ -393,9 +396,12 @@ function renderTodos() {
     parents.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
     if (filtered.length === 0) {
-        list.innerHTML = `<tr><td colspan="6" style="text-align:center;color:#999;padding:2rem;">チケットが見つかりません</td></tr>`;
+        const emptyMsg = '<tr><td colspan="6" style="text-align:center;color:#999;padding:2rem;">チケットが見つかりません</td></tr>';
+        list.innerHTML = emptyMsg;
+        if (mobileList) mobileList.innerHTML = '<p style="text-align:center;color:#999;padding:2rem;">チケットなし</p>';
     } else {
         const renderRow = (t, isChild = false) => {
+            // Table View
             const tr = document.createElement('tr');
             tr.onclick = () => openTaskModal(t.id);
             if (isChild) tr.classList.add('child-row');
@@ -422,6 +428,31 @@ function renderTodos() {
                 <td style="color:#666; font-size:0.8rem;">${dateStr}</td>
             `;
             list.appendChild(tr);
+
+            // Mobile Card View
+            if (mobileList) {
+                const card = document.createElement('div');
+                card.className = 'mobile-task-card';
+                card.onclick = () => openTaskModal(t.id);
+                card.innerHTML = `
+                    <div class="mtc-header">
+                        <span class="status-badge ${statClass}">${statMap[t.status] || t.status}</span>
+                        <span style="font-family:var(--font-mono); font-size:0.8rem; color:#999;">#${shortId}</span>
+                    </div>
+                    <span class="mtc-subject">${isChild ? '↳ ' : ''}${escapeHTML(t.subject)}</span>
+                    <div class="progress-container" style="margin-bottom:0.8rem;">
+                        <div class="progress-bar" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="mtc-meta">
+                        <span>担当: ${escapeHTML(assignee)}</span>
+                        <span>進捗: ${progress}%</span>
+                    </div>
+                    <div class="mtc-meta" style="margin-top:0.3rem;">
+                        <span>期限: ${dateStr}</span>
+                    </div>
+                `;
+                mobileList.appendChild(card);
+            }
         };
 
         parents.forEach(p => {
@@ -502,13 +533,16 @@ function renderGantt(todos) {
         bar.className = 'gantt-bar';
         bar.style.left = left + '%';
         bar.style.width = width + '%';
-        bar.textContent = `${t.progress}%`;
 
+        // Add text and inner progress coloring
         if (t.status === 'Resolved' || t.progress === 100) {
             bar.style.background = '#28a745';
-        } else if (t.progress > 0) {
-            bar.style.background = 'linear-gradient(to right, var(--accent-color) ' + t.progress + '%, #ccc ' + t.progress + '%)';
-            bar.style.color = '#333';
+            bar.textContent = `DONE ${t.progress}%`;
+        } else {
+            // Dual-tone bar to show progress inside the bar itself
+            bar.style.background = `linear-gradient(to right, #007bff ${t.progress}%, #6c757d ${t.progress}%)`;
+            bar.style.color = '#fff';
+            bar.textContent = `${t.progress}%`;
         }
 
         timeline.appendChild(bar);
