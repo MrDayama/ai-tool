@@ -189,12 +189,6 @@ function renderCalendar() {
             eventHtml += `<div class="cal-event">${escapeHTML(eventsDict[dateStr])}</div>`;
         }
 
-        // Add Task markers to calendar
-        const dayTasks = todos.filter(t => t.taskDueDate === dateStr);
-        dayTasks.forEach(t => {
-            eventHtml += `<div class="cal-event" style="background:rgba(0,123,255,0.3); border-left:2px solid #007bff;">[T] ${escapeHTML(t.subject)}</div>`;
-        });
-
         cell.innerHTML = `
             <span class="cal-day-num">${i}</span>
             ${holidayName ? `<span class="holiday-name">${holidayName}</span>` : ''}
@@ -490,7 +484,7 @@ function renderGantt(todos) {
     const headerRow = document.createElement('div');
     headerRow.className = 'gantt-header-row';
     const labelPad = document.createElement('div');
-    labelPad.style.width = '200px';
+    labelPad.className = 'gantt-label-column-header'; // Changed to use class for styling
     headerRow.appendChild(labelPad);
 
     for (let i = 0; i <= dayDiff; i++) {

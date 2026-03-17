@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 :root {
   --primary: #00ff41;
   /* Neon green for monitoring */
@@ -98,6 +102,12 @@ body {
 .screen-container.active {
   display: grid;
   grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+#screen-calendar.active {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
   gap: 1.5rem;
 }
 
@@ -620,27 +630,28 @@ body {
 
 .gantt-row {
   display: flex;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  height: 30px;
+  border-bottom: 1px solid #f0f0f0;
+  min-height: 40px;
 }
 
+.gantt-label-column-header,
 .gantt-label {
-  width: 200px;
-  min-width: 200px;
-  font-size: 0.85rem;
-  white-space: nowrap;
+  flex: 0 0 150px;
+  width: 150px;
+  padding: 0.5rem;
+  background: #fdfdfd;
+  border-right: 1px solid #eee;
+  font-size: 0.8rem;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding-right: 1rem;
 }
 
 .gantt-timeline {
   flex-grow: 1;
-  height: 100%;
-  background: #f8f9fa;
   position: relative;
-  min-width: 800px;
+  background: #fafafa;
+  min-width: 0;
+  /* Important for flex fitting */
 }
 
 .gantt-bar {
@@ -683,6 +694,13 @@ body {
 
 /* Mobile / Touch Adjustments */
 @media (max-width: 600px) {
+
+  .gantt-label-column-header,
+  .gantt-label {
+    flex: 0 0 100px;
+    width: 100px;
+    font-size: 0.7rem;
+  }
 
   /* Layout */
   .dashboard-grid {
