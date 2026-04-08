@@ -2,241 +2,189 @@
 <html lang="ja">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>競馬AI期待値アナライザー | Horse Racing EV Analyzer</title>
-    <meta name="description" content="AI予測勝率と市場オッズを比較し、期待値の高い馬を自動抽出する競馬分析ツール" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&family=Outfit:wght@300;400;600;700;900&display=swap"
-        rel="stylesheet" />
-    <link rel="stylesheet" href="style.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unified Dashboard v3.1</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+JP:wght@400;700&display=swap"
+        rel="stylesheet">
 </head>
 
 <body>
-    <!-- Background particles -->
-    <div class="bg-particles" id="bgParticles"></div>
+    <!-- Global effects removed for clarity -->
 
-    <!-- Header -->
-    <header class="header">
-        <div class="header-inner">
-            <div class="logo">
-                <div class="logo-icon">🏇</div>
-                <div class="logo-text">
-                    <span class="logo-main">RACE<span class="logo-accent">EV</span></span>
-                    <span class="logo-sub">AI期待値アナライザー</span>
-                </div>
-            </div>
-            <div class="header-meta">
-                <div class="live-badge">
-                    <span class="live-dot"></span>
-                    LIVE ANALYSIS
-                </div>
-                <div id="currentDate" class="date-display"></div>
-            </div>
+    <header class="header panel">
+        <div class="sys-info">
+            <span class="bling">SYSTEM.ONLINE</span> >> <span id="sysId">STATUS: NOMINAL</span>
         </div>
+        <div class="clock" id="clock">00:00:00</div>
     </header>
 
-    <!-- Main content -->
-    <main class="main">
+    <nav class="main-nav">
+        <button class="nav-btn active" data-screen="calendar">カレンダー</button>
+        <button class="nav-btn" data-screen="tasks">チケット管理</button>
+        <button class="nav-btn" data-screen="gantt">ガントチャート</button>
+    </nav>
 
-        <!-- Race Setup Panel -->
-        <section class="panel race-setup-panel">
-            <div class="panel-header">
-                <h2 class="panel-title">
-                    <span class="panel-icon">📋</span> レース情報入力
-                </h2>
-                <div class="panel-actions">
-                    <button id="loadSampleBtn" class="btn btn-ghost">
-                        <span>📊</span> サンプルデータ
-                    </button>
-                    <button id="clearAllBtn" class="btn btn-ghost btn-danger">
-                        <span>🗑</span> クリア
-                    </button>
+    <main class="dashboard-grid">
+        <!-- Calendar Screen -->
+        <div id="screen-calendar" class="screen-container active">
+            <section class="panel calendar-panel">
+                <div class="scanline-local"></div>
+                <h2 class="panel-title">[MOD_CALENDAR_INTEL]</h2>
+                <div class="cal-header">
+                    <button id="prevBtn" class="cyber-btn">&lt;</button>
+                    <span id="monthYear" class="month-year-display">YYYY-MM</span>
+                    <button id="nextBtn" class="cyber-btn">&gt;</button>
                 </div>
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- JS will inject days -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Task Tracker Screen -->
+        <div id="screen-tasks" class="screen-container">
+            <section class="panel task-panel">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                    <h2 class="panel-title" style="margin: 0; border: none;">チケット管理</h2>
+                    <div style="display: flex; gap: 0.8rem; flex-wrap: wrap;">
+                        <select id="todoFilterAssignee" class="cyber-select" style="max-width: 150px;">
+                            <option value="All">すべての担当者</option>
+                        </select>
+                        <select id="todoFilter" class="cyber-select" style="max-width: 150px;">
+                            <option value="All">すべてのステータス</option>
+                            <option value="New">新規</option>
+                            <option value="In Progress">進行中</option>
+                            <option value="Resolved">完了</option>
+                        </select>
+                        <button id="todoAddBtn" class="cyber-btn" style="background:#007bff; color:#fff; border:none;">+
+                            新規チケット</button>
+                    </div>
+                </div>
+                <div class="task-table-wrapper">
+                    <table class="task-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>ステータス</th>
+                                <th>担当者</th>
+                                <th>進捗</th>
+                                <th>題名</th>
+                                <th>期限</th>
+                            </tr>
+                        </thead>
+                        <tbody id="todoList">
+                            <!-- JS injected tasks -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="todoMobileList" class="mobile-tasks-container">
+                    <!-- JS UI will inject task cards here -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Gantt Chart Screen -->
+        <div id="screen-gantt" class="screen-container">
+            <section class="panel gantt-panel">
+                <h2 class="panel-title">ガントチャート</h2>
+                <div id="ganttContainer" class="gantt-container">
+                    <!-- JS will inject gantt chart -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="app.js"></script>
+
+    <!-- Task Modal -->
+    <div id="taskModal" class="modal-overlay hidden">
+        <div class="modal-content panel">
+            <h2 class="panel-title" id="modalTitle">NEW ISSUE</h2>
+            <input type="hidden" id="taskId">
+            <div class="form-group">
+                <label class="prompt">題名</label>
+                <input type="text" id="taskSubject" class="cyber-input" placeholder="チケットの題名を入力...">
             </div>
-
-            <!-- レース検索UI -->
-            <div class="race-search-container">
-                <label class="form-label">レース検索</label>
-                <div class="search-input-wrapper">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" id="raceSearchInput" class="form-input" placeholder="レース名で検索（例: ダービー、天皇賞）..."
-                        autocomplete="off" />
-                    <div id="raceSearchDropdown" class="search-dropdown hidden"></div>
-                </div>
+            <div class="form-group">
+                <label class="prompt">親チケット</label>
+                <select id="taskParentId" class="cyber-select">
+                    <option value="">(なし / 親チケットとして登録)</option>
+                </select>
             </div>
-            <hr class="panel-divider" />
-
-            <div class="race-info-grid">
+            <div class="form-group-row">
                 <div class="form-group">
-                    <label class="form-label">レース名</label>
-                    <input type="text" id="raceName" class="form-input" placeholder="例: 第45回 大阪杯 G1" />
-                </div>
-                <div class="form-group">
-                    <label class="form-label">開催日</label>
-                    <input type="date" id="raceDate" class="form-input" />
-                </div>
-                <div class="form-group">
-                    <label class="form-label">競馬場</label>
-                    <select id="raceVenue" class="form-input form-select">
-                        <option value="">選択してください</option>
-                        <option>中央競馬場（東京）</option>
-                        <option>阪神競馬場</option>
-                        <option>中京競馬場</option>
-                        <option>京都競馬場</option>
-                        <option>小倉競馬場</option>
-                        <option>福島競馬場</option>
-                        <option>新潟競馬場</option>
-                        <option>札幌競馬場</option>
-                        <option>函館競馬場</option>
+                    <label class="prompt">ステータス</label>
+                    <select id="taskStatus" class="cyber-select">
+                        <option value="New">新規</option>
+                        <option value="In Progress">進行中</option>
+                        <option value="Resolved">完了</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">距離</label>
-                    <input type="text" id="raceDistance" class="form-input" placeholder="例: 2000m 芝" />
+                    <label class="prompt">優先度</label>
+                    <select id="taskPriority" class="cyber-select">
+                        <option value="Low">低め</option>
+                        <option value="Normal" selected>通常</option>
+                        <option value="High">高め</option>
+                        <option value="Urgent">緊急</option>
+                    </select>
                 </div>
             </div>
-        </section>
-
-        <!-- Horse Input Panel -->
-        <section class="panel horse-input-panel">
-            <div class="panel-header">
-                <h2 class="panel-title">
-                    <span class="panel-icon">🐴</span> 出走馬データ入力
-                </h2>
-                <button id="addHorseBtn" class="btn btn-primary">
-                    <span>＋</span> 馬を追加
-                </button>
-            </div>
-
-            <!-- Column Labels -->
-            <div class="horse-header-row">
-                <div class="col-num">枠番</div>
-                <div class="col-name">馬名</div>
-                <div class="col-ai">AI勝率 (%)</div>
-                <div class="col-odds">市場オッズ (倍)</div>
-                <div class="col-ev">期待値</div>
-                <div class="col-edge">エッジ</div>
-                <div class="col-action"></div>
-            </div>
-
-            <!-- Horse Rows Container -->
-            <div id="horseList" class="horse-list"></div>
-
-            <!-- Analysis Button -->
-            <div class="analyze-bar">
-                <div class="analyze-info">
-                    <span id="horseCount">0頭</span> 入力済み
-                    <span class="separator">|</span>
-                    <span id="totalAiProb">合計AI勝率: 0%</span>
+            <div class="form-group-row">
+                <div class="form-group">
+                    <label class="prompt">担当者</label>
+                    <input type="text" id="taskAssignee" class="cyber-input" placeholder="名前を入力...">
                 </div>
-                <button id="analyzeBtn" class="btn btn-analyze">
-                    <span class="btn-icon">⚡</span>
-                    期待値を分析する
-                </button>
-            </div>
-        </section>
-
-        <!-- Results Panel -->
-        <section class="panel results-panel" id="resultsPanel" style="display:none;">
-            <div class="panel-header">
-                <h2 class="panel-title">
-                    <span class="panel-icon">📈</span> 分析結果
-                </h2>
-                <div class="panel-actions">
-                    <button id="exportBtn" class="btn btn-ghost">
-                        <span>💾</span> CSVエクスポート
-                    </button>
+                <div class="form-group">
+                    <label class="prompt">進捗状況 (<span id="progressValue">0</span>%)</label>
+                    <input type="range" id="taskProgress" class="cyber-range" min="0" max="100" step="10" value="0">
                 </div>
             </div>
-
-            <!-- Summary Cards -->
-            <div class="summary-cards">
-                <div class="summary-card card-positive">
-                    <div class="summary-card-icon">✅</div>
-                    <div class="summary-card-body">
-                        <div class="summary-card-value" id="positiveEvCount">0</div>
-                        <div class="summary-card-label">期待値プラス馬</div>
-                    </div>
+            <div class="form-group-row">
+                <div class="form-group">
+                    <label class="prompt">開始日</label>
+                    <input type="date" id="taskStartDate" class="cyber-input">
                 </div>
-                <div class="summary-card card-best">
-                    <div class="summary-card-icon">🏆</div>
-                    <div class="summary-card-body">
-                        <div class="summary-card-value" id="bestEvHorse">-</div>
-                        <div class="summary-card-label">最高期待値馬</div>
-                    </div>
-                </div>
-                <div class="summary-card card-info">
-                    <div class="summary-card-icon">📊</div>
-                    <div class="summary-card-body">
-                        <div class="summary-card-value" id="maxEv">-</div>
-                        <div class="summary-card-label">最高期待値</div>
-                    </div>
-                </div>
-                <div class="summary-card card-warning">
-                    <div class="summary-card-icon">⚠️</div>
-                    <div class="summary-card-body">
-                        <div class="summary-card-value" id="negativeEvCount">0</div>
-                        <div class="summary-card-label">期待値マイナス馬</div>
-                    </div>
+                <div class="form-group">
+                    <label class="prompt">期日</label>
+                    <input type="date" id="taskDueDate" class="cyber-input">
                 </div>
             </div>
-
-            <!-- Results Table -->
-            <div class="results-table-wrapper">
-                <table class="results-table" id="resultsTable">
-                    <thead>
-                        <tr>
-                            <th class="th-sort" data-col="num">枠番 <span class="sort-icon">↕</span></th>
-                            <th class="th-sort" data-col="name">馬名</th>
-                            <th class="th-sort" data-col="aiProb">AI勝率 <span class="sort-icon">↕</span></th>
-                            <th class="th-sort" data-col="impliedProb">市場勝率 <span class="sort-icon">↕</span></th>
-                            <th class="th-sort" data-col="odds">オッズ <span class="sort-icon">↕</span></th>
-                            <th class="th-sort" data-col="ev">期待値 <span class="sort-icon">↕</span></th>
-                            <th class="th-sort" data-col="edge">エッジ <span class="sort-icon">↕</span></th>
-                            <th>推奨</th>
-                        </tr>
-                    </thead>
-                    <tbody id="resultsBody"></tbody>
-                </table>
+            <div class="form-group">
+                <label class="prompt">説明</label>
+                <textarea id="taskDesc" class="cyber-textarea" placeholder="詳細な要件やログ..."></textarea>
             </div>
-
-            <!-- Chart Section -->
-            <div class="chart-section">
-                <h3 class="chart-title">📊 勝率比較チャート（AI予測 vs 市場）</h3>
-                <div class="chart-container" id="chartContainer"></div>
+            <div class="modal-actions">
+                <button id="taskCancelBtn" class="cyber-btn">キャンセル</button>
+                <button id="taskDelBtn" class="cyber-btn hidden"
+                    style="border-color: #dc3545; color: #dc3545;">削除</button>
+                <button id="taskSaveBtn" class="cyber-btn"
+                    style="background: #007bff; color: #fff; border:none;">保存</button>
             </div>
+        </div>
+    </div>
 
-            <!-- EV Explanation -->
-            <div class="ev-explanation">
-                <div class="ev-explain-title">💡 期待値の見方</div>
-                <div class="ev-explain-grid">
-                    <div class="ev-explain-item">
-                        <div class="ev-badge ev-positive">EV &gt; 1.0</div>
-                        <div>100円賭けた場合、平均的に利益が見込める</div>
-                    </div>
-                    <div class="ev-explain-item">
-                        <div class="ev-badge ev-neutral">EV = 1.0</div>
-                        <div>損益なし（ブレイクイーブン）</div>
-                    </div>
-                    <div class="ev-explain-item">
-                        <div class="ev-badge ev-negative">EV &lt; 1.0</div>
-                        <div>期待値がマイナス（推奨しない）</div>
-                    </div>
-                </div>
-                <div class="ev-formula">
-                    期待値 (EV) = AI予測勝率 × オッズ &nbsp;|&nbsp; エッジ = AI勝率 − 市場勝率
-                </div>
+    <!-- Event Modal -->
+    <div id="eventModal" class="modal-overlay hidden">
+        <div class="modal-content panel" style="max-width: 400px;">
+            <h2 class="panel-title" id="eventModalTitle">EVENT LOG</h2>
+            <input type="hidden" id="eventDate">
+            <div class="form-group">
+                <label class="prompt">LOG ENTRY</label>
+                <input type="text" id="eventDescInput" class="cyber-input" placeholder="Enter plan / event...">
             </div>
-        </section>
-    </main>
-
-    <!-- Toast notification -->
-    <div class="toast" id="toast"></div>
-
-    <script src="app.js"></script>
+            <div class="modal-actions">
+                <button id="eventCancelBtn" class="cyber-btn">CANCEL</button>
+                <button id="eventDelBtn" class="cyber-btn hidden"
+                    style="border-color: #dc3545; color: #dc3545;">DELETE</button>
+                <button id="eventSaveBtn" class="cyber-btn"
+                    style="background: #28a745; color: #fff; border:none;">SAVE</button>
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

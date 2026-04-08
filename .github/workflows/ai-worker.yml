@@ -1,0 +1,42 @@
+name: AI Autonomous Developer
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - '.ai/instructions.md'
+
+jobs:
+  ai_develop_and_test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: dev
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install @google/genai
+
+      - name: Run AI Agent (Develop & Test)
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: npm run ai-agent
+
+      - name: Commit Changes to dev branch
+        run: |
+          git config --global user.name "AI Agent"
+          git config --global user.email "ai@antigravity.dev"
+          
+          git add .
+          git diff --staged --quiet || (git commit -m "🤖 AI Auto-fix and feature implementation from CI/CD" && git push origin dev)

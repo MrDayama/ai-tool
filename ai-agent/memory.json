@@ -1,0 +1,355 @@
+{
+    "goal": "ハローワールドを出力するプログラム作成して",
+    "tasks": [
+        {
+            "id": 0,
+            "description": "Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+            "status": "pending",
+            "result": ""
+        },
+        {
+            "id": 1,
+            "description": "Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+            "status": "pending",
+            "result": ""
+        },
+        {
+            "id": 2,
+            "description": "Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}",
+            "status": "pending",
+            "result": ""
+        }
+    ],
+    "history": [
+        {
+            "timestamp": "2026-03-09T00:46:26.843467",
+            "role": "system",
+            "message": "Goal set: 機能を説明して"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:27.375873",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:27.929133",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:28.489296",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:29.036024",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:29.594373",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:30.135195",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:30.696200",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:31.237591",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:31.796412",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:32.331674",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:32.888678",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:48.162408",
+            "role": "system",
+            "message": "Goal set: git hub連携したい"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:48.345421",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:48.883187",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:48.883187",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:49.662395",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:49.662395",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:50.196348",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:50.196348",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:50.722150",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:50.722150",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:51.258288",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:51.258288",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:51.800166",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:51.800166",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:52.374562",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:52.374562",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:52.894846",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:52.895354",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:53.418239",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:53.418239",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:53.946007",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:46:53.946007",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:34.643752",
+            "role": "system",
+            "message": "Goal set: ハローワールドを出力するプログラム作成して"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:34.879096",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:35.410130",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:35.410130",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:35.410130",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:35.947527",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:35.947527",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:35.947527",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:36.480181",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:36.480181",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:36.480181",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:37.034578",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:37.034578",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:37.034578",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:37.563340",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:37.563340",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:37.563340",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:38.089738",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:38.089738",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:38.089738",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:38.612475",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:38.612475",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:38.612475",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:39.135945",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:39.135945",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:39.135945",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:39.664805",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:39.664805",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:39.664805",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:40.176215",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:40.176215",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        },
+        {
+            "timestamp": "2026-03-09T00:47:40.176215",
+            "role": "system",
+            "message": "Task added: Error calling LLM: Error code: 404 - {'error': {'message': 'The model `gpt-4-turbo-preview` does not exist or you do not have access to it.', 'type': 'invalid_request_error', 'param': None, 'code': 'model_not_found'}}"
+        }
+    ]
+}
