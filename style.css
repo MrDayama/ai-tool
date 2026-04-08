@@ -734,8 +734,11 @@ body {
   }
 
   /* Calendar - Compact for small screens */
+  .calendar-panel {
+    padding: 0.5rem;
+  }
   .cal-cell {
-    min-height: 60px;
+    min-height: 100px; /* スマホでは高さを少し抑えつつ視認性を確保 */
     padding: 0.2rem;
   }
 

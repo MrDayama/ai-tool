@@ -1,0 +1,45 @@
+﻿git : remote: error: Trace
+: 7243168bcb002d95429bfe0d
+6951aeff9ad970ad923126dffc
+57d2c9c653ade1        
+発生場所 行:1 文字:1
++ git push origin dev --fo
+rce 2>&1 | Out-File -FileP
+ath "git_push_error ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~
+    + CategoryInfo        
+      : NotSpecified: (r  
+  emote: error: ...653a   
+ de1        :String) [    
+], RemoteException
+    + FullyQualifiedError 
+   Id : NativeCommandErr  
+  or
+ 
+remote: error: See https:/
+/gh.io/lfs for more inform
+ation.        
+remote: error: File ai-age
+nt/build/ai-agent/ai-agent
+.pkg is 133.65 MB; this ex
+ceeds GitHub's file size l
+imit of 100.00 MB        
+remote: error: File ai-age
+nt/ai-agent.exe is 133.98 
+MB; this exceeds GitHub's 
+file size limit of 100.00 
+MB        
+remote: error: GH001: Larg
+e files detected. You may 
+want to try Git Large File
+ Storage - https://git-lfs
+.github.com.        
+To https://github.com/MrDa
+yama/ai-tool.git
+ ! [remote rejected] dev -
+> dev (pre-receive hook de
+clined)
+error: failed to push some
+ refs to 'https://github.c
+om/MrDayama/ai-tool.git'
