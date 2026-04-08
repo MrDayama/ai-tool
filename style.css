@@ -106,9 +106,10 @@ body {
 }
 
 #screen-calendar.active {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
+  display: flex;
+  flex-direction: column;
   gap: 1.5rem;
+  width: 100%;
 }
 
 #screen-tasks.active,
@@ -523,12 +524,14 @@ body {
 }
 
 .cal-cell {
-  min-height: 80px;
-  padding: 0.3rem;
+  min-height: 150px;
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
   position: relative;
+  background: var(--panel-bg);
+  border: 1px solid var(--border-light);
 }
 
 .cal-event {
