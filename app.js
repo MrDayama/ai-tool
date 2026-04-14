@@ -1,611 +1,723 @@
-/* ============================================================
-   RACE EV ANALYZER — App Logic
-   ============================================================ */
-
-'use strict';
-
-// ── State ────────────────────────────────────────────────────
-let horses = [];
-let sortState = { col: 'ev', asc: false };
-
-// ── Utility ──────────────────────────────────────────────────
-
-function calcEV(aiProb, odds) {
-    // EV = P_ai × odds  (normalized: 0–1 for aiProb, decimal odds)
-    return (aiProb / 100) * odds;
-}
-
-function calcEdge(aiProb, odds) {
-    // Market implied prob = 1/odds (×100 for %)
-    const impliedProb = (1 / odds) * 100;
-    return aiProb - impliedProb;
-}
-
-function impliedProb(odds) {
-    return (1 / odds) * 100;
-}
-
-function fmt(n, decimals = 2) {
-    return Number.isFinite(n) ? n.toFixed(decimals) : '-';
-}
-
-function showToast(msg, type = 'info') {
-    const t = document.getElementById('toast');
-    const icon = type === 'success' ? '✅' : type === 'warn' ? '⚠️' : 'ℹ️';
-    t.textContent = `${icon} ${msg}`;
-    t.style.borderColor = type === 'success' ? 'rgba(34,213,123,0.5)' :
-        type === 'warn' ? 'rgba(255,154,60,0.5)' :
-            'rgba(79,163,255,0.35)';
-    t.classList.add('show');
-    clearTimeout(t._timeout);
-    t._timeout = setTimeout(() => t.classList.remove('show'), 2800);
-}
-
-// ── Init ─────────────────────────────────────────────────────
-
 document.addEventListener('DOMContentLoaded', () => {
-    initDate();
-    initParticles();
-    bindEvents();
-    initSearch();
-    // Start with 5 empty rows
-    for (let i = 0; i < 5; i++) addHorse();
+    initClock();
+    initCalendar();
+    initTodo();
+    initNotes();
+    initNavigation();
+    initPoker();
 });
 
-function initDate() {
-    const el = document.getElementById('currentDate');
-    const now = new Date();
-    el.textContent = now.toLocaleDateString('ja-JP', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        weekday: 'short'
+function initNavigation() {
+    const navBtns = document.querySelectorAll('.nav-btn');
+    const screens = document.querySelectorAll('.screen-container');
+
+    navBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const screenId = btn.getAttribute('data-screen');
+
+            // Update buttons
+            navBtns.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // Update screens
+            screens.forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${screenId}`).classList.add('active');
+
+            // Specific refresh logic
+            if (screenId === 'tasks') renderTodos();
+            if (screenId === 'gantt') renderGantt(getTodos());
+            if (screenId === 'calendar') renderCalendar();
+            if (screenId === 'poker') { /* Optional poker init code */ }
+        });
     });
-    // Set today as default race date
-    const dateInput = document.getElementById('raceDate');
-    dateInput.value = now.toISOString().split('T')[0];
 }
 
-function initParticles() {
-    const container = document.getElementById('bgParticles');
-    const colors = ['#f5c842', '#4fa3ff', '#22d57b', '#ff9a3c'];
-    for (let i = 0; i < 28; i++) {
-        const p = document.createElement('div');
-        p.className = 'particle';
-        const size = Math.random() * 4 + 2;
-        p.style.cssText = `
-      width: ${size}px; height: ${size}px;
-      left: ${Math.random() * 100}%;
-      bottom: -10px;
-      background: ${colors[Math.floor(Math.random() * colors.length)]};
-      animation-duration: ${Math.random() * 18 + 14}s;
-      animation-delay: ${Math.random() * 12}s;
-    `;
-        container.appendChild(p);
+// ================= CLOCK =================
+function initClock() {
+    const clockEl = document.getElementById('clock');
+    setInterval(() => {
+        const now = new Date();
+        clockEl.textContent = now.toLocaleTimeString('en-US', { hour12: false });
+    }, 1000);
+}
+
+// ================= CALENDAR =================
+let holidaysData = {};
+let currentYear = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
+
+async function fetchHolidays() {
+    try {
+        const res = await fetch('https://holidays-jp.github.io/api/v1/date.json');
+        holidaysData = await res.json();
+        renderCalendar();
+    } catch (e) {
+        console.error("Failed to fetch holidays", e);
+        renderCalendar(); // render without holidays if failed
     }
 }
 
-function bindEvents() {
-    document.getElementById('addHorseBtn').addEventListener('click', () => {
-        addHorse();
-        showToast('馬を追加しました', 'success');
-    });
+function initCalendar() {
+    document.getElementById('prevBtn').addEventListener('click', () => changeMonth(-1));
+    document.getElementById('nextBtn').addEventListener('click', () => changeMonth(1));
 
-    document.getElementById('analyzeBtn').addEventListener('click', runAnalysis);
-    document.getElementById('clearAllBtn').addEventListener('click', clearAll);
-    document.getElementById('loadSampleBtn').addEventListener('click', loadSample);
-    document.getElementById('exportBtn').addEventListener('click', exportCSV);
+    document.getElementById('eventCancelBtn').addEventListener('click', closeEventModal);
+    document.getElementById('eventSaveBtn').addEventListener('click', saveEventFromModal);
+    document.getElementById('eventDelBtn').addEventListener('click', deleteEventFromModal);
 
-    // Sort header clicks
-    document.querySelectorAll('.th-sort').forEach(th => {
-        th.addEventListener('click', () => {
-            const col = th.dataset.col;
-            if (sortState.col === col) {
-                sortState.asc = !sortState.asc;
-            } else {
-                sortState.col = col;
-                sortState.asc = false;
-            }
-            renderResultsTable();
-        });
-    });
+    fetchHolidays();
 }
 
-// ── Horse Row Management ──────────────────────────────────────
-
-function addHorse(data = {}) {
-    const id = Date.now() + Math.random();
-    const horse = { id, num: '', name: '', aiProb: '', odds: '' };
-    Object.assign(horse, data);
-    horses.push(horse);
-    renderHorseList();
+function changeMonth(dir) {
+    currentMonth += dir;
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    else if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    renderCalendar();
 }
 
-function removeHorse(id) {
-    horses = horses.filter(h => h.id !== id);
-    renderHorseList();
+function getEvents() {
+    return JSON.parse(localStorage.getItem('sys_events') || '{}');
 }
 
-function renderHorseList() {
-    const list = document.getElementById('horseList');
-
-    if (horses.length === 0) {
-        list.innerHTML = `
-      <div class="empty-state">
-        <div class="empty-state-icon">🐴</div>
-        <div>「馬を追加」ボタンから出走馬を入力してください</div>
-      </div>`;
-        updateStats();
-        return;
-    }
-
-    list.innerHTML = '';
-    horses.forEach((horse, idx) => {
-        const row = document.createElement('div');
-        row.className = 'horse-row';
-        row.dataset.id = horse.id;
-
-        const evVal = (horse.aiProb !== '' && horse.odds !== '')
-            ? calcEV(+horse.aiProb, +horse.odds) : null;
-        const edgeVal = (horse.aiProb !== '' && horse.odds !== '')
-            ? calcEdge(+horse.aiProb, +horse.odds) : null;
-
-        const evClass = evVal === null ? 'neutral' : evVal >= 1 ? 'positive' : 'negative';
-        const edgeClass = edgeVal === null ? 'neutral' : edgeVal >= 0 ? 'positive' : 'negative';
-        const evText = evVal !== null ? evVal.toFixed(3) : '--';
-        const edgeText = edgeVal !== null ? (edgeVal >= 0 ? '+' : '') + edgeVal.toFixed(1) + '%' : '--';
-
-        row.innerHTML = `
-      <div class="horse-num-display">${idx + 1}</div>
-      <input type="text" class="horse-name" placeholder="馬名を入力" value="${escHtml(horse.name)}" data-field="name" />
-      <input type="number" class="horse-ai" placeholder="例: 25.0" step="0.1" min="0" max="100" value="${horse.aiProb}" data-field="aiProb" />
-      <input type="number" class="horse-odds" placeholder="例: 4.5" step="0.1" min="1" value="${horse.odds}" data-field="odds" />
-      <div class="ev-preview ${evClass}">${evText}</div>
-      <div class="edge-preview ${edgeClass}">${edgeText}</div>
-      <button class="btn-remove-horse" title="削除">✕</button>
-    `;
-
-        // Field changes
-        row.querySelectorAll('input').forEach(input => {
-            input.addEventListener('input', e => {
-                const h = horses.find(h => h.id === horse.id);
-                if (!h) return;
-                const field = e.target.dataset.field;
-                h[field] = e.target.value;
-                // Live preview
-                updateHorseRowPreview(row, h);
-                updateStats();
-            });
-        });
-
-        // Remove button
-        row.querySelector('.btn-remove-horse').addEventListener('click', () => {
-            removeHorse(horse.id);
-        });
-
-        list.appendChild(row);
-    });
-
-    updateStats();
+function saveEvents(eventsDict) {
+    localStorage.setItem('sys_events', JSON.stringify(eventsDict));
 }
 
-function updateHorseRowPreview(row, horse) {
-    const evEl = row.querySelector('.ev-preview');
-    const edgeEl = row.querySelector('.edge-preview');
+function openEventModal(dateStr) {
+    const events = getEvents();
+    const existing = events[dateStr];
 
-    if (horse.aiProb !== '' && horse.odds !== '' && +horse.odds > 0) {
-        const ev = calcEV(+horse.aiProb, +horse.odds);
-        const edge = calcEdge(+horse.aiProb, +horse.odds);
+    document.getElementById('eventModalTitle').textContent = `ログ - ${dateStr}`;
+    document.getElementById('eventDate').value = dateStr;
+    const input = document.getElementById('eventDescInput');
+    const delBtn = document.getElementById('eventDelBtn');
 
-        evEl.textContent = ev.toFixed(3);
-        evEl.className = 'ev-preview ' + (ev >= 1 ? 'positive' : 'negative');
-
-        edgeEl.textContent = (edge >= 0 ? '+' : '') + edge.toFixed(1) + '%';
-        edgeEl.className = 'edge-preview ' + (edge >= 0 ? 'positive' : 'negative');
+    if (existing) {
+        input.value = existing;
+        delBtn.classList.remove('hidden');
     } else {
-        evEl.textContent = '--';
-        evEl.className = 'ev-preview neutral';
-        edgeEl.textContent = '--';
-        edgeEl.className = 'edge-preview neutral';
-    }
-}
-
-function updateStats() {
-    const valid = horses.filter(h => h.aiProb !== '' && h.odds !== '');
-    document.getElementById('horseCount').textContent = `${horses.length}頭`;
-    const totalAI = valid.reduce((s, h) => s + +h.aiProb, 0);
-    const totalEl = document.getElementById('totalAiProb');
-    totalEl.textContent = `合計AI勝率: ${totalAI.toFixed(1)}%`;
-    totalEl.style.color = Math.abs(totalAI - 100) < 5 ? 'var(--green)' :
-        Math.abs(totalAI - 100) < 15 ? 'var(--orange)' :
-            'var(--red)';
-}
-
-// ── Analysis ─────────────────────────────────────────────────
-
-function runAnalysis() {
-    const valid = horses.filter(h =>
-        h.name.trim() !== '' &&
-        h.aiProb !== '' && +h.aiProb > 0 &&
-        h.odds !== '' && +h.odds >= 1
-    );
-
-    if (valid.length < 2) {
-        showToast('少なくとも2頭分のデータを入力してください', 'warn');
-        return;
+        input.value = '';
+        delBtn.classList.add('hidden');
     }
 
-    // Calculate all metrics
-    const analyzed = valid.map((h, idx) => ({
-        ...h,
-        num: h.num || (idx + 1),
-        aiProb: +h.aiProb,
-        odds: +h.odds,
-        impliedProb: impliedProb(+h.odds),
-        ev: calcEV(+h.aiProb, +h.odds),
-        edge: calcEdge(+h.aiProb, +h.odds),
-    }));
-
-    // Sort by EV descending by default
-    analyzed.sort((a, b) => b.ev - a.ev);
-
-    // Show results panel
-    const panel = document.getElementById('resultsPanel');
-    panel.style.display = 'block';
-    panel.classList.add('fade-in');
-
-    // Update summary cards
-    const positiveEv = analyzed.filter(h => h.ev >= 1);
-    const negativeEv = analyzed.filter(h => h.ev < 1);
-    const topHorse = analyzed[0];
-
-    document.getElementById('positiveEvCount').textContent = positiveEv.length;
-    document.getElementById('negativeEvCount').textContent = negativeEv.length;
-    document.getElementById('bestEvHorse').textContent = topHorse.name;
-    document.getElementById('maxEv').textContent = topHorse.ev.toFixed(3);
-
-    // Store for sort
-    window._analyzedData = analyzed;
-
-    renderResultsTable();
-    renderChart(analyzed);
-
-    // Scroll to results
-    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    showToast('分析完了！期待値の高い馬を特定しました', 'success');
+    document.getElementById('eventModal').classList.remove('hidden');
+    input.focus();
 }
 
-function renderResultsTable() {
-    const data = [...(window._analyzedData || [])];
-    if (!data.length) return;
+function closeEventModal() {
+    document.getElementById('eventModal').classList.add('hidden');
+}
 
-    // Sort
-    const col = sortState.col;
-    data.sort((a, b) => {
-        let va = a[col], vb = b[col];
-        if (col === 'name') { va = va || ''; vb = vb || ''; return sortState.asc ? va.localeCompare(vb) : vb.localeCompare(va); }
-        return sortState.asc ? va - vb : vb - va;
+function saveEventFromModal() {
+    const dateStr = document.getElementById('eventDate').value;
+    const desc = document.getElementById('eventDescInput').value.trim();
+    if (!desc) { deleteEventFromModal(); return; }
+
+    const events = getEvents();
+    events[dateStr] = desc;
+    saveEvents(events);
+    closeEventModal();
+    renderCalendar();
+}
+
+function deleteEventFromModal() {
+    const dateStr = document.getElementById('eventDate').value;
+    const events = getEvents();
+    if (events[dateStr]) {
+        delete events[dateStr];
+        saveEvents(events);
+    }
+    closeEventModal();
+    renderCalendar();
+}
+
+
+function renderCalendar() {
+    const grid = document.getElementById('calendarGrid');
+    const label = document.getElementById('monthYear');
+    grid.innerHTML = '';
+
+    // YYYY-MM display
+    label.textContent = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+
+    // Header row
+    const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+    days.forEach((d, i) => {
+        const h = document.createElement('div');
+        h.className = 'cal-header-cell';
+        if (i === 0) h.classList.add('text-sun');
+        if (i === 6) h.classList.add('text-sat');
+        h.textContent = d;
+        grid.appendChild(h);
     });
 
-    const tbody = document.getElementById('resultsBody');
-    tbody.innerHTML = '';
+    const today = new Date();
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const eventsDict = getEvents();
+    const todos = getTodos();
 
-    data.forEach((horse, idx) => {
-        const isTop = horse.ev === Math.max(...data.map(d => d.ev));
-        const tr = document.createElement('tr');
-        if (isTop) tr.classList.add('row-top1');
+    // Blanks
+    for (let i = 0; i < firstDay; i++) {
+        const blank = document.createElement('div');
+        blank.className = 'cal-cell blank';
+        grid.appendChild(blank);
+    }
 
-        // Recommendation
-        let recHTML;
-        if (horse.ev >= 1.3 && horse.edge >= 10) {
-            recHTML = '<span class="rec-badge rec-strong">🔥 強く推奨</span>';
-        } else if (horse.ev >= 1.0) {
-            recHTML = '<span class="rec-badge rec-moderate">👍 推奨</span>';
-        } else {
-            recHTML = '<span class="rec-badge rec-skip">— スキップ</span>';
+    // Days
+    for (let i = 1; i <= daysInMonth; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell';
+
+        const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+        const dayOfWeek = (firstDay + i - 1) % 7;
+
+        if (dayOfWeek === 0) cell.classList.add('is-sunday');
+        if (dayOfWeek === 6) cell.classList.add('is-saturday');
+
+        let holidayName = holidaysData[dateStr];
+        if (holidayName) {
+            cell.classList.add('is-holiday');
         }
 
-        const rankEmoji = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
-        const evClass = horse.ev >= 1.3 ? 'ev-positive' : horse.ev >= 1.0 ? 'ev-neutral' : 'ev-negative';
-        const edgeCls = horse.edge >= 0 ? 'edge-positive' : 'edge-negative';
+        if (today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === i) {
+            cell.classList.add('today');
+        }
 
-        const aiBarW = Math.min(horse.aiProb, 100).toFixed(1);
-        const mktBarW = Math.min(horse.impliedProb, 100).toFixed(1);
+        cell.onclick = () => openEventModal(dateStr);
 
-        tr.innerHTML = `
-      <td class="td-num">${horse.num}</td>
-      <td class="td-name">
-        ${rankEmoji ? `<span class="rank-badge">${rankEmoji}</span>` : ''}
-        ${escHtml(horse.name)}
-      </td>
-      <td class="prob-cell">
-        <div class="prob-bar-wrap">
-          <div class="prob-bar-bg"><div class="prob-bar-fill ai" style="width:${aiBarW}%"></div></div>
-          <span class="prob-value" style="color:var(--blue)">${horse.aiProb.toFixed(1)}%</span>
-        </div>
-      </td>
-      <td class="prob-cell">
-        <div class="prob-bar-wrap">
-          <div class="prob-bar-bg"><div class="prob-bar-fill mkt" style="width:${mktBarW}%"></div></div>
-          <span class="prob-value" style="color:var(--orange)">${horse.impliedProb.toFixed(1)}%</span>
-        </div>
-      </td>
-      <td style="font-family:var(--font-display);font-weight:700;">${horse.odds.toFixed(1)}倍</td>
-      <td><span class="ev-badge ${evClass}">${horse.ev.toFixed(3)}</span></td>
-      <td class="${edgeCls}">${horse.edge >= 0 ? '+' : ''}${horse.edge.toFixed(1)}%</td>
-      <td>${recHTML}</td>
-    `;
-        tbody.appendChild(tr);
-    });
+        let eventHtml = '';
+        if (eventsDict[dateStr]) {
+            eventHtml += `<div class="cal-event">${escapeHTML(eventsDict[dateStr])}</div>`;
+        }
+
+        cell.innerHTML = `
+            <span class="cal-day-num">${i}</span>
+            ${holidayName ? `<span class="holiday-name">${holidayName}</span>` : ''}
+            ${eventHtml}
+        `;
+        grid.appendChild(cell);
+    }
 }
 
-// ── Chart ─────────────────────────────────────────────────────
+// ================= TO-DO (ISSUE TRACKER) =================
+function initTodo() {
+    document.getElementById('todoAddBtn').addEventListener('click', () => openTaskModal());
+    document.getElementById('taskCancelBtn').addEventListener('click', closeTaskModal);
+    document.getElementById('taskSaveBtn').addEventListener('click', saveTaskFromModal);
+    document.getElementById('taskDelBtn').addEventListener('click', deleteTaskFromModal);
 
-function renderChart(data) {
-    const container = document.getElementById('chartContainer');
+    const progressInput = document.getElementById('taskProgress');
+    const progressValue = document.getElementById('progressValue');
+    progressInput.addEventListener('input', () => {
+        progressValue.textContent = progressInput.value;
+    });
+
+    document.getElementById('todoFilter').addEventListener('change', renderTodos);
+    document.getElementById('todoFilterAssignee').addEventListener('change', renderTodos);
+
+    renderTodos();
+}
+
+function getTodos() {
+    return JSON.parse(localStorage.getItem('sys_todos_v2') || '[]');
+}
+
+function saveTodos(todos) {
+    localStorage.setItem('sys_todos_v2', JSON.stringify(todos));
+}
+
+function openTaskModal(taskId = null) {
+    const modal = document.getElementById('taskModal');
+    const title = document.getElementById('modalTitle');
+    const idInput = document.getElementById('taskId');
+    const subInput = document.getElementById('taskSubject');
+    const parentSelect = document.getElementById('taskParentId');
+    const statSelect = document.getElementById('taskStatus');
+    const prioSelect = document.getElementById('taskPriority');
+    const assigneeInput = document.getElementById('taskAssignee');
+    const progressInput = document.getElementById('taskProgress');
+    const progressValueText = document.getElementById('progressValue');
+    const startInput = document.getElementById('taskStartDate');
+    const endInput = document.getElementById('taskDueDate');
+    const descInput = document.getElementById('taskDesc');
+    const delBtn = document.getElementById('taskDelBtn');
+
+    const todos = getTodos();
+
+    // Populate parent task options (don't allow self or nested children in a simple system)
+    parentSelect.innerHTML = '<option value="">(なし / 親チケットとして登録)</option>';
+    const availableParents = todos.filter(t => !t.parentId && (!taskId || t.id !== parseInt(taskId)));
+    availableParents.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        opt.textContent = `#${t.id.toString().slice(-4)} ${t.subject}`;
+        parentSelect.appendChild(opt);
+    });
+
+    if (taskId) {
+        const task = todos.find(t => t.id === taskId);
+        if (!task) return;
+        title.textContent = `編集 #${taskId.toString().slice(-4)}`;
+        idInput.value = task.id;
+        subInput.value = task.subject;
+        parentSelect.value = task.parentId || '';
+        statSelect.value = task.status;
+        prioSelect.value = task.priority;
+        assigneeInput.value = task.assignee || '';
+        progressInput.value = task.progress || 0;
+        progressValueText.textContent = task.progress || 0;
+        startInput.value = task.taskStartDate || '';
+        endInput.value = task.taskDueDate || '';
+        descInput.value = task.desc || '';
+        delBtn.classList.remove('hidden');
+    } else {
+        title.textContent = '新規チケット';
+        idInput.value = '';
+        subInput.value = '';
+        parentSelect.value = '';
+        statSelect.value = 'New';
+        prioSelect.value = 'Normal';
+        assigneeInput.value = '';
+        progressInput.value = 0;
+        progressValueText.textContent = 0;
+        startInput.value = '';
+        endInput.value = '';
+        descInput.value = '';
+        delBtn.classList.add('hidden');
+    }
+    modal.classList.remove('hidden');
+}
+
+function closeTaskModal() {
+    document.getElementById('taskModal').classList.add('hidden');
+}
+
+function saveTaskFromModal() {
+    const id = document.getElementById('taskId').value;
+    const subject = document.getElementById('taskSubject').value.trim();
+    if (!subject) return;
+
+    let todos = getTodos();
+    const newData = {
+        subject: subject,
+        parentId: document.getElementById('taskParentId').value ? parseInt(document.getElementById('taskParentId').value) : null,
+        status: document.getElementById('taskStatus').value,
+        priority: document.getElementById('taskPriority').value,
+        assignee: document.getElementById('taskAssignee').value.trim(),
+        progress: parseInt(document.getElementById('taskProgress').value),
+        taskStartDate: document.getElementById('taskStartDate').value,
+        taskDueDate: document.getElementById('taskDueDate').value,
+        desc: document.getElementById('taskDesc').value,
+        updatedAt: new Date().toISOString()
+    };
+
+    if (id) {
+        const tIndex = todos.findIndex(t => t.id === parseInt(id));
+        if (tIndex > -1) {
+            todos[tIndex] = { ...todos[tIndex], ...newData };
+        }
+    } else {
+        todos.push({ id: Date.now(), createdAt: new Date().toISOString(), ...newData });
+    }
+
+    saveTodos(todos);
+    updateAssigneeFilter(todos);
+    closeTaskModal();
+    renderTodos();
+    renderCalendar();
+}
+
+function deleteTaskFromModal() {
+    const id = document.getElementById('taskId').value;
+    if (id) {
+        let todos = getTodos();
+        // Also clean parentId for children
+        todos = todos.map(t => t.parentId === parseInt(id) ? { ...t, parentId: null } : t);
+        todos = todos.filter(t => t.id !== parseInt(id));
+        saveTodos(todos);
+    }
+    closeTaskModal();
+    renderTodos();
+    renderCalendar();
+}
+
+function updateAssigneeFilter(todos) {
+    const filter = document.getElementById('todoFilterAssignee');
+    const currentVal = filter.value;
+    const assignees = [...new Set(todos.map(t => t.assignee).filter(a => a))];
+
+    filter.innerHTML = '<option value="All">すべての担当者</option>';
+    assignees.sort().forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a;
+        opt.textContent = a;
+        filter.appendChild(opt);
+    });
+    filter.value = assignees.includes(currentVal) ? currentVal : 'All';
+}
+
+function renderTodos() {
+    const list = document.getElementById('todoList');
+    const mobileList = document.getElementById('todoMobileList');
+    list.innerHTML = '';
+    if (mobileList) mobileList.innerHTML = '';
+
+    const statusFilter = document.getElementById('todoFilter').value;
+    const assigneeFilter = document.getElementById('todoFilterAssignee').value;
+    let todos = getTodos();
+
+    updateAssigneeFilter(todos);
+
+    // Filter
+    let filtered = todos;
+    if (statusFilter !== 'All') {
+        filtered = filtered.filter(t => t.status === statusFilter);
+    }
+    if (assigneeFilter !== 'All') {
+        filtered = filtered.filter(t => t.assignee === assigneeFilter);
+    }
+
+    // Organization: Hierarchy
+    const parents = filtered.filter(t => !t.parentId);
+    const childrenMap = {};
+    filtered.forEach(t => {
+        if (t.parentId) {
+            if (!childrenMap[t.parentId]) childrenMap[t.parentId] = [];
+            childrenMap[t.parentId].push(t);
+        }
+    });
+
+    // Sort parents by updated
+    parents.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+    if (filtered.length === 0) {
+        const emptyMsg = '<tr><td colspan="6" style="text-align:center;color:#999;padding:2rem;">チケットが見つかりません</td></tr>';
+        list.innerHTML = emptyMsg;
+        if (mobileList) mobileList.innerHTML = '<p style="text-align:center;color:#999;padding:2rem;">チケットなし</p>';
+    } else {
+        const renderRow = (t, isChild = false) => {
+            // Table View
+            const tr = document.createElement('tr');
+            tr.onclick = () => openTaskModal(t.id);
+            if (isChild) tr.classList.add('child-row');
+
+            const shortId = t.id.toString().slice(-4);
+            const dateStr = t.taskDueDate || '-';
+            const assignee = t.assignee || '-';
+            const progress = t.progress || 0;
+
+            const statMap = { 'New': '新規', 'In Progress': '進行中', 'Resolved': '完了' };
+            const statClass = 'stat-' + t.status.replace(' ', '_');
+
+            tr.innerHTML = `
+                <td>#${shortId}</td>
+                <td><span class="status-badge ${statClass}">${statMap[t.status] || t.status}</span></td>
+                <td style="font-size:0.85rem;">${escapeHTML(assignee)}</td>
+                <td>
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: ${progress}%"></div>
+                    </div>
+                    <span class="progress-text">${progress}%</span>
+                </td>
+                <td class="task-subject ${isChild ? 'child-task-indent' : ''}">${escapeHTML(t.subject)}</td>
+                <td style="color:#666; font-size:0.8rem;">${dateStr}</td>
+            `;
+            list.appendChild(tr);
+
+            // Mobile Card View
+            if (mobileList) {
+                const card = document.createElement('div');
+                card.className = 'mobile-task-card';
+                card.onclick = () => openTaskModal(t.id);
+                card.innerHTML = `
+                    <div class="mtc-header">
+                        <span class="status-badge ${statClass}">${statMap[t.status] || t.status}</span>
+                        <span style="font-family:var(--font-mono); font-size:0.8rem; color:#999;">#${shortId}</span>
+                    </div>
+                    <span class="mtc-subject">${isChild ? '↳ ' : ''}${escapeHTML(t.subject)}</span>
+                    <div class="progress-container" style="margin-bottom:0.8rem;">
+                        <div class="progress-bar" style="width: ${progress}%"></div>
+                    </div>
+                    <div class="mtc-meta">
+                        <span>担当: ${escapeHTML(assignee)}</span>
+                        <span>進捗: ${progress}%</span>
+                    </div>
+                    <div class="mtc-meta" style="margin-top:0.3rem;">
+                        <span>期限: ${dateStr}</span>
+                    </div>
+                `;
+                mobileList.appendChild(card);
+            }
+        };
+
+        parents.forEach(p => {
+            renderRow(p);
+            const children = childrenMap[p.id] || [];
+            children.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+            children.forEach(c => renderRow(c, true));
+        });
+
+        // Render orpaned children (if parent is filtered out)
+        filtered.filter(t => t.parentId && !parents.find(p => p.id === t.parentId)).forEach(orph => renderRow(orph, true));
+    }
+
+    renderGantt(todos);
+}
+
+function renderGantt(todos) {
+    const container = document.getElementById('ganttContainer');
+    if (!container) return;
     container.innerHTML = '';
 
-    const maxProb = Math.max(
-        ...data.map(h => Math.max(h.aiProb, h.impliedProb))
-    );
-    const scale = 160 / maxProb; // px per %
-
-    data.forEach(horse => {
-        const aiH = Math.max(4, horse.aiProb * scale);
-        const mktH = Math.max(4, horse.impliedProb * scale);
-
-        const group = document.createElement('div');
-        group.className = 'chart-group';
-        group.innerHTML = `
-      <div class="chart-bars">
-        <div class="chart-bar chart-bar-ai"
-          style="height:${aiH}px"
-          data-tooltip="AI: ${horse.aiProb.toFixed(1)}%">
-        </div>
-        <div class="chart-bar chart-bar-mkt"
-          style="height:${mktH}px"
-          data-tooltip="市場: ${horse.impliedProb.toFixed(1)}%">
-        </div>
-      </div>
-      <div class="chart-name">${escHtml(horse.name)}</div>
-    `;
-        container.appendChild(group);
-    });
-
-    // Legend
-    const legend = document.createElement('div');
-    legend.style.cssText = 'width:100%; display:flex; gap:20px; justify-content:center; padding-top:8px;';
-    legend.innerHTML = `
-    <div class="legend-item"><div class="legend-dot legend-ai"></div>AI予測勝率</div>
-    <div class="legend-item"><div class="legend-dot legend-mkt"></div>市場勝率（インプライド）</div>
-  `;
-    container.after(legend);
-}
-
-// ── Sample Data ───────────────────────────────────────────────
-
-function loadSample() {
-    horses = [];
-    document.getElementById('raceName').value = '第70回 大阪杯 (G1)';
-    document.getElementById('raceVenue').value = '阪神競馬場';
-    document.getElementById('raceDistance').value = '2000m 芝';
-
-    const sampleHorses = [
-        { name: 'ドウデュース', aiProb: '28.5', odds: '2.8' },
-        { name: 'イクイノックス', aiProb: '22.0', odds: '3.5' },
-        { name: 'スターズオンアース', aiProb: '18.0', odds: '5.2' },
-        { name: 'ジャックドール', aiProb: '12.5', odds: '6.8' },
-        { name: 'ダノンベルーガ', aiProb: '7.0', odds: '12.0' },
-        { name: 'ヴェルトライゼンデ', aiProb: '5.5', odds: '15.5' },
-        { name: 'マテンロウオリオン', aiProb: '3.0', odds: '22.0' },
-        { name: 'ラーグルフ', aiProb: '1.5', odds: '45.0' },
-    ];
-
-    sampleHorses.forEach((h, i) => {
-        addHorse({ ...h, num: i + 1 });
-    });
-
-    showToast('サンプルデータを読み込みました！', 'success');
-    setTimeout(() => {
-        document.getElementById('analyzeBtn').scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 200);
-}
-
-// ── Clear ─────────────────────────────────────────────────────
-
-function clearAll() {
-    horses = [];
-    renderHorseList();
-    document.getElementById('resultsPanel').style.display = 'none';
-    document.getElementById('raceName').value = '';
-    document.getElementById('raceVenue').value = '';
-    document.getElementById('raceDistance').value = '';
-    window._analyzedData = null;
-    showToast('データをクリアしました');
-    // Re-add 3 blank rows
-    for (let i = 0; i < 3; i++) addHorse();
-}
-
-// ── CSV Export ────────────────────────────────────────────────
-
-function exportCSV() {
-    const data = window._analyzedData;
-    if (!data || data.length === 0) {
-        showToast('先に分析を実行してください', 'warn');
+    const datedTasks = todos.filter(t => t.taskStartDate && t.taskDueDate);
+    if (datedTasks.length === 0) {
+        container.innerHTML = '<p style="color:#999; text-align:center; padding:1rem;">日程が設定されたチケットがありません</p>';
         return;
     }
 
-    const raceName = document.getElementById('raceName').value || 'レース分析';
-    const raceDate = document.getElementById('raceDate').value || new Date().toISOString().split('T')[0];
-    const venue = document.getElementById('raceVenue').value || '';
+    let minDate = new Date(Math.min(...datedTasks.map(t => new Date(t.taskStartDate))));
+    let maxDate = new Date(Math.max(...datedTasks.map(t => new Date(t.taskDueDate))));
+    minDate.setDate(minDate.getDate() - 2);
+    maxDate.setDate(maxDate.getDate() + 5);
 
-    const header = ['枠番', '馬名', 'AI勝率(%)', '市場勝率(%)', 'オッズ(倍)', '期待値', 'エッジ(%)', '推奨'];
-    const rows = data.map(h => [
-        h.num,
-        h.name,
-        h.aiProb.toFixed(1),
-        h.impliedProb.toFixed(1),
-        h.odds.toFixed(1),
-        h.ev.toFixed(4),
-        h.edge.toFixed(2),
-        h.ev >= 1.3 && h.edge >= 10 ? '強く推奨' : h.ev >= 1.0 ? '推奨' : 'スキップ'
-    ]);
+    const dayDiff = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24));
 
-    const meta = `# ${raceName} - ${raceDate} ${venue}\n`;
-    const csvContent = meta + [header, ...rows].map(r => r.join(',')).join('\n');
+    const headerRow = document.createElement('div');
+    headerRow.className = 'gantt-header-row';
+    const labelPad = document.createElement('div');
+    labelPad.className = 'gantt-label-column-header'; // Changed to use class for styling
+    headerRow.appendChild(labelPad);
 
-    const bom = '\uFEFF'; // UTF-8 BOM for Excel
-    const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `競馬EV分析_${raceDate}_${raceName}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    showToast('CSVをエクスポートしました', 'success');
-}
-
-// ── Race Search ───────────────────────────────────────────────
-
-const MOCK_RACES = [
-    {
-        name: '第93回 日本ダービー (G1)',
-        date: '2026-05-31',
-        venue: '中央競馬場（東京）',
-        distance: '2400m 芝',
-        horses: [
-            { name: 'イクイノックス', aiProb: '35.0', odds: '2.1' },
-            { name: 'ドウデュース', aiProb: '18.0', odds: '4.5' },
-            { name: 'ジャスティンパレス', aiProb: '14.0', odds: '6.0' },
-            { name: 'タイトルホルダー', aiProb: '9.0', odds: '11.0' },
-            { name: 'リバティアイランド', aiProb: '6.0', odds: '18.0' },
-            { name: 'スターズオンアース', aiProb: '5.0', odds: '22.0' }
-        ]
-    },
-    {
-        name: '第173回 天皇賞（春） (G1)',
-        date: '2026-05-03',
-        venue: '京都競馬場',
-        distance: '3200m 芝',
-        horses: [
-            { name: 'タイトルホルダー', aiProb: '28.0', odds: '3.0' },
-            { name: 'テーオーロイヤル', aiProb: '20.0', odds: '4.2' },
-            { name: 'サリエラ', aiProb: '15.0', odds: '7.5' },
-            { name: 'ドゥレッツァ', aiProb: '10.0', odds: '11.0' },
-            { name: 'シルヴァーソニック', aiProb: '8.0', odds: '16.0' }
-        ]
-    },
-    {
-        name: '第67回 宝塚記念 (G1)',
-        date: '2026-06-28',
-        venue: '阪神競馬場',
-        distance: '2200m 芝',
-        horses: []
-    },
-    {
-        name: '第45回 ジャパンカップ (G1)',
-        date: '2025-11-30',
-        venue: '中央競馬場（東京）',
-        distance: '2400m 芝',
-        horses: []
+    for (let i = 0; i <= dayDiff; i++) {
+        const d = new Date(minDate);
+        d.setDate(d.getDate() + i);
+        const dayEl = document.createElement('div');
+        dayEl.className = 'gantt-header-day';
+        dayEl.textContent = d.getDate();
+        if (d.getDay() === 0) dayEl.style.color = 'var(--red)';
+        if (d.getDay() === 6) dayEl.style.color = 'var(--cyan)';
+        headerRow.appendChild(dayEl);
     }
-];
+    container.appendChild(headerRow);
 
-function initSearch() {
-    const input = document.getElementById('raceSearchInput');
-    const dropdown = document.getElementById('raceSearchDropdown');
+    // Group tasks by person for Gantt if needed? User asked to "divide by person" (人でわける)
+    // Let's sort by assignee first
+    datedTasks.sort((a, b) => (a.assignee || '').localeCompare(b.assignee || ''));
 
-    if (!input || !dropdown) return;
+    datedTasks.forEach(t => {
+        const row = document.createElement('div');
+        row.className = 'gantt-row';
+        row.onclick = () => openTaskModal(t.id);
 
-    // Close dropdown on outside click
-    document.addEventListener('click', (e) => {
-        if (!e.target.closest('.search-input-wrapper')) {
-            dropdown.classList.add('hidden');
+        const label = document.createElement('div');
+        label.className = 'gantt-label';
+        label.innerHTML = `<span style="color:#999;font-size:0.7rem;">${escapeHTML(t.assignee || '未設定')}</span><br>${escapeHTML(t.subject)}`;
+        label.style.lineHeight = "1.2";
+        row.appendChild(label);
+
+        const timeline = document.createElement('div');
+        timeline.className = 'gantt-timeline';
+
+        const start = new Date(t.taskStartDate);
+        const end = new Date(t.taskDueDate);
+
+        const left = ((start - minDate) / (maxDate - minDate)) * 100;
+        const width = ((end - start) / (maxDate - minDate)) * 100 + (100 / dayDiff);
+
+        const bar = document.createElement('div');
+        bar.className = 'gantt-bar';
+        bar.style.left = left + '%';
+        bar.style.width = width + '%';
+
+        // Add text and inner progress coloring
+        if (t.status === 'Resolved' || t.progress === 100) {
+            bar.style.background = '#28a745';
+            bar.textContent = `DONE ${t.progress}%`;
+        } else {
+            // Dual-tone bar to show progress inside the bar itself
+            bar.style.background = `linear-gradient(to right, #007bff ${t.progress}%, #6c757d ${t.progress}%)`;
+            bar.style.color = '#fff';
+            bar.textContent = `${t.progress}%`;
         }
+
+        timeline.appendChild(bar);
+        row.appendChild(timeline);
+        container.appendChild(row);
     });
-
-    input.addEventListener('focus', () => renderSearch(input.value));
-    input.addEventListener('input', (e) => renderSearch(e.target.value));
-
-    function renderSearch(query) {
-        const q = query.trim().toLowerCase();
-        let results = MOCK_RACES;
-        if (q) {
-            results = MOCK_RACES.filter(r =>
-                r.name.toLowerCase().includes(q) ||
-                r.venue.includes(q) ||
-                r.distance.includes(q)
-            );
-        }
-
-        if (results.length === 0) {
-            dropdown.innerHTML = '<div class="search-item"><div class="search-item-meta">該当するレースが見つかりません</div></div>';
-            dropdown.classList.remove('hidden');
-            return;
-        }
-
-        dropdown.innerHTML = results.map((r, i) => `
-            <div class="search-item" data-index="${MOCK_RACES.indexOf(r)}">
-                <div class="search-item-title">${escHtml(r.name)}</div>
-                <div class="search-item-meta">📅 ${r.date} &nbsp;|&nbsp; 📍 ${r.venue} &nbsp;|&nbsp; 🏇 ${r.distance}</div>
-            </div>
-        `).join('');
-
-        dropdown.querySelectorAll('.search-item').forEach(item => {
-            item.addEventListener('click', () => {
-                const idx = item.dataset.index;
-                if (idx !== undefined) selectRace(MOCK_RACES[idx]);
-                dropdown.classList.add('hidden');
-                input.value = ''; // 選択後はクリア
-            });
-        });
-
-        dropdown.classList.remove('hidden');
-    }
 }
 
-function selectRace(race) {
-    document.getElementById('raceName').value = race.name;
-    document.getElementById('raceDate').value = race.date;
-
-    const venueSelect = document.getElementById('raceVenue');
-    let optionExists = Array.from(venueSelect.options).some(opt => opt.value === race.venue || opt.text === race.venue);
-    if (!optionExists) {
-        const opt = document.createElement('option');
-        opt.value = opt.text = race.venue;
-        venueSelect.add(opt);
-    }
-    Array.from(venueSelect.options).forEach(opt => {
-        if (opt.value === race.venue || opt.text === race.venue) opt.selected = true;
+// ================= NOTES =================
+function initNotes() {
+    const area = document.getElementById('notesArea');
+    if (!area) return;
+    area.value = localStorage.getItem('sys_notes') || '';
+    area.addEventListener('input', () => {
+        localStorage.setItem('sys_notes', area.value);
     });
-
-    document.getElementById('raceDistance').value = race.distance;
-
-    // Load available horses or reset
-    if (race.horses && race.horses.length > 0) {
-        horses = [];
-        race.horses.forEach((h, i) => {
-            addHorse({ ...h, num: i + 1 });
-        });
-        while (horses.length < 5) addHorse();
-    } else {
-        horses = [];
-        for (let i = 0; i < 5; i++) addHorse();
-    }
-
-    document.getElementById('resultsPanel').style.display = 'none';
-    window._analyzedData = null;
-
-    showToast(`「${race.name}」を選択しました`, 'success');
 }
 
-// ── Helpers ───────────────────────────────────────────────────
+function initGitHub() { /* Disabled */ }
 
-function escHtml(str) {
+// Utility
+function escapeHTML(str) {
     if (!str) return '';
-    return str.replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+    return str.replace(/[&<>'"]/g,
+        tag => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            "'": '&#39;',
+            '"': '&quot;'
+        }[tag])
+    );
+}
+
+// ================= POKER EV ENGINE =================
+function initPoker() {
+    const calcBtn = document.getElementById('calcPokerBtn');
+    if (calcBtn) {
+        calcBtn.addEventListener('click', runPokerAnalysis);
+    }
+}
+
+function runPokerAnalysis() {
+    const stacksStr = document.getElementById('pokerStacks').value;
+    const payoutsStr = document.getElementById('pokerPayouts').value;
+    const sb = parseFloat(document.getElementById('pokerSB').value);
+    const bb = parseFloat(document.getElementById('pokerBB').value);
+    const ante = parseFloat(document.getElementById('pokerAnte').value);
+
+    const stacks = stacksStr.split(',').map(s => parseFloat(s.trim()));
+    const payouts = payoutsStr.split(',').map(s => parseFloat(s.trim()));
+
+    if (stacks.some(isNaN) || payouts.some(isNaN)) {
+        alert("Invalid input detected.");
+        return;
+    }
+
+    const resultsDiv = document.getElementById('pokerResults');
+    const adviceDiv = document.getElementById('pokerAdvice');
+    resultsDiv.innerHTML = '';
+
+    // 1. ICM Calculation
+    const icmEvs = computeICM(stacks, payouts);
+    
+    // 2. State & M-Ratio
+    const orbitCost = sb + bb + (ante * stacks.length);
+    const mRatios = stacks.map(s => s / (orbitCost || 1));
+
+    // 3. FGS Depth-1
+    // Simplification: In next state, BTN moves 1, calculate blinded stacks
+    const nextStacks = [...stacks];
+    // This is a rough estimation for UI
+    const n = stacks.length;
+    // Just show one hero's comprehensive analysis or all? 
+    // Let's show all players summary.
+
+    stacks.forEach((stack, i) => {
+        const card = document.createElement('div');
+        card.className = 'poker-card';
+
+        // Find biggest threat for this player
+        let biggestPremium = 0;
+        let threatIdx = -1;
+        stacks.forEach((vStack, j) => {
+            if (i === j) return;
+            const bf = computeBubbleFactor(stacks, payouts, i, j);
+            const premium = (bf / (bf + 1)) - 0.5;
+            if (premium > biggestPremium) {
+                biggestPremium = premium;
+                threatIdx = j;
+            }
+        });
+
+        card.innerHTML = `
+            <h3>PLAYER ${i} ${i === 0 ? '(LEADER)' : ''}</h3>
+            <div class="poker-metric"><span>Stack:</span> <span class="metric-val">${stack.toLocaleString()}</span></div>
+            <div class="poker-metric"><span>ICM EV:</span> <span class="metric-val">$${icmEvs[i].toFixed(2)}</span></div>
+            <div class="poker-metric"><span>M-Ratio:</span> <span class="metric-val">${mRatios[i].toFixed(1)}</span></div>
+            <div class="poker-metric" style="margin-top:0.8rem; font-weight:bold; color:var(--accent-color);">
+                <span>Max Risk Premium:</span> <span class="metric-val">${(biggestPremium * 100).toFixed(1)}%</span>
+            </div>
+            <div style="font-size:0.75rem; color:#888;">vs Player ${threatIdx}</div>
+        `;
+        resultsDiv.appendChild(card);
+    });
+
+    // Strategy Advice
+    adviceDiv.classList.remove('hidden');
+    adviceDiv.classList.remove('critical');
+    const maxP = Math.max(...stacks.map((_, i) => {
+        let max = 0;
+        stacks.forEach((_, j) => { if(i!==j) max = Math.max(max, (computeBubbleFactor(stacks, payouts, i, j)/(computeBubbleFactor(stacks, payouts, i, j)+1))-0.5); });
+        return max;
+    }));
+
+    if (maxP > 0.15) {
+        adviceDiv.classList.add('critical');
+        adviceDiv.innerHTML = "<strong>CRITICAL:</strong> High ICM pressure detected on the table. Tighten your ranges significantly against bigger stacks.";
+    } else {
+        adviceDiv.innerHTML = "<strong>INFO:</strong> Moderate ICM pressure. Standard tournament ranges apply.";
+    }
+}
+
+// --- ICM Engine Port ---
+let icmMemo = {};
+
+function computeICM(stacks, payouts) {
+    const n = stacks.length;
+    const fullPayouts = [...payouts];
+    while (fullPayouts.length < n) fullPayouts.push(0);
+    icmMemo = {};
+    return recursiveICM(stacks, fullPayouts);
+}
+
+function recursiveICM(stacks, payouts) {
+    const key = stacks.join(',') + '|' + payouts.join(',');
+    if (icmMemo[key]) return icmMemo[key];
+
+    const n = stacks.length;
+    const totalChips = stacks.reduce((a, b) => a + b, 0);
+    let evs = new Array(n).fill(0);
+
+    if (payouts.length === 0 || totalChips <= 0) return evs;
+
+    const currPrize = payouts[0];
+    const remPrizes = payouts.slice(1);
+
+    for (let i = 0; i < n; i++) {
+        if (stacks[i] <= 0) continue;
+
+        const probWin = stacks[i] / totalChips;
+        evs[i] += probWin * currPrize;
+
+        const remStacks = [...stacks];
+        remStacks[i] = 0;
+
+        if (remPrizes.length > 0 && remStacks.some(s => s > 0)) {
+            const subEvs = recursiveICM(remStacks, remPrizes);
+            for (let j = 0; j < n; j++) {
+                evs[j] += probWin * subEvs[j];
+            }
+        }
+    }
+
+    icmMemo[key] = evs;
+    return evs;
+}
+
+function computeBubbleFactor(stacks, payouts, heroIdx, villainIdx) {
+    if (heroIdx === villainIdx) return 1.0;
+    const evNow = computeICM(stacks, payouts)[heroIdx];
+    const effective = Math.min(stacks[heroIdx], stacks[villainIdx]);
+
+    const sWin = [...stacks]; sWin[heroIdx]+=effective; sWin[villainIdx]-=effective;
+    const evWin = computeICM(sWin, payouts)[heroIdx];
+
+    const sLose = [...stacks]; sLose[heroIdx]-=effective; sLose[villainIdx]+=effective;
+    const evLose = computeICM(sLose, payouts)[heroIdx];
+
+    const denom = evWin - evNow;
+    return denom <= 0 ? 1.0 : (evNow - evLose) / denom;
 }

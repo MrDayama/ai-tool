@@ -1,0 +1,13 @@
+{
+    "name": "ai-tool",
+    "version": "1.0.0",
+    "description": "AI driven automatic development workflow",
+    "main": "app.js",
+    "scripts": {
+        "test": "node .ai/test.js",
+        "ai-agent": "node .ai/agent.js"
+    },
+    "dependencies": {
+        "@google/genai": "^0.1.0"
+    }
+}

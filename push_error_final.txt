@@ -1,0 +1,39 @@
+﻿git : remote: error: Trace: db
+53a9a58057c1b2628271013d214e5a
+e430bd562121ec10595da14d109733
+4f        
+発生場所 行:1 文字:1
++ git push origin fix-push-tem
+p:dev --force 2>&1 | Out-File 
+-FilePath " ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : 
+    NotSpecified: (remote: e  
+  rror: ...097334f        :   
+ String) [], RemoteExcepti    
+on
+    + FullyQualifiedErrorId : 
+    NativeCommandError
+ 
+remote: error: See https://gh.
+io/lfs for more information.  
+      
+remote: error: File ai-agent/b
+uild/ai-agent/ai-agent.pkg is 
+133.65 MB; this exceeds GitHub
+'s file size limit of 100.00 M
+B        
+remote: error: GH001: Large fi
+les detected. You may want to 
+try Git Large File Storage - h
+ttps://git-lfs.github.com.    
+    
+To https://github.com/MrDayama
+/ai-tool.git
+ ! [remote rejected] fix-push-
+temp -> dev (pre-receive hook 
+declined)
+error: failed to push some ref
+s to 'https://github.com/MrDay
+ama/ai-tool.git'

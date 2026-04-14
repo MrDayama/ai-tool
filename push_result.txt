@@ -1,0 +1,14 @@
+﻿git : remote: error: Trace: c7802bddce30103e03de360fc27d87ad1c276da70de7682b8b2fd7e4f2c2c836        
+発生場所 行:1 文字:1
++ git push origin gh-pages --force 2>&1 | Out-File -FilePath "push_resu ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (remote: error: ...2c2c836        :String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+remote: error: See https://gh.io/lfs for more information.        
+remote: error: File ai-agent/build/ai-agent/ai-agent.pkg is 133.65 MB; this exceeds GitHub's file size limit of 100.00 MB        
+remote: error: File ai-agent/ai-agent.exe is 133.98 MB; this exceeds GitHub's file size limit of 100.00 MB        
+remote: error: GH001: Large files detected. You may want to try Git Large File Storage - https://git-lfs.github.com.        
+To https://github.com/MrDayama/ai-tool.git
+ ! [remote rejected] gh-pages -> gh-pages (pre-receive hook declined)
+error: failed to push some refs to 'https://github.com/MrDayama/ai-tool.git'
