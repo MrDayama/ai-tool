@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTodo();
     initNotes();
     initNavigation();
+    initPoker();
 });
 
 function initNavigation() {
@@ -26,6 +27,7 @@ function initNavigation() {
             if (screenId === 'tasks') renderTodos();
             if (screenId === 'gantt') renderGantt(getTodos());
             if (screenId === 'calendar') renderCalendar();
+            if (screenId === 'poker') { /* Optional poker init code */ }
         });
     });
 }
@@ -569,4 +571,153 @@ function escapeHTML(str) {
             '"': '&quot;'
         }[tag])
     );
+}
+
+// ================= POKER EV ENGINE =================
+function initPoker() {
+    const calcBtn = document.getElementById('calcPokerBtn');
+    if (calcBtn) {
+        calcBtn.addEventListener('click', runPokerAnalysis);
+    }
+}
+
+function runPokerAnalysis() {
+    const stacksStr = document.getElementById('pokerStacks').value;
+    const payoutsStr = document.getElementById('pokerPayouts').value;
+    const sb = parseFloat(document.getElementById('pokerSB').value);
+    const bb = parseFloat(document.getElementById('pokerBB').value);
+    const ante = parseFloat(document.getElementById('pokerAnte').value);
+
+    const stacks = stacksStr.split(',').map(s => parseFloat(s.trim()));
+    const payouts = payoutsStr.split(',').map(s => parseFloat(s.trim()));
+
+    if (stacks.some(isNaN) || payouts.some(isNaN)) {
+        alert("Invalid input detected.");
+        return;
+    }
+
+    const resultsDiv = document.getElementById('pokerResults');
+    const adviceDiv = document.getElementById('pokerAdvice');
+    resultsDiv.innerHTML = '';
+
+    // 1. ICM Calculation
+    const icmEvs = computeICM(stacks, payouts);
+    
+    // 2. State & M-Ratio
+    const orbitCost = sb + bb + (ante * stacks.length);
+    const mRatios = stacks.map(s => s / (orbitCost || 1));
+
+    // 3. FGS Depth-1
+    // Simplification: In next state, BTN moves 1, calculate blinded stacks
+    const nextStacks = [...stacks];
+    // This is a rough estimation for UI
+    const n = stacks.length;
+    // Just show one hero's comprehensive analysis or all? 
+    // Let's show all players summary.
+
+    stacks.forEach((stack, i) => {
+        const card = document.createElement('div');
+        card.className = 'poker-card';
+
+        // Find biggest threat for this player
+        let biggestPremium = 0;
+        let threatIdx = -1;
+        stacks.forEach((vStack, j) => {
+            if (i === j) return;
+            const bf = computeBubbleFactor(stacks, payouts, i, j);
+            const premium = (bf / (bf + 1)) - 0.5;
+            if (premium > biggestPremium) {
+                biggestPremium = premium;
+                threatIdx = j;
+            }
+        });
+
+        card.innerHTML = `
+            <h3>PLAYER ${i} ${i === 0 ? '(LEADER)' : ''}</h3>
+            <div class="poker-metric"><span>Stack:</span> <span class="metric-val">${stack.toLocaleString()}</span></div>
+            <div class="poker-metric"><span>ICM EV:</span> <span class="metric-val">$${icmEvs[i].toFixed(2)}</span></div>
+            <div class="poker-metric"><span>M-Ratio:</span> <span class="metric-val">${mRatios[i].toFixed(1)}</span></div>
+            <div class="poker-metric" style="margin-top:0.8rem; font-weight:bold; color:var(--accent-color);">
+                <span>Max Risk Premium:</span> <span class="metric-val">${(biggestPremium * 100).toFixed(1)}%</span>
+            </div>
+            <div style="font-size:0.75rem; color:#888;">vs Player ${threatIdx}</div>
+        `;
+        resultsDiv.appendChild(card);
+    });
+
+    // Strategy Advice
+    adviceDiv.classList.remove('hidden');
+    adviceDiv.classList.remove('critical');
+    const maxP = Math.max(...stacks.map((_, i) => {
+        let max = 0;
+        stacks.forEach((_, j) => { if(i!==j) max = Math.max(max, (computeBubbleFactor(stacks, payouts, i, j)/(computeBubbleFactor(stacks, payouts, i, j)+1))-0.5); });
+        return max;
+    }));
+
+    if (maxP > 0.15) {
+        adviceDiv.classList.add('critical');
+        adviceDiv.innerHTML = "<strong>CRITICAL:</strong> High ICM pressure detected on the table. Tighten your ranges significantly against bigger stacks.";
+    } else {
+        adviceDiv.innerHTML = "<strong>INFO:</strong> Moderate ICM pressure. Standard tournament ranges apply.";
+    }
+}
+
+// --- ICM Engine Port ---
+let icmMemo = {};
+
+function computeICM(stacks, payouts) {
+    const n = stacks.length;
+    const fullPayouts = [...payouts];
+    while (fullPayouts.length < n) fullPayouts.push(0);
+    icmMemo = {};
+    return recursiveICM(stacks, fullPayouts);
+}
+
+function recursiveICM(stacks, payouts) {
+    const key = stacks.join(',') + '|' + payouts.join(',');
+    if (icmMemo[key]) return icmMemo[key];
+
+    const n = stacks.length;
+    const totalChips = stacks.reduce((a, b) => a + b, 0);
+    let evs = new Array(n).fill(0);
+
+    if (payouts.length === 0 || totalChips <= 0) return evs;
+
+    const currPrize = payouts[0];
+    const remPrizes = payouts.slice(1);
+
+    for (let i = 0; i < n; i++) {
+        if (stacks[i] <= 0) continue;
+
+        const probWin = stacks[i] / totalChips;
+        evs[i] += probWin * currPrize;
+
+        const remStacks = [...stacks];
+        remStacks[i] = 0;
+
+        if (remPrizes.length > 0 && remStacks.some(s => s > 0)) {
+            const subEvs = recursiveICM(remStacks, remPrizes);
+            for (let j = 0; j < n; j++) {
+                evs[j] += probWin * subEvs[j];
+            }
+        }
+    }
+
+    icmMemo[key] = evs;
+    return evs;
+}
+
+function computeBubbleFactor(stacks, payouts, heroIdx, villainIdx) {
+    if (heroIdx === villainIdx) return 1.0;
+    const evNow = computeICM(stacks, payouts)[heroIdx];
+    const effective = Math.min(stacks[heroIdx], stacks[villainIdx]);
+
+    const sWin = [...stacks]; sWin[heroIdx]+=effective; sWin[villainIdx]-=effective;
+    const evWin = computeICM(sWin, payouts)[heroIdx];
+
+    const sLose = [...stacks]; sLose[heroIdx]-=effective; sLose[villainIdx]+=effective;
+    const evLose = computeICM(sLose, payouts)[heroIdx];
+
+    const denom = evWin - evNow;
+    return denom <= 0 ? 1.0 : (evNow - evLose) / denom;
 }

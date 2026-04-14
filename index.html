@@ -24,6 +24,7 @@
         <button class="nav-btn active" data-screen="calendar">カレンダー</button>
         <button class="nav-btn" data-screen="tasks">チケット管理</button>
         <button class="nav-btn" data-screen="gantt">ガントチャート</button>
+        <button class="nav-btn" data-screen="poker">ポーカー分析</button>
     </nav>
 
     <main class="dashboard-grid">
@@ -92,6 +93,48 @@
                 <h2 class="panel-title">ガントチャート</h2>
                 <div id="ganttContainer" class="gantt-container">
                     <!-- JS will inject gantt chart -->
+                </div>
+            </section>
+        </div>
+
+        <!-- Poker EV Screen -->
+        <div id="screen-poker" class="screen-container">
+            <section class="panel poker-panel">
+                <h2 class="panel-title">[MOD_POKER_EV_ENGINE]</h2>
+                <div class="poker-layout">
+                    <div class="poker-sidebar">
+                        <div class="form-group">
+                            <label class="prompt">Stacks (comma separated)</label>
+                            <input type="text" id="pokerStacks" class="cyber-input" value="3000, 2500, 1500, 500">
+                        </div>
+                        <div class="form-group">
+                            <label class="prompt">Payouts (comma separated)</label>
+                            <input type="text" id="pokerPayouts" class="cyber-input" value="500, 300, 200">
+                        </div>
+                        <div class="form-group-row">
+                            <div class="form-group">
+                                <label class="prompt">SB / BB</label>
+                                <div style="display:flex; gap:0.5rem;">
+                                    <input type="number" id="pokerSB" class="cyber-input" value="50">
+                                    <input type="number" id="pokerBB" class="cyber-input" value="100">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="prompt">Ante</label>
+                                <input type="number" id="pokerAnte" class="cyber-input" value="10">
+                            </div>
+                        </div>
+                        <button id="calcPokerBtn" class="cyber-btn" style="width:100%; margin-top:1rem; background:#007bff; color:#fff;">CALCULATE EV</button>
+                    </div>
+                    <div class="poker-main">
+                        <div id="pokerResults" class="poker-results-grid">
+                            <!-- JS will inject results -->
+                            <div class="empty-msg">Enter data and press CALCULATE</div>
+                        </div>
+                        <div id="pokerAdvice" class="poker-advice-panel hidden">
+                            <!-- Strategic advice -->
+                        </div>
+                    </div>
                 </div>
             </section>
         </div>
