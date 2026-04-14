@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Poker EV Analyzer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #18181a;
+    --surface:   #222225;
+    --border:    #303035;
+    --border2:   #3d3d43;
+    --text1:     #dddde0;
+    --text2:     #8c8c94;
+    --text3:     #555560;
+    --accent:    #c9a84c;
+    --accent-dim:#7a6230;
+    --red:       #b05040;
+    --green:     #5a8f6a;
+    --mono:      'Roboto Mono', monospace;
+    --sans:      'Inter', sans-serif;
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text1);
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* ── Layout ── */
+  .shell {
+    display: grid;
+    grid-template-rows: 42px 1fr;
+    grid-template-columns: 270px 1fr 290px;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* ── Header ── */
+  .topbar {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .topbar-title {
+    font-size: 11px;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    font-weight: 600;
+    color: var(--text2);
+  }
+  .topbar-title span { color: var(--accent); }
+  .topbar-meta {
+    margin-left: auto;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+  }
+  #liveTag {
+    display: inline-block;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  /* ── Left panel ── */
+  .panel-left {
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 18px 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* ── Center panel ── */
+  .panel-center {
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  /* ── Right panel ── */
+  .panel-right {
+    border-left: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 18px 16px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  /* ── Section label ── */
+  .sec-label {
+    font-size: 9.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--text3);
+    font-weight: 600;
+    margin-bottom: 8px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  /* ── Inputs ── */
+  .field-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+  .field-row label {
+    font-size: 11px;
+    color: var(--text2);
+    min-width: 28px;
+    font-family: var(--mono);
+  }
+  .num-input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text1);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 4px 8px;
+    border-radius: 3px;
+    outline: none;
+    transition: border-color .15s;
+    min-width: 0;
+  }
+  .num-input:focus { border-color: var(--accent-dim); }
+  .num-input::placeholder { color: var(--text3); }
+
+  .add-btn, .del-btn {
+    background: none;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    font-size: 14px;
+    width: 24px; height: 24px;
+    border-radius: 3px;
+    cursor: pointer;
+    line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: border-color .12s, color .12s;
+    flex-shrink: 0;
+  }
+  .del-btn { color: var(--red); border-color: transparent; }
+  .del-btn:hover { border-color: var(--red); }
+  .add-btn:hover { border-color: var(--accent-dim); color: var(--accent); }
+
+  .blind-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 2px;
+  }
+  .blind-field { display: flex; flex-direction: column; gap: 3px; }
+  .blind-field span { font-size: 10px; color: var(--text3); }
+
+  /* ── Result table ── */
+  .result-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .result-table th {
+    text-align: left;
+    font-size: 9.5px;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text3);
+    padding: 0 10px 6px 0;
+    font-weight: 500;
+    border-bottom: 1px solid var(--border);
+  }
+  .result-table th:not(:first-child) { text-align: right; }
+  .result-table td {
+    padding: 7px 10px 7px 0;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .result-table td:not(:first-child) { text-align: right; }
+  .result-table tr:last-child td { border-bottom: none; }
+
+  .cell-player { font-size: 11px; color: var(--text2); font-family: var(--mono); }
+  .cell-stack  { font-family: var(--mono); font-size: 13px; }
+  .cell-ev     { font-family: var(--mono); font-size: 14px; font-weight: 500; color: var(--text1); }
+  .cell-pct    { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+
+  .ev-bar-wrap { width: 80px; height: 3px; background: var(--border2); border-radius: 2px; margin-left: auto; }
+  .ev-bar      { height: 100%; background: var(--accent); border-radius: 2px; transition: width .3s; }
+
+  /* ── Big number ── */
+  .big-num { font-family: var(--mono); font-size: 28px; font-weight: 500; letter-spacing: -.02em; }
+  .big-label { font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-top: 2px; }
+
+  /* ── BF matrix ── */
+  .bf-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+  .bf-table th, .bf-table td {
+    padding: 5px 8px;
+    text-align: center;
+    border: 1px solid var(--border);
+  }
+  .bf-table th { background: var(--surface); color: var(--text3); font-size: 10px; font-weight: 500; }
+  .bf-table td { color: var(--text2); }
+  .bf-table td.self { color: var(--text3); }
+  .bf-high { color: var(--red) !important; }
+  .bf-low  { color: var(--green) !important; }
+
+  /* ── Right panel: scenario ── */
+  .scenario-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .scenario-row:last-child { border-bottom: none; }
+  .scen-key { font-size: 11px; color: var(--text2); }
+  .scen-val { font-family: var(--mono); font-size: 13px; font-weight: 500; }
+  .scen-val.warn  { color: var(--red); }
+  .scen-val.ok    { color: var(--green); }
+  .scen-val.accent { color: var(--accent); }
+
+  .hero-selector {
+    display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;
+  }
+  .hero-btn {
+    padding: 3px 10px;
+    border: 1px solid var(--border2);
+    background: none;
+    color: var(--text2);
+    font-family: var(--mono);
+    font-size: 11px;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all .12s;
+  }
+  .hero-btn.active {
+    background: var(--accent-dim);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── M-Ratio bar ── */
+  .m-row { display: flex; align-items: center; gap: 8px; padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .m-row:last-child { border-bottom: none; }
+  .m-label { font-family: var(--mono); font-size: 11px; color: var(--text3); width: 32px; }
+  .m-bar-wrap { flex: 1; height: 4px; background: var(--border2); border-radius: 2px; }
+  .m-bar { height: 100%; border-radius: 2px; transition: width .3s; }
+  .m-val { font-family: var(--mono); font-size: 11px; color: var(--text2); width: 36px; text-align: right; }
+
+  .advice-box {
+    background: var(--surface);
+    border-left: 2px solid var(--accent-dim);
+    padding: 8px 10px;
+    font-size: 11px;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+  .advice-box strong { color: var(--accent); }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ── Top bar ── -->
+  <header class="topbar">
+    <div class="topbar-title">Poker EV <span>Analyzer</span></div>
+    <div class="topbar-meta"><span id="liveTag"></span>LIVE · <span id="calcTime">-</span>ms</div>
+  </header>
+
+  <!-- ──────────── LEFT PANEL ──────────── -->
+  <aside class="panel-left">
+
+    <!-- Players / Stacks -->
+    <div>
+      <div class="sec-label">Players · Stacks</div>
+      <div id="stackList"></div>
+      <button class="add-btn" id="addPlayerBtn" title="Add player" style="margin-top:6px; width:100%; height:26px; font-size:12px;">+ Add Player</button>
+    </div>
+
+    <!-- Payouts -->
+    <div>
+      <div class="sec-label">Payouts</div>
+      <div id="payoutList"></div>
+      <button class="add-btn" id="addPayoutBtn" title="Add payout" style="margin-top:6px; width:100%; height:26px; font-size:12px;">+ Add Payout</button>
+    </div>
+
+    <!-- Blinds -->
+    <div>
+      <div class="sec-label">Blinds / Ante</div>
+      <div class="blind-row">
+        <div class="blind-field"><span>SB</span><input class="num-input" type="number" id="sbInput" value="50" min="0"></div>
+        <div class="blind-field"><span>BB</span><input class="num-input" type="number" id="bbInput" value="100" min="0"></div>
+      </div>
+      <div class="blind-row" style="margin-top:6px;">
+        <div class="blind-field"><span>Ante</span><input class="num-input" type="number" id="anteInput" value="10" min="0"></div>
+        <div class="blind-field"><span>BTN</span><input class="num-input" type="number" id="btnInput" value="0" min="0"></div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ──────────── CENTER PANEL ──────────── -->
+  <main class="panel-center">
+
+    <!-- ICM EV table -->
+    <div>
+      <div class="sec-label">ICM Expected Value</div>
+      <table class="result-table" id="evTable">
+        <thead>
+          <tr>
+            <th>P</th>
+            <th>Stack</th>
+            <th>ICM EV</th>
+            <th>%Prize</th>
+            <th style="width:90px">Share</th>
+          </tr>
+        </thead>
+        <tbody id="evTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- BF Matrix -->
+    <div>
+      <div class="sec-label">Bubble Factor Matrix <span style="color:var(--text3);font-weight:400;font-size:9px;">[row=hero / col=villain]</span></div>
+      <div id="bfMatrixWrap" style="overflow-x:auto;"></div>
+    </div>
+
+    <!-- FGS note -->
+    <div id="fgsSection">
+      <div class="sec-label">FGS EV <span style="color:var(--text3);font-weight:400;font-size:9px;">[next hand, depth-1]</span></div>
+      <table class="result-table" id="fgsTable">
+        <thead>
+          <tr>
+            <th>P</th>
+            <th>FGS EV</th>
+            <th>Δ vs ICM</th>
+            <th>M-Ratio</th>
+          </tr>
+        </thead>
+        <tbody id="fgsTableBody"></tbody>
+      </table>
+    </div>
+
+  </main>
+
+  <!-- ──────────── RIGHT PANEL ──────────── -->
+  <aside class="panel-right">
+
+    <!-- Hero selector -->
+    <div>
+      <div class="sec-label">Hero</div>
+      <div class="hero-selector" id="heroSelector"></div>
+    </div>
+
+    <!-- Scenario: Hero vs each -->
+    <div>
+      <div class="sec-label">BF vs Each Villain</div>
+      <div id="bfVsVillain"></div>
+    </div>
+
+    <!-- Required Equity -->
+    <div>
+      <div class="sec-label">Scenario Analysis</div>
+      <div id="scenarioPanel"></div>
+    </div>
+
+    <!-- M-ratio bars -->
+    <div>
+      <div class="sec-label">Stack Survival</div>
+      <div id="mRatioBars"></div>
+    </div>
+
+    <!-- Advice -->
+    <div>
+      <div class="sec-label">Recommendation</div>
+      <div class="advice-box" id="adviceBox">—</div>
+    </div>
+
+  </aside>
+</div>
+
+<script>
+// =====================================================
+//  ICM ENGINE
+// =====================================================
+function computeICM(stacks, payouts) {
+  const n = stacks.length;
+  if (n === 0) return [];
+  const memo = new Map();
+
+  function recurse(sArr, pArr) {
+    const key = sArr.join(',') + '|' + pArr.join(',');
+    if (memo.has(key)) return memo.get(key);
+
+    const evs = new Array(n).fill(0);
+    if (!pArr.length) { memo.set(key, evs); return evs; }
+
+    const total = sArr.reduce((a, b) => a + b, 0);
+    if (total <= 0) { memo.set(key, evs); return evs; }
+
+    const payout = pArr[0];
+    const nextP = pArr.slice(1);
+
+    for (let i = 0; i < n; i++) {
+      if (sArr[i] <= 0) continue;
+      const prob = sArr[i] / total;
+      evs[i] += prob * payout;
+
+      const next = [...sArr]; next[i] = 0;
+      if (nextP.length && next.some(s => s > 0)) {
+        const sub = recurse(next, nextP);
+        for (let j = 0; j < n; j++) evs[j] += prob * sub[j];
+      }
+    }
+    memo.set(key, evs); return evs;
+  }
+
+  const fullP = [...payouts];
+  while (fullP.length < n) fullP.push(0);
+  return recurse(stacks, fullP.slice(0, n));
+}
+
+function computeBF(stacks, payouts, hero, villain) {
+  if (hero === villain) return null;
+  const evNow  = computeICM(stacks, payouts)[hero];
+  const eff    = Math.min(stacks[hero], stacks[villain]);
+
+  const sWin = [...stacks]; sWin[hero] += eff; sWin[villain] -= eff;
+  const evWin  = computeICM(sWin, payouts)[hero];
+
+  const sLose = [...stacks]; sLose[hero] -= eff; sLose[villain] += eff;
+  const evLose = computeICM(sLose, payouts)[hero];
+
+  const denom = evWin - evNow;
+  if (denom <= 1e-9) return null;
+  return (evNow - evLose) / denom;
+}
+
+// =====================================================
+//  STATE
+// =====================================================
+let players = [
+  { name: 'P0', stack: 5000 },
+  { name: 'P1', stack: 3000 },
+  { name: 'P2', stack: 2000 },
+  { name: 'P3', stack: 800  },
+];
+let payouts = [500, 300, 200];
+let heroIdx = 1;
+
+function getInputVal(id, fallback = 0) {
+  const v = parseFloat(document.getElementById(id).value);
+  return isNaN(v) ? fallback : v;
+}
+
+// =====================================================
+//  RENDER LEFT PANEL
+// =====================================================
+function renderStackInputs() {
+  const el = document.getElementById('stackList');
+  el.innerHTML = '';
+  players.forEach((p, i) => {
+    const row = document.createElement('div');
+    row.className = 'field-row';
+    row.innerHTML = `
+      <label>${p.name}</label>
+      <input class="num-input" type="number" value="${p.stack}" min="0" data-idx="${i}" data-type="stack">
+      <button class="del-btn" data-idx="${i}" data-role="del-player" title="Remove">×</button>
+    `;
+    el.appendChild(row);
+  });
+}
+
+function renderPayoutInputs() {
+  const el = document.getElementById('payoutList');
+  el.innerHTML = '';
+  payouts.forEach((v, i) => {
+    const row = document.createElement('div');
+    row.className = 'field-row';
+    row.innerHTML = `
+      <label>${i + 1}st</label>
+      <input class="num-input" type="number" value="${v}" min="0" data-idx="${i}" data-type="payout">
+      <button class="del-btn" data-idx="${i}" data-role="del-payout" title="Remove">×</button>
+    `;
+    el.appendChild(row);
+  });
+}
+
+// =====================================================
+//  COMPUTE & RENDER CENTER
+// =====================================================
+function recalc() {
+  const t0 = performance.now();
+
+  const stacks = players.map(p => p.stack);
+  const icmEvs = computeICM(stacks, payouts);
+  const totalPrize = payouts.reduce((a, b) => a + b, 0);
+  const totalChips  = stacks.reduce((a, b) => a + b, 0);
+
+  // ── ICM EV Table ──
+  const tbody = document.getElementById('evTableBody');
+  tbody.innerHTML = '';
+  const maxEV = Math.max(...icmEvs);
+  icmEvs.forEach((ev, i) => {
+    const pct = totalPrize > 0 ? (ev / totalPrize * 100).toFixed(1) : '0.0';
+    const bar = maxEV > 0 ? (ev / maxEV * 100).toFixed(1) : 0;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="cell-player">${players[i].name}</td>
+      <td class="cell-stack">${stacks[i].toLocaleString()}</td>
+      <td class="cell-ev">$${ev.toFixed(2)}</td>
+      <td class="cell-pct">${pct}%</td>
+      <td><div class="ev-bar-wrap"><div class="ev-bar" style="width:${bar}%"></div></div></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // ── BF Matrix ──
+  renderBFMatrix(stacks);
+
+  // ── FGS Table ──
+  const sb   = getInputVal('sbInput', 50);
+  const bb   = getInputVal('bbInput', 100);
+  const ante = getInputVal('anteInput', 0);
+  const btn  = Math.round(getInputVal('btnInput', 0)) % players.length;
+  renderFGS(stacks, icmEvs, sb, bb, ante, btn, payouts);
+
+  // ── Right panel ──
+  renderHeroSelector();
+  renderRightPanel(stacks, icmEvs, sb, bb, ante, totalPrize);
+
+  const t1 = performance.now();
+  document.getElementById('calcTime').textContent = (t1 - t0).toFixed(1);
+}
+
+function renderBFMatrix(stacks) {
+  const n = players.length;
+  const wrap = document.getElementById('bfMatrixWrap');
+  if (n < 2) { wrap.innerHTML = '<span style="color:var(--text3);font-size:11px">Need ≥ 2 players</span>'; return; }
+
+  let html = '<table class="bf-table"><thead><tr><th></th>';
+  players.forEach(p => { html += `<th>${p.name}</th>`; });
+  html += '</tr></thead><tbody>';
+
+  for (let hero = 0; hero < n; hero++) {
+    html += `<tr><th>${players[hero].name}</th>`;
+    for (let vln = 0; vln < n; vln++) {
+      if (hero === vln) {
+        html += '<td class="self">—</td>';
+      } else {
+        const bf = computeBF(stacks, payouts, hero, vln);
+        if (bf === null) { html += '<td class="self">—</td>'; continue; }
+        const cls = bf > 2.5 ? 'bf-high' : bf < 1.2 ? 'bf-low' : '';
+        html += `<td class="${cls}">${bf.toFixed(2)}</td>`;
+      }
+    }
+    html += '</tr>';
+  }
+  html += '</tbody></table>';
+  wrap.innerHTML = html;
+}
+
+function renderFGS(stacks, icmEvs, sb, bb, ante, btn, payouts) {
+  const n = players.length;
+  const sbIdx = (btn + 1) % n;
+  const bbIdx = (btn + 2) % n;
+  const orbitCost = sb + bb + ante * n;
+
+  const nextStacks = [...stacks];
+  for (let i = 0; i < n; i++) nextStacks[i] = Math.max(0, nextStacks[i] - ante);
+  nextStacks[sbIdx] = Math.max(0, nextStacks[sbIdx] - sb);
+  nextStacks[bbIdx] = Math.max(0, nextStacks[bbIdx] - bb);
+
+  const fgsEvs = computeICM(nextStacks, payouts);
+
+  const tbody = document.getElementById('fgsTableBody');
+  tbody.innerHTML = '';
+  fgsEvs.forEach((ev, i) => {
+    const delta = ev - icmEvs[i];
+    const m = orbitCost > 0 ? (stacks[i] / orbitCost).toFixed(1) : '∞';
+    const dCls = delta >= 0 ? 'color:var(--green)' : 'color:var(--red)';
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="cell-player">${players[i].name}</td>
+      <td style="font-family:var(--mono);text-align:right">$${ev.toFixed(2)}</td>
+      <td style="font-family:var(--mono);font-size:11px;text-align:right;${dCls}">${delta >= 0 ? '+' : ''}${delta.toFixed(2)}</td>
+      <td style="font-family:var(--mono);font-size:11px;text-align:right;color:var(--text2)">${m}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// =====================================================
+//  RIGHT PANEL
+// =====================================================
+function renderHeroSelector() {
+  const wrap = document.getElementById('heroSelector');
+  wrap.innerHTML = '';
+  players.forEach((p, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'hero-btn' + (i === heroIdx ? ' active' : '');
+    btn.textContent = p.name;
+    btn.addEventListener('click', () => { heroIdx = i; recalc(); });
+    wrap.appendChild(btn);
+  });
+}
+
+function renderRightPanel(stacks, icmEvs, sb, bb, ante, totalPrize) {
+  const n = players.length;
+  const orbitCost = sb + bb + ante * n;
+
+  // BF vs each villain
+  const bfWrap = document.getElementById('bfVsVillain');
+  bfWrap.innerHTML = '';
+  players.forEach((p, vi) => {
+    if (vi === heroIdx) return;
+    const bf = computeBF(stacks, payouts, heroIdx, vi);
+    if (bf === null) return;
+    const reqEq = (bf / (bf + 1) * 100).toFixed(1);
+    const risk  = (bf / (bf + 1) - 0.5) * 100;
+    const bfCls = bf > 2.5 ? 'warn' : bf < 1.2 ? 'ok' : 'accent';
+    const row = document.createElement('div');
+    row.className = 'scenario-row';
+    row.innerHTML = `
+      <div>
+        <div class="scen-key">${players[heroIdx].name} vs ${p.name}</div>
+        <div style="font-size:10px;color:var(--text3)">Req EQ: ${reqEq}% · Risk: +${risk.toFixed(1)}%</div>
+      </div>
+      <div class="scen-val ${bfCls}">BF ${bf.toFixed(2)}</div>
+    `;
+    bfWrap.appendChild(row);
+  });
+
+  // Scenario summary for hero
+  const ev = icmEvs[heroIdx];
+  const evPct = totalPrize > 0 ? (ev / totalPrize * 100).toFixed(1) : '0';
+  const m = orbitCost > 0 ? (stacks[heroIdx] / orbitCost).toFixed(1) : '∞';
+  const chipShare = stacks.reduce((a,b)=>a+b,0) > 0 ? (stacks[heroIdx] / stacks.reduce((a,b)=>a+b,0) * 100).toFixed(1) : '—';
+
+  document.getElementById('scenarioPanel').innerHTML = `
+    <div class="scenario-row"><span class="scen-key">ICM EV</span><span class="scen-val accent">$${ev.toFixed(2)}</span></div>
+    <div class="scenario-row"><span class="scen-key">Prize Share</span><span class="scen-val">${evPct}%</span></div>
+    <div class="scenario-row"><span class="scen-key">Chip Share</span><span class="scen-val">${chipShare}%</span></div>
+    <div class="scenario-row"><span class="scen-key">M-Ratio</span><span class="scen-val ${parseFloat(m)<5?'warn':parseFloat(m)<10?'accent':''}">${m}</span></div>
+  `;
+
+  // M-ratio bars
+  const mWrap = document.getElementById('mRatioBars');
+  mWrap.innerHTML = '';
+  const maxM = orbitCost > 0 ? Math.max(...stacks.map(s => s / orbitCost)) : 1;
+  players.forEach((p, i) => {
+    const mVal = orbitCost > 0 ? stacks[i] / orbitCost : 999;
+    const pct  = maxM > 0 ? (mVal / maxM * 100).toFixed(1) : 0;
+    const col  = mVal < 5 ? 'var(--red)' : mVal < 10 ? 'var(--accent)' : 'var(--green)';
+    const row = document.createElement('div');
+    row.className = 'm-row';
+    row.innerHTML = `
+      <span class="m-label">${p.name}</span>
+      <div class="m-bar-wrap"><div class="m-bar" style="width:${pct}%;background:${col}"></div></div>
+      <span class="m-val">${mVal.toFixed(1)}</span>
+    `;
+    mWrap.appendChild(row);
+  });
+
+  // Advice
+  const heroEv = icmEvs[heroIdx];
+  const bfs = players.map((_, vi) => vi === heroIdx ? null : computeBF(stacks, payouts, heroIdx, vi)).filter(b => b !== null);
+  const maxBF = bfs.length ? Math.max(...bfs) : 1;
+  const mH = parseFloat(m);
+
+  let advice = '';
+  if (mH < 5) {
+    advice = `<strong>Critical:</strong> M-ratio ${mH.toFixed(1)} → push/fold territory. Any marginal spot must be evaluated as a shove.`;
+  } else if (maxBF > 3) {
+    advice = `<strong>Extreme ICM pressure</strong> (BF up to ${maxBF.toFixed(2)}). Fold marginal calls. Exploit short stacks aggressively.`;
+  } else if (maxBF > 2) {
+    advice = `<strong>Significant ICM pressure.</strong> Tighten calling range vs covered stacks. Max exploit bubble.`;
+  } else {
+    advice = `ICM pressure is <strong>moderate</strong>. Play near chip-EV. Standard GTO ranges apply with minor ICM adjustment.`;
+  }
+  document.getElementById('adviceBox').innerHTML = advice;
+}
+
+// =====================================================
+//  EVENT WIRING
+// =====================================================
+document.addEventListener('input', e => {
+  const el = e.target;
+  const idx = parseInt(el.dataset.idx);
+  const type = el.dataset.type;
+  if (type === 'stack') {
+    players[idx].stack = parseFloat(el.value) || 0;
+    recalc();
+  } else if (type === 'payout') {
+    payouts[idx] = parseFloat(el.value) || 0;
+    recalc();
+  } else if (['sbInput','bbInput','anteInput','btnInput'].includes(el.id)) {
+    recalc();
+  }
+});
+
+document.addEventListener('click', e => {
+  const role = e.target.dataset.role;
+  const idx  = parseInt(e.target.dataset.idx);
+  if (role === 'del-player' && players.length > 2) {
+    players.splice(idx, 1);
+    players.forEach((p, i) => p.name = 'P' + i);
+    if (heroIdx >= players.length) heroIdx = players.length - 1;
+    renderStackInputs(); recalc();
+  } else if (role === 'del-payout' && payouts.length > 1) {
+    payouts.splice(idx, 1);
+    renderPayoutInputs(); recalc();
+  }
+});
+
+document.getElementById('addPlayerBtn').addEventListener('click', () => {
+  if (players.length >= 9) return;
+  players.push({ name: 'P' + players.length, stack: 1000 });
+  renderStackInputs(); recalc();
+});
+
+document.getElementById('addPayoutBtn').addEventListener('click', () => {
+  payouts.push(0);
+  renderPayoutInputs(); recalc();
+});
+
+// =====================================================
+//  INIT
+// =====================================================
+renderStackInputs();
+renderPayoutInputs();
+recalc();
+</script>
+</body>
+</html>
