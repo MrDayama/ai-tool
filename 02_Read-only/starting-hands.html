@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <title>Archie — スターティングハンド一覧（参考）</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body{font-family:system-ui, -apple-system, "Hiragino Kaku Gothic ProN", "Meiryo", sans-serif;line-height:1.6;margin:24px}
+    h1,h2{color:#1b3a57}
+    .tier{margin-bottom:18px}
+    ul{margin:6px 0 12px 1.2em}
+    .note{color:#555;font-size:0.95em}
+    table{border-collapse:collapse;width:100%;max-width:980px}
+    td,th{border:1px solid #ddd;padding:8px}
+    th{background:#f2f7fb;text-align:left}
+  </style>
+</head>
+<body>
+  <h1>Archie — スターティングハンド一覧（参考）</h1>
+  <p class="note">注：この一覧は Overview / strategy に基づくスターティングハンドの具体例集。ハンドは5枚の初期配牌（ドリーハンド）を想定。スートの組合せは代表例のみ記載（同スート=suited, 異スート=mixed）。実戦では位置・アクション・マルチウェイ等を考慮すること。</p>
+
+  <h2>使い方</h2>
+  <ul>
+    <li>各カテゴリは EV 観点での優先度（S > A > B > C）</li>
+    <li>"スクープポテンシャル" が高いハンドは S/A に分類</li>
+    <li>以下は具体ハンド例。スートは代表例に留め、同等の別スートも当てはまる。</li>
+  </ul>
+
+  <div class="tier">
+    <h2>S — 最優先（超強力、スクープ期待値が高い）</h2>
+    <table>
+      <tr><th>説明</th><th>具体例（代表）</th></tr>
+      <tr><td>Wheel・ほぼ完成ロー＋ハイの両狙い（Aを含む4toWheel, 4toWheel+flush）</td><td>A♠ 2♠ 3♠ 4♠ 9♣（4toWheel + 1枚でWheel/Flush）</td></tr>
+      <tr><td>Wheelに非常に近い4枚＋ハート等スートでのフラッシュポテンシャル</td><td>A♥ 2♥ 3♥ 4♥ K♣（suited 4-to-wheel）</td></tr>
+      <tr><td>Aを含む4枚ロー＋ミドルカード（複合ドロー）</td><td>A♣ 2♦ 3♠ 4♣ 5♦（ほぼWheel完成）</td></tr>
+      <tr><td>ローハンドとハイハンド両方の改善余地がある構成</td><td>A♦ 2♦ 3♣ 9♦ 5♦（ロー有望＋フラッシュ期待）</td></tr>
+      <tr><td>ストレートフラッシュに直結する4枚（スート揃い）</td><td>9♠ T♠ J♠ Q♠ 2♦（4-to-straight-flush）</td></tr>
+    </table>
+    <ul>
+      <li>代表例を拡張すると、A234 + any（A234x）や A2x3x4x の組合せはすべてS帯。</li>
+      <li>例：A♠2♠3♠4♣5♣ / A♥2♥3♥4♥6♠ / A♦2♣3♦4♦9♥ など</li>
+    </ul>
+  </div>
+
+  <div class="tier">
+    <h2>A — 高EV（ロー主導／ハイ主導の強力ハンド）</h2>
+    <table>
+      <tr><th>説明</th><th>具体例</th></tr>
+      <tr><td>強力なトリップス（Trips）やフラッシュ・ロー完成に近いハンド</td><td>K♠ K♦ K♣ 4♥ 9♦（Trips K）</td></tr>
+      <tr><td>Aを含む3枚以上のローテンパイ（3-to-low 〜 4-to-low）</td><td>A♣ 2♠ 3♦ 7♣ 8♦（3〜4to-low）</td></tr>
+      <tr><td>強いハイフラッシュドロー（4-to-flush with A or high cards）</td><td>A♠ K♠ Q♠ J♣ 2♦（4-to-flush）</td></tr>
+      <tr><td>Wheel候補＋高ランクカードの混合（A含むがややブロッカーあり）</td><td>A♣ 2♦ 4♠ 5♣ 9♠</td></tr>
+    </table>
+    <ul>
+      <li>具体例拡張：AAKxx（例：A♠ A♥ K♣ 4♦ 9♣）はハイで強く、A含むロー系と比べても堅い。</li>
+      <li>例：A♠ 2♦ 3♣ 6♠ 9♦ / K♠ K♥ 3♦ 4♣ 7♣ / Q♠ J♠ T♦ 9♠ 2♣</li>
+    </ul>
+  </div>
+
+  <div class="tier">
+    <h2>B — 中〜低リスク（条件付きでプレイ）</h2>
+    <table>
+      <tr><th>説明</th><th>具体例</th></tr>
+      <tr><td>Aを含まないロードロー（逆ドミネイトリスクあり）</td><td>2♠ 4♦ 5♣ 7♥ J♠（2–4–5–7–J）</td></tr>
+      <tr><td>マージナルなハイペア（9のペア等） — ポジション限定で可</td><td>9♠ 9♣ 2♦ 5♥ J♠（9のペア）</td></tr>
+      <tr><td>スーテッド2枚＋低ランクのロー候補（投機的）</td><td>4♠ 5♠ 8♦ J♣ Q♥（suited 4-5 のような投機）</td></tr>
+    </table>
+    <ul>
+      <li>例：3♣ 4♣ 5♦ 9♠ J♥ / 6♠ 7♠ 2♦ 9♦ K♣ / 9♠ 9♦ A♣ 4♣ 2♥（ポジション依存）</li>
+    </ul>
+  </div>
+
+  <div class="tier">
+    <h2>C — フォールド推奨（EV 低）</h2>
+    <table>
+      <tr><th>説明</th><th>具体例</th></tr>
+      <tr><td>3枚交換前提の薄い投機ハンド（完成率低）</td><td>7♠ 8♦ J♣ 2♥ 3♦（投機的）</td></tr>
+      <tr><td>ギリギリの9ペア以外の弱いマージナルハイ</td><td>9♣ 9♥ 4♦ 6♠ 2♣（マージナル、状況依存で捨てる）</td></tr>
+    </table>
+    <ul>
+      <li>例：T♣ J♦ 3♠ 6♥ 8♦ / 5♠ 9♦ Q♣ K♥ 2♣（弱い）</li>
+    </ul>
+  </div>
+
+  <h2>より多くの具体ハンド（カテゴリ別例）</h2>
+  <p class="note">以下は実戦で参照しやすい具体的ハンド組合せのリスト（代表的スート例）。必要ならCSV/JSON形式で出力可能。</p>
+
+  <h3>S（代表的：20例）</h3>
+  <ul>
+    <li>A♠ 2♠ 3♠ 4♠ 9♣</li>
+    <li>A♥ 2♥ 3♥ 4♥ K♣</li>
+    <li>A♣ 2♦ 3♠ 4♣ 5♦</li>
+    <li>A♦ 2♣ 3♦ 4♦ 6♠</li>
+    <li>A♠ 2♥ 3♣ 4♦ 5♠</li>
+    <li>A♠ 2♠ 3♣ 4♣ 7♥</li>
+    <li>A♥ 2♣ 3♦ 4♠ 5♣</li>
+    <li>A♣ 2♣ 5♣ 4♣ 9♠ (suited 4-to-wheel)</li>
+    <li>A♦ 2♦ 3♦ 4♣ 8♣</li>
+    <li>A♠ 2♥ 3♦ 4♣ 5♣</li>
+    <li>A♥ 2♠ 3♠ 4♦ 9♦</li>
+    <li>A♦ 3♦ 4♦ 5♦ 9♣</li>
+    <li>A♣ 2♠ 3♣ 9♣ 5♣</li>
+    <li>A♥ 2♥ 3♦ 4♦ 6♦</li>
+    <li>A♠ 2♠ 3♥ 4♥ 8♥</li>
+    <li>A♦ 2♣ 3♠ 4♣ J♣</li>
+    <li>A♣ 2♥ 3♦ 4♠ Q♠</li>
+    <li>A♥ 2♣ 3♠ 4♣ 5♠</li>
+    <li>A♠ 2♣ 3♦ 4♥ 6♥</li>
+    <li>A♦ 2♦ 3♠ 4♣ 9♥</li>
+  </ul>
+
+  <h3>A（代表的：24例）</h3>
+  <ul>
+    <li>K♠ K♦ K♣ 4♥ 9♦</li>
+    <li>A♠ K♠ Q♠ J♣ 2♦</li>
+    <li>A♣ 2♠ 3♦ 6♣ 9♦</li>
+    <li>A♠ 3♠ 4♦ 8♣ 9♣</li>
+    <li>A♥ 2♦ 5♣ 6♣ 9♠</li>
+    <li>Q♠ J♠ T♦ 9♠ 2♣</li>
+    <li>K♣ K♥ 3♦ 4♣ 7♣</li>
+    <li>A♦ A♠ K♣ 4♦ 2♣</li>
+    <li>A♣ 2♦ 3♣ 9♠ J♣</li>
+    <li>A♠ 2♠ 4♠ 5♣ T♦</li>
+    <li>A♥ 4♥ 5♥ 6♣ 9♠</li>
+    <li>A♣ 3♣ 4♣ 5♣ Q♣</li>
+    <li>K♠ Q♠ J♠ T♠ 3♦</li>
+    <li>J♠ J♥ 5♦ 4♣ 2♣</li>
+    <li>Q♣ Q♦ 3♠ 6♣ 7♦</li>
+    <li>10♠ 9♠ 8♠ 7♣ 2♦</li>
+    <li>A♦ K♦ Q♦ 2♦ 7♣</li>
+    <li>A♣ J♣ 3♣ 4♥ 8♠</li>
+    <li>9♠ 9♦ A♣ 5♠ 2♦</li>
+    <li>8♣ 7♣ 6♣ 5♦ K♣</li>
+    <li>4♠ 5♠ 6♠ 7♣ A♠</li>
+    <li>3♣ 4♣ 5♣ 2♣ A♦</li>
+    <li>K♦ Q♥ J♦ 9♦ 4♣</li>
+  </ul>
+
+  <h3>B（代表的：20例）</h3>
+  <ul>
+    <li>2♠ 4♦ 5♣ 7♥ J♠</li>
+    <li>9♠ 9♣ 2♦ 5♥ J♠</li>
+    <li>4♠ 5♠ 8♦ J♣ Q♥</li>
+    <li>3♣ 4♣ 5♦ 9♠ J♥</li>
+    <li>6♠ 7♠ 2♦ 9♦ K♣</li>
+    <li>T♣ J♦ 9♠ 2♣ 4♥</li>
+    <li>8♦ 8♣ 3♠ 5♣ A♣</li>
+    <li>7♠ 7♦ 4♣ 2♣ J♦</li>
+    <li>Q♠ 9♠ 5♣ 3♦ 2♥</li>
+    <li>5♣ 6♣ 7♣ 2♦ 3♦</li>
+    <li>9♥ 8♥ 7♦ 3♣ 2♣</li>
+    <li>4♦ 5♦ 3♠ 8♣ K♦</li>
+    <li>6♣ 6♦ 2♠ 9♣ J♣</li>
+    <li>3♠ 5♣ 9♦ Q♠ K♣</li>
+    <li>2♦ 3♦ 4♦ 9♠ A♠</li>
+    <li>7♣ 8♣ 5♦ Q♣ K♠</li>
+    <li>4♠ 6♠ 9♦ T♣ J♣</li>
+    <li>5♥ 6♥ 7♦ 8♦ 2♠</li>
+    <li>9♣ 9♦ Q♣ 5♠ 2♦</li>
+    <li>8♠ 9♠ T♦ 3♣ 4♥</li>
+  </ul>
+
+  <h3>C（代表的：16例）</h3>
+  <ul>
+    <li>7♠ 8♦ J♣ 2♥ 3♦</li>
+    <li>9♣ 9♥ 4♦ 6♠ 2♣</li>
+    <li>T♣ J♦ 3♠ 6♥ 8♦</li>
+    <li>5♠ 9♦ Q♣ K♥ 2♣</li>
+    <li>2♦ 7♣ 8♠ Q♣ J♦</li>
+    <li>3♠ 6♣ 9♦ T♣ A♣（A1枚だが整合性低）</li>
+    <li>4♥ 5♦ 8♣ K♠ T♦</li>
+    <li>2♣ 3♣ 7♦ 9♠ Q♣</li>
+    <li>6♦ 7♦ 9♥ J♣ 4♠</li>
+    <li>8♣ 9♦ 2♥ 3♦ 5♠</li>
+    <li>Q♥ 7♣ 5♣ 3♠ 2♦</li>
+    <li>J♠ 6♠ 4♣ 9♣ 2♣</li>
+    <li>T♥ 8♦ 3♣ 5♠ 6♦</li>
+    <li>9♠ 4♠ 2♦ 7♣ K♦</li>
+    <li>5♣ 6♦ Q♣ J♦ 8♠</li>
+    <li>3♦ 4♣ 5♠ 9♥ T♦</li>
+  </ul>
+
+  <h2>出力・次のオプション</h2>
+  <ul>
+    <li>この HTML を編集して CSV/JSON に変換できます。希望なら出力します。</li>
+    <li>より多くの具体例（スート全組合せなど）を生成する場合は、出力形式（CSV/JSON/テキスト）を指定ください。</li>
+  </ul>
+
+  <footer class="note">生成日: 2026-06-15 — Archie 引継ぎ用補助資料</footer>
+</body>
+</html>
