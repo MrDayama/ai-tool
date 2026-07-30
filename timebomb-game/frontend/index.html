@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タイムボム (Timebomb) Online</title>
+    <meta name="description" content="正体隠匿ボードゲーム『タイムボム』のオンラインマルチプレイヤー版。友人と手軽に心理戦が楽しめます。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <!-- Socket.io クライアント (CDN) -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        /* ═══════════════════════════════════════
+           CSS 変数・リセット
+           ═══════════════════════════════════════ */
+        :root {
+            --bg:     #07090f;
+            --panel:  rgba(14,17,32,0.85);
+            --border: rgba(255,255,255,0.06);
+            --red:    #ff3838;
+            --green:  #05c46b;
+            --cyan:   #00d2d3;
+            --gold:   #ffd32a;
+            --muted:  #6c7a8d;
+            --light:  #e8eaf0;
+            --font:   'Outfit', sans-serif;
+            --mono:   'Share Tech Mono', monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            color: var(--light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+            background-image:
+                radial-gradient(ellipse at 0% 0%,    rgba(255,56,56,.13) 0, transparent 55%),
+                radial-gradient(ellipse at 100% 100%,rgba(0,210,211,.12) 0, transparent 55%);
+        }
+
+        /* ═══════════════════════════════════════
+           ユーティリティ
+           ═══════════════════════════════════════ */
+        .hidden { display: none !important; }
+        .container { width: 100%; max-width: 640px; padding: 20px; }
+        .container.wide { max-width: 1040px; }
+
+        .glass {
+            background: var(--panel);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid var(--border);
+            border-radius: 26px;
+            padding: 38px 42px;
+            box-shadow: 0 28px 60px rgba(0,0,0,.55);
+        }
+        @media(max-width:560px){ .glass { padding: 26px 22px; } }
+
+        h1 {
+            font-size: 2.8rem; font-weight: 900; text-align: center; margin-bottom: 28px;
+            background: linear-gradient(120deg, #ff3838 0%, #ff7070 28%, #00d2d3 65%, #54a0ff 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            letter-spacing: 4px;
+        }
+        h2 {
+            font-size: 1.45rem; font-weight: 800; margin-bottom: 22px;
+            border-left: 5px solid var(--red); padding-left: 14px;
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+        .form-group label {
+            font-size: .8rem; color: var(--muted);
+            text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700;
+        }
+        input[type="text"], input[type="url"] {
+            background: rgba(255,255,255,.03);
+            border: 1px solid rgba(255,255,255,.09);
+            color: var(--light); padding: 15px 18px;
+            border-radius: 13px; font-size: 1rem; font-family: var(--font);
+            transition: .3s; width: 100%;
+        }
+        input:focus {
+            outline: none; border-color: var(--red);
+            box-shadow: 0 0 14px rgba(255,56,56,.22);
+        }
+
+        /* ボタン */
+        .btn {
+            background: linear-gradient(135deg, var(--red), #ff6060);
+            color: #fff; border: none; padding: 16px 28px;
+            border-radius: 14px; font-size: 1rem; font-weight: 800;
+            cursor: pointer; width: 100%; text-align: center;
+            transition: .3s cubic-bezier(.175,.885,.32,1.275);
+            box-shadow: 0 10px 24px rgba(255,56,56,.28);
+            margin-top: 6px;
+        }
+        .btn:hover  { transform: translateY(-3px); box-shadow: 0 14px 30px rgba(255,56,56,.42); }
+        .btn:active { transform: translateY(1px); }
+        .btn.secondary {
+            background: rgba(255,255,255,.06);
+            box-shadow: none; border: 1px solid rgba(255,255,255,.1);
+            color: var(--light);
+        }
+        .btn.secondary:hover { background: rgba(255,255,255,.1); box-shadow: none; }
+        .btn.green {
+            background: linear-gradient(135deg, var(--green), #0be881);
+            box-shadow: 0 10px 24px rgba(5,196,107,.28);
+        }
+        .btn.green:hover { box-shadow: 0 14px 30px rgba(5,196,107,.42); }
+        .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; }
+
+        /* エラー通知 */
+        .error-toast {
+            display: none; margin-top: 16px; padding: 14px 18px;
+            background: rgba(255,56,56,.12); border: 1px solid rgba(255,56,56,.3);
+            border-radius: 12px; color: var(--red); font-size: .9rem; font-weight: 600;
+        }
+
+        /* ═══════════════════════════════════════
+           画面① 接続画面
+           ═══════════════════════════════════════ */
+        #screen-connect .subtitle {
+            text-align: center; color: var(--muted); font-size: .95rem; margin-bottom: 30px;
+        }
+        .connect-spinner {
+            display: flex; align-items: center; justify-content: center; gap: 14px;
+            margin-top: 20px; padding: 16px; border-radius: 14px;
+            background: rgba(0,210,211,.07); border: 1px solid rgba(0,210,211,.2);
+        }
+        .spinner-ring {
+            width: 26px; height: 26px; border: 3px solid rgba(0,210,211,.2);
+            border-top-color: var(--cyan); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .connect-hint {
+            font-size: .85rem; color: var(--muted); text-align: center;
+            margin-top: 14px; line-height: 1.55;
+        }
+
+        /* ═══════════════════════════════════════
+           画面② ロビー画面
+           ═══════════════════════════════════════ */
+        .lobby-divider {
+            display: flex; align-items: center; gap: 12px;
+            margin: 22px 0; color: var(--muted); font-size: .85rem;
+        }
+        .lobby-divider::before, .lobby-divider::after {
+            content: ''; flex: 1; height: 1px;
+            background: rgba(255,255,255,.07);
+        }
+        .join-section {
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .join-row { display: flex; gap: 10px; }
+        .join-row input { flex: 1; text-transform: uppercase; letter-spacing: 3px; text-align: center; font-size: 1.4rem; font-family: var(--mono); }
+        .join-row .btn { width: auto; min-width: 100px; margin-top: 0; padding: 15px 20px; }
+
+        /* ═══════════════════════════════════════
+           画面③ 待機室
+           ═══════════════════════════════════════ */
+        .room-code-box {
+            background: rgba(0,210,211,.06);
+            border: 1px solid rgba(0,210,211,.25);
+            border-radius: 18px; padding: 22px;
+            text-align: center; margin-bottom: 24px;
+        }
+        .room-code-label { font-size: .75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 8px; }
+        .room-code-value { font-family: var(--mono); font-size: 3rem; font-weight: 700; color: var(--cyan); letter-spacing: 12px; }
+        .copy-btn {
+            margin-top: 12px; padding: 8px 18px; border-radius: 10px;
+            background: rgba(0,210,211,.12); border: 1px solid rgba(0,210,211,.3);
+            color: var(--cyan); font-size: .82rem; font-weight: 700; cursor: pointer;
+            transition: .2s;
+        }
+        .copy-btn:hover { background: rgba(0,210,211,.22); }
+
+        .player-list-title {
+            font-size: .8rem; color: var(--muted); text-transform: uppercase;
+            letter-spacing: 1.2px; font-weight: 700; margin-bottom: 12px;
+        }
+        .player-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+        .player-list-item {
+            display: flex; align-items: center; gap: 14px;
+            background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06);
+            border-radius: 13px; padding: 12px 16px;
+        }
+        .player-dot {
+            width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+            background: var(--green); box-shadow: 0 0 8px rgba(5,196,107,.5);
+        }
+        .player-dot.offline { background: var(--muted); box-shadow: none; }
+        .player-list-name { font-weight: 700; flex: 1; }
+        .host-badge {
+            font-size: .72rem; font-weight: 800; padding: 3px 9px;
+            border-radius: 7px; background: rgba(255,211,42,.15);
+            border: 1px solid rgba(255,211,42,.3); color: var(--gold);
+        }
+        .waiting-hint { font-size: .9rem; color: var(--muted); text-align: center; margin-top: 12px; }
+
+        /* ═══════════════════════════════════════
+           画面④ ゲーム画面
+           ═══════════════════════════════════════ */
+
+        /* ─ トラッカーセクション ─ */
+        .tracker-row {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px;
+        }
+        @media(max-width:660px){ .tracker-row { grid-template-columns: 1fr; } }
+
+        .tracker-box {
+            background: rgba(255,255,255,.02);
+            border: 1px solid rgba(255,255,255,.06);
+            border-radius: 16px; padding: 16px 18px;
+        }
+        .tracker-label {
+            font-size: .72rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1.4px; color: var(--muted); margin-bottom: 12px;
+        }
+
+        /* ワイヤースロット */
+        .wire-track { display: flex; gap: 8px; flex-wrap: wrap; }
+        .wire-slot {
+            position: relative; width: 64px; height: 36px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 9px; background: rgba(255,255,255,.03);
+            border: 1.5px solid rgba(255,255,255,.09); transition: all .4s ease; overflow: hidden;
+        }
+        .wire-slot::before {
+            content: ''; position: absolute;
+            left: 8px; right: 8px; top: 50%; height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(0,210,211,.5) 30%, rgba(0,210,211,.9) 50%, rgba(0,210,211,.5) 70%, transparent);
+            border-radius: 2px; transform: translateY(-50%); transition: all .4s ease;
+        }
+        .wire-slot .nipper { position: relative; z-index: 2; font-size: 1.2rem; filter: grayscale(.5) opacity(.55); transition: .4s; }
+        .wire-slot.cut { background: rgba(255,56,56,.08); border-color: rgba(255,56,56,.3); }
+        .wire-slot.cut::before {
+            background: linear-gradient(90deg, transparent, rgba(255,56,56,.4) 30%, rgba(255,56,56,.7) 50%, rgba(255,56,56,.4) 70%, transparent);
+            clip-path: polygon(0 45%, 46% 45%, 52% 0%, 54% 0%, 48% 48%, 100% 48%, 100% 52%, 52% 52%, 54% 100%, 52% 100%, 48% 55%, 0 55%);
+        }
+        .wire-slot.cut .nipper { filter: none; transform: rotate(-18deg) scale(1.1); opacity: 1; }
+        .wire-slot.active { background: rgba(0,210,211,.1); border-color: rgba(0,210,211,.5); box-shadow: 0 0 14px rgba(0,210,211,.2); animation: wirePulse 1.6s ease-in-out infinite; }
+        .wire-slot.active::before { background: linear-gradient(90deg, transparent, rgba(0,210,211,.7) 30%, #00d2d3 50%, rgba(0,210,211,.7) 70%, transparent); }
+        .wire-slot.active .nipper { filter: none; opacity: 1; }
+
+        /* 解除チップ */
+        .defuse-track { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .defuse-chip {
+            width: 46px; height: 46px; border-radius: 50%;
+            border: 2.5px solid rgba(255,255,255,.1);
+            background: rgba(255,255,255,.02);
+            display: flex; align-items: center; justify-content: center; font-size: 1.35rem;
+            transition: all .5s cubic-bezier(.175,.885,.32,1.275);
+        }
+        .defuse-chip.found {
+            border-color: var(--green); background: rgba(5,196,107,.15);
+            box-shadow: 0 0 18px rgba(5,196,107,.5); animation: defusePop .5s cubic-bezier(.175,.885,.32,1.275);
+        }
+        .defuse-chip.boom-chip { border: 2.5px dashed rgba(255,56,56,.3); }
+        .defuse-chip.boom-chip.exploded { border-color: var(--red); background: rgba(255,56,56,.15); box-shadow: 0 0 18px rgba(255,56,56,.5); }
+
+        /* ─ 手番表示 ─ */
+        .turn-box {
+            background: linear-gradient(135deg, rgba(0,210,211,.1), rgba(255,56,56,.03));
+            border: 1px dashed rgba(0,210,211,.3);
+            border-radius: 16px; padding: 15px 22px;
+            text-align: center; margin-bottom: 22px;
+        }
+        .cutter-name { font-size: 1.45rem; font-weight: 900; color: var(--cyan); text-shadow: 0 0 12px rgba(0,210,211,.3); }
+        .turn-hint   { font-size: .86rem; color: var(--muted); margin-top: 4px; }
+
+        /* ─ ラウンドアナウンス ─ */
+        #round-announce {
+            display: none; text-align: center; font-size: 1.4rem; font-weight: 900;
+            padding: 16px 22px; margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(0,210,211,.12), rgba(255,56,56,.05));
+            border: 1px solid rgba(0,210,211,.25); border-radius: 16px;
+            animation: fadeSlide .5s ease;
+        }
+
+        /* ─ プレイヤーボード ─ */
+        .players-board { display: flex; flex-direction: column; gap: 18px; }
+        .player-row {
+            background: rgba(255,255,255,.01);
+            border: 1px solid rgba(255,255,255,.04);
+            border-radius: 20px; padding: 18px 22px;
+            display: flex; align-items: center; justify-content: space-between; gap: 14px;
+            transition: .3s;
+        }
+        .player-row.is-cutter {
+            border-color: rgba(0,210,211,.28);
+            box-shadow: 0 0 18px rgba(0,210,211,.07);
+            background: rgba(0,210,211,.012);
+        }
+        .player-row.is-self {
+            border-color: rgba(255,211,42,.2);
+            background: rgba(255,211,42,.015);
+        }
+        .player-info { min-width: 160px; display: flex; flex-direction: column; gap: 7px; }
+        .player-name-el { font-size: 1.15rem; font-weight: 800; }
+        .self-role-badge {
+            font-size: .75rem; font-weight: 800; padding: 4px 10px;
+            border-radius: 8px; display: inline-block; width: fit-content;
+        }
+        .self-role-badge.police { background: rgba(0,210,211,.2); border: 1px solid rgba(0,210,211,.4); color: var(--cyan); }
+        .self-role-badge.bomber { background: rgba(255,56,56,.2);  border: 1px solid rgba(255,56,56,.4);  color: var(--red); }
+
+        /* ─ 3D カード ─ */
+        .player-cards { display: flex; gap: 10px; flex-grow: 1; justify-content: flex-end; flex-wrap: wrap; }
+        .card-container { width: 68px; height: 108px; perspective: 600px; cursor: default; }
+        .card-inner {
+            width: 100%; height: 100%; position: relative;
+            transform-style: preserve-3d;
+            transition: transform .55s cubic-bezier(.4,0,.2,1);
+        }
+        .card-container.flipped .card-inner { transform: rotateY(180deg); }
+        .card-front, .card-back {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; -webkit-backface-visibility: hidden;
+            border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 6px 14px rgba(0,0,0,.45);
+        }
+        /* 裏面 */
+        .card-back {
+            background: linear-gradient(145deg, #111728, #07090f);
+            border: 2px solid rgba(255,255,255,.08); overflow: hidden;
+        }
+        .card-back::before { content: ''; position: absolute; width: 76%; height: 76%; border: 1px solid rgba(255,56,56,.14); border-radius: 8px; }
+        .card-back::after  { content: '💣'; font-size: 1.7rem; opacity: .2; transition: .3s; }
+        /* 自分のカード - 種類が見える（色で区別） */
+        .card-back.own-safe  { border-color: rgba(100,120,160,.35); background: linear-gradient(145deg,#1a1f35,#0e1220); }
+        .card-back.own-safe::after  { content: '💤'; opacity: .5; }
+        .card-back.own-scute { border-color: rgba(5,196,107,.4);  background: linear-gradient(145deg,#0e2a1e,#071610); }
+        .card-back.own-scute::after { content: '⚡'; opacity: .6; font-size: 1.9rem; }
+        .card-back.own-boom  { border-color: rgba(255,56,56,.5);  background: linear-gradient(145deg,#2a0e0e,#160707); }
+        .card-back.own-boom::after  { content: '💣'; opacity: .7; font-size: 1.9rem; }
+        /* 自分のカードにはカーソルを付けない */
+        .card-container.is-own { cursor: default; }
+        /* 他人のカードで手番ならカーソル */
+        .card-container.cuttable { cursor: pointer; }
+        .card-container.cuttable:hover .card-back { border-color: rgba(255,56,56,.45); }
+        .card-container.cuttable:hover .card-back::after { opacity: .7; transform: scale(1.12); }
+        /* 表面 */
+        .card-front { transform: rotateY(180deg); }
+        .card-front.safe  { background: radial-gradient(circle,#3d4357,#1c2030); border: 2px solid rgba(255,255,255,.1); }
+        .card-front.safe::after  { content: '💤'; font-size: 1.9rem; }
+        .card-front.scute { background: radial-gradient(circle,#05c46b,#037d43); border: 2px solid var(--green); box-shadow: 0 0 22px rgba(5,196,107,.45); }
+        .card-front.scute::after { content: '⚡'; font-size: 2.3rem; text-shadow: 0 0 10px rgba(255,255,255,.7); animation: pulse 1.5s infinite; }
+        .card-front.boom  { background: radial-gradient(circle,#ff3838,#9e0e0e); border: 2px solid var(--red); box-shadow: 0 0 30px rgba(255,56,56,.85); }
+        .card-front.boom::after  { content: '💥'; font-size: 2.7rem; animation: shakeBomb .3s infinite; }
+
+        /* ─ パーティクル ─ */
+        .fx-layer { position: fixed; inset: 0; pointer-events: none; z-index: 999; }
+        .particle  { position: absolute; border-radius: 50%; pointer-events: none; animation: flyOut 1.2s cubic-bezier(.1,.8,.3,1) forwards; }
+
+        /* ─ モーダル ─ */
+        .modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.92); backdrop-filter: blur(14px);
+            align-items: center; justify-content: center; z-index: 100;
+        }
+        .modal.active { display: flex; }
+        .modal-content { max-width: 520px; width: 90%; text-align: center; }
+        .modal-title  { font-size: 2.2rem; font-weight: 900; margin-bottom: 14px; }
+        .modal-body   { font-size: 1.05rem; margin-bottom: 26px; color: var(--muted); line-height: 1.65; }
+        .role-badge   { display: inline-block; padding: 4px 12px; border-radius: 8px; font-weight: 800; margin: 4px; }
+        .role-badge.police { background: var(--cyan); color: #000; }
+        .role-badge.bomber { background: var(--red);  color: #fff; }
+
+        /* ─ shake/flash ─ */
+        .shake  { animation: shakeFx .65s cubic-bezier(.36,.07,.19,.97) both; }
+        .flash-r{ animation: flashR .45s ease-out; }
+        .flash-g{ animation: flashG .45s ease-out; }
+
+        /* ═══════════════════════════════════════
+           キーフレーム
+           ═══════════════════════════════════════ */
+        @keyframes spin      { to { transform: rotate(360deg); } }
+        @keyframes pulse     { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+        @keyframes shakeBomb { 0%,100%{transform:translate(1px,1px)} 50%{transform:translate(-1px,-1px) rotate(-2deg)} }
+        @keyframes shakeFx   { 10%,90%{transform:translate3d(-4px,0,0)} 20%,80%{transform:translate3d(6px,0,0)} 30%,50%,70%{transform:translate3d(-9px,0,0)} 40%,60%{transform:translate3d(9px,0,0)} }
+        @keyframes flashR    { 0%{background-color:rgba(255,56,56,.5)} 100%{background-color:transparent} }
+        @keyframes flashG    { 0%{background-color:rgba(5,196,107,.38)} 100%{background-color:transparent} }
+        @keyframes flyOut    { 0%{transform:translate(0,0) scale(1);opacity:1} 100%{transform:translate(var(--tx),var(--ty)) scale(0);opacity:0} }
+        @keyframes wirePulse { 0%,100%{box-shadow:0 0 10px rgba(0,210,211,.15)} 50%{box-shadow:0 0 22px rgba(0,210,211,.4)} }
+        @keyframes defusePop { 0%{transform:scale(.6);opacity:0} 60%{transform:scale(1.2)} 100%{transform:scale(1);opacity:1} }
+        @keyframes fadeSlide { from{opacity:0;transform:translateY(-8px)} to{opacity:1;transform:translateY(0)} }
+    </style>
+</head>
+<body>
+<div id="fx-layer" class="fx-layer"></div>
+
+<!-- ══════════════════════════════════════
+     画面① 接続画面
+     ══════════════════════════════════════ -->
+<div id="screen-connect" class="container">
+<div class="glass">
+    <h1>TIME BOMB</h1>
+    <p class="subtitle">オンラインマルチプレイヤー版</p>
+
+    <div class="form-group">
+        <label for="server-url">バックエンドサーバーURL</label>
+        <input type="url" id="server-url" placeholder="https://your-app.onrender.com" value="http://localhost:3001">
+    </div>
+    <button id="connect-btn" class="btn">接続する</button>
+
+    <div id="connecting-spinner" class="connect-spinner hidden">
+        <div class="spinner-ring"></div>
+        <span id="connecting-text">サーバーに接続中...</span>
+    </div>
+    <p class="connect-hint">
+        ※ 初回接続時、Render.comの無料サーバーが<br>起動するまで最大1分かかることがあります。
+    </p>
+    <div id="connect-error" class="error-toast"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     画面② ロビー画面
+     ══════════════════════════════════════ -->
+<div id="screen-lobby" class="container hidden">
+<div class="glass">
+    <h1>TIME BOMB</h1>
+    <div class="form-group">
+        <label for="nickname">ニックネーム</label>
+        <input type="text" id="nickname" placeholder="あなたの名前" maxlength="16">
+    </div>
+
+    <button id="create-room-btn" class="btn">🏠 新しいルームを作る</button>
+
+    <div class="lobby-divider">または</div>
+
+    <div class="join-section">
+        <div class="form-group" style="margin-bottom:10px">
+            <label for="room-code-input">ルームコード (4文字)</label>
+        </div>
+        <div class="join-row">
+            <input type="text" id="room-code-input" placeholder="ABCD" maxlength="4">
+            <button id="join-room-btn" class="btn secondary">参加</button>
+        </div>
+    </div>
+
+    <div id="lobby-error" class="error-toast"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     画面③ 待機室
+     ══════════════════════════════════════ -->
+<div id="screen-waiting" class="container hidden">
+<div class="glass">
+    <h2>待機室</h2>
+
+    <div class="room-code-box">
+        <div class="room-code-label">ルームコードを友達に伝えよう</div>
+        <div class="room-code-value" id="display-room-code">——</div>
+        <button class="copy-btn" id="copy-code-btn">📋 コードをコピー</button>
+    </div>
+
+    <div class="player-list-title">参加中のプレイヤー</div>
+    <div id="waiting-player-list" class="player-list"></div>
+
+    <button id="start-game-btn" class="btn green hidden">⚡ ゲームスタート（ホストのみ）</button>
+    <p id="waiting-hint" class="waiting-hint">ホストがゲームを開始するまでお待ちください…</p>
+
+    <div id="waiting-error" class="error-toast"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     画面④ ゲーム画面
+     ══════════════════════════════════════ -->
+<div id="screen-game" class="container wide hidden">
+<div class="glass">
+
+    <!-- トラッカーエリア -->
+    <div class="tracker-row">
+        <div class="tracker-box">
+            <div class="tracker-label">✂️ このラウンドの残りカット</div>
+            <div id="wire-track" class="wire-track"></div>
+        </div>
+        <div class="tracker-box">
+            <div class="tracker-label">⚡ 解除コード進捗</div>
+            <div id="defuse-track" class="defuse-track"></div>
+        </div>
+    </div>
+
+    <!-- ラウンドアナウンス -->
+    <div id="round-announce"></div>
+
+    <!-- 手番表示 -->
+    <div class="turn-box">
+        <div class="cutter-name" id="cutter-name-disp">—</div>
+        <div class="turn-hint" id="turn-hint-disp">の手番</div>
+    </div>
+
+    <!-- ボード -->
+    <div id="game-board" class="players-board"></div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     ゲーム終了モーダル
+     ══════════════════════════════════════ -->
+<div id="modal" class="modal">
+<div class="glass modal-content">
+    <div id="modal-title" class="modal-title"></div>
+    <div id="modal-body"  class="modal-body"></div>
+    <button id="modal-back-btn" class="btn">ロビーに戻る</button>
+</div>
+</div>
+
+<!-- ゲーム中断モーダル -->
+<div id="modal-abort" class="modal">
+<div class="glass modal-content">
+    <div class="modal-title" style="color:var(--muted)">⚠️ ゲーム中断</div>
+    <div id="modal-abort-body" class="modal-body"></div>
+    <button id="modal-abort-btn" class="btn secondary">ロビーに戻る</button>
+</div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   タイムボム オンライン クライアント
+   ══════════════════════════════════════════════════ */
+
+const PER_ROUND = {1:5, 2:4, 3:3, 4:2};
+
+// ─── セッション管理 ───────────────────────────────
+function getOrCreatePlayerId() {
+    let id = localStorage.getItem('timebomb_player_id');
+    if (!id) {
+        // UUID v4 生成
+        id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        localStorage.setItem('timebomb_player_id', id);
+    }
+    return id;
+}
+function saveSession(roomId, nickname) {
+    localStorage.setItem('timebomb_session', JSON.stringify({ roomId, nickname }));
+}
+function clearSession() {
+    localStorage.removeItem('timebomb_session');
+}
+function loadSession() {
+    try { return JSON.parse(localStorage.getItem('timebomb_session')); }
+    catch { return null; }
+}
+
+// ─── 状態 ────────────────────────────────────────
+let socket = null;
+const MY_ID = getOrCreatePlayerId();
+let myNickname = '';
+let myRoomId   = '';
+let myHostId   = '';
+let lastRoomState = null; // 最後に受信した room_state
+let roundSlots = [];      // ワイヤートラッカー用: [{type}|null]
+
+// ─── DOM ─────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+const screens = {
+    connect: $('screen-connect'),
+    lobby:   $('screen-lobby'),
+    waiting: $('screen-waiting'),
+    game:    $('screen-game'),
+};
+
+function showScreen(name) {
+    Object.entries(screens).forEach(([k, el]) => {
+        el.classList.toggle('hidden', k !== name);
+    });
+}
+
+// ─── エラー表示ヘルパー ────────────────────────────
+function showError(el, msg) {
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+/* ══════════════════════════════════════════════════
+   画面① 接続
+   ══════════════════════════════════════════════════ */
+$('connect-btn').addEventListener('click', () => {
+    const url = $('server-url').value.trim();
+    if (!url) return;
+    attemptConnect(url);
+});
+
+function attemptConnect(serverUrl) {
+    const spinner = $('connecting-spinner');
+    const errEl   = $('connect-error');
+    spinner.classList.remove('hidden');
+    $('connect-btn').disabled = true;
+    $('connecting-text').textContent = 'サーバーに接続中...';
+
+    // ヘルスチェック（Renderのスリープ解除を待つ）
+    let attempts = 0;
+    const maxAttempts = 14; // 最大約70秒
+    const healthUrl = serverUrl.replace(/\/$/, '') + '/health';
+
+    const tryHealth = () => {
+        attempts++;
+        $('connecting-text').textContent = `サーバー起動確認中... (${attempts}/${maxAttempts})`;
+
+        fetch(healthUrl, { signal: AbortSignal.timeout(6000) })
+            .then(r => {
+                if (r.ok) {
+                    // サーバー起動確認 → Socket.io 接続
+                    spinner.classList.add('hidden');
+                    initSocket(serverUrl);
+                } else {
+                    throw new Error('not ok');
+                }
+            })
+            .catch(() => {
+                if (attempts < maxAttempts) {
+                    setTimeout(tryHealth, 5000);
+                } else {
+                    spinner.classList.add('hidden');
+                    $('connect-btn').disabled = false;
+                    showError(errEl, 'サーバーへの接続に失敗しました。URLを確認してください。');
+                }
+            });
+    };
+    tryHealth();
+}
+
+function initSocket(serverUrl) {
+    socket = io(serverUrl, {
+        transports: ['websocket', 'polling'],
+        reconnectionAttempts: 5,
+    });
+
+    socket.on('connect', () => {
+        console.log('Socket connected:', socket.id);
+
+        // セッション復旧を試みる
+        const saved = loadSession();
+        if (saved) {
+            $('connecting-text').textContent = 'セッションを復旧中...';
+            $('connecting-spinner').classList.remove('hidden');
+            socket.emit('reconnect_session', { playerId: MY_ID });
+        } else {
+            showLobby();
+        }
+    });
+
+    socket.on('reconnect_success', ({ roomId, nickname }) => {
+        myRoomId = roomId;
+        myNickname = nickname;
+        $('connecting-spinner').classList.add('hidden');
+        // room_state を待ってから画面遷移（すぐに来る）
+    });
+
+    socket.on('reconnect_failed', () => {
+        clearSession();
+        $('connecting-spinner').classList.add('hidden');
+        showLobby();
+    });
+
+    socket.on('room_state', (state) => {
+        console.log('room_state:', state);
+
+        if (state.status === 'LOBBY') {
+            myHostId = state.hostId;
+            myRoomId = state.roomId;
+            lastRoomState = state;
+            renderWaitingRoom(state);
+            showScreen('waiting');
+        } else {
+            // ラウンド変化検知（ここでリセット）
+            if (lastRoomState && lastRoomState.currentRound !== state.currentRound && state.currentRound > 1) {
+                roundSlots = [];
+                showRoundAnnounce(state.currentRound, PER_ROUND[state.currentRound]);
+            }
+            lastRoomState = state;
+            myHostId = state.hostId || myHostId;
+            renderGameScreen(state);
+            showScreen('game');
+
+            if (state.status === 'POLICE_WON') {
+                setTimeout(() => showGameEndModal(state, 'police'), 600);
+            } else if (state.status === 'BOMBER_WON') {
+                setTimeout(() => showGameEndModal(state, 'bomber'), 600);
+            }
+        }
+    });
+
+    socket.on('wire_cut_animation', ({ cutterId, targetId, cardId, type }) => {
+        // カードをフリップする演出
+        const cardEl = document.querySelector(`[data-card-id="${cardId}"]`);
+        if (cardEl) {
+            cardEl.classList.add('flipped');
+            setTimeout(() => {
+                const rect = cardEl.getBoundingClientRect();
+                const cx = rect.left + rect.width  / 2;
+                const cy = rect.top  + rect.height / 2;
+                if (type === 'scute') spark(cx, cy, 'green');
+                if (type === 'boom')  spark(cx, cy, 'boom');
+            }, 300);
+        }
+
+        // ラウンドスロット更新
+        const cutCount = roundSlots.filter(s => s !== null).length;
+        if (cutCount < roundSlots.length) {
+            roundSlots[cutCount] = { type };
+        }
+        renderWireTracker(roundSlots);
+    });
+
+    socket.on('error', (msg) => {
+        // 現在の画面に応じてエラー表示
+        const errId = screens.waiting.classList.contains('hidden') ? 'lobby-error' : 'waiting-error';
+        showError($(errId), msg);
+    });
+
+    socket.on('game_aborted', (msg) => {
+        $('modal-abort-body').textContent = msg;
+        $('modal-abort').classList.add('active');
+    });
+
+    socket.on('disconnect', () => {
+        console.warn('Socket disconnected');
+    });
+}
+
+/* ══════════════════════════════════════════════════
+   画面② ロビー
+   ══════════════════════════════════════════════════ */
+function showLobby() {
+    // 保存済みニックネームを復元
+    const saved = localStorage.getItem('timebomb_nickname');
+    if (saved) $('nickname').value = saved;
+    showScreen('lobby');
+}
+
+$('create-room-btn').addEventListener('click', () => {
+    const name = $('nickname').value.trim();
+    if (!name) { showError($('lobby-error'), 'ニックネームを入力してください。'); return; }
+    myNickname = name;
+    localStorage.setItem('timebomb_nickname', name);
+    socket.emit('create_room', { playerId: MY_ID, nickname: name });
+});
+
+$('join-room-btn').addEventListener('click', () => {
+    const name = $('nickname').value.trim();
+    const code = $('room-code-input').value.trim().toUpperCase();
+    if (!name) { showError($('lobby-error'), 'ニックネームを入力してください。'); return; }
+    if (!code || code.length !== 4) { showError($('lobby-error'), 'ルームコードは4文字で入力してください。'); return; }
+    myNickname = name;
+    localStorage.setItem('timebomb_nickname', name);
+    socket.emit('join_room', { roomId: code, playerId: MY_ID, nickname: name });
+});
+
+$('room-code-input').addEventListener('input', e => {
+    e.target.value = e.target.value.toUpperCase();
+});
+
+/* ══════════════════════════════════════════════════
+   画面③ 待機室
+   ══════════════════════════════════════════════════ */
+function renderWaitingRoom(state) {
+    $('display-room-code').textContent = state.roomId;
+    saveSession(state.roomId, myNickname);
+
+    const list = $('waiting-player-list');
+    list.innerHTML = '';
+    state.players.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'player-list-item';
+        const dot  = document.createElement('div');
+        dot.className = `player-dot${p.connected ? '' : ' offline'}`;
+        const name = document.createElement('span');
+        name.className = 'player-list-name';
+        name.textContent = p.name + (p.id === MY_ID ? ' (あなた)' : '');
+        item.appendChild(dot);
+        item.appendChild(name);
+        if (p.id === state.hostId) {
+            const badge = document.createElement('span');
+            badge.className = 'host-badge';
+            badge.textContent = 'ホスト';
+            item.appendChild(badge);
+        }
+        list.appendChild(item);
+    });
+
+    const isHost = (state.hostId === MY_ID);
+    $('start-game-btn').classList.toggle('hidden', !isHost);
+    $('waiting-hint').classList.toggle('hidden', isHost);
+
+    // 人数不足ならボタンを無効化
+    if (isHost) {
+        $('start-game-btn').disabled = state.players.length < 3;
+        $('start-game-btn').textContent = state.players.length < 3
+            ? `⚡ ゲームスタート（あと${3 - state.players.length}人必要）`
+            : '⚡ ゲームスタート';
+    }
+}
+
+$('copy-code-btn').addEventListener('click', () => {
+    const code = $('display-room-code').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        $('copy-code-btn').textContent = '✅ コピーしました！';
+        setTimeout(() => { $('copy-code-btn').textContent = '📋 コードをコピー'; }, 2000);
+    });
+});
+
+$('start-game-btn').addEventListener('click', () => {
+    socket.emit('start_game');
+});
+
+/* ══════════════════════════════════════════════════
+   画面④ ゲーム
+   ══════════════════════════════════════════════════ */
+function renderGameScreen(state) {
+    renderWireTracker(roundSlots, state);
+    renderDefuseTracker(state);
+    renderTurnBox(state);
+    renderBoard(state);
+}
+
+// ─── ワイヤートラッカー ─────────────────────────
+function renderWireTracker(slots, state) {
+    const track = $('wire-track');
+    track.innerHTML = '';
+    const n = state ? state.players.length : (lastRoomState ? lastRoomState.players.length : 0);
+    const cutsThisRound = slots ? slots.filter(s => s !== null).length : 0;
+
+    for (let i = 0; i < n; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'wire-slot';
+        const nipper = document.createElement('span');
+        nipper.className = 'nipper';
+        const slotData = slots ? slots[i] : null;
+
+        if (slotData) {
+            slot.classList.add('cut');
+            nipper.textContent = slotData.type === 'scute' ? '⚡' : slotData.type === 'boom' ? '💥' : '✂️';
+        } else if (i === cutsThisRound) {
+            slot.classList.add('active');
+            nipper.textContent = '✂️';
+        } else {
+            nipper.textContent = '✂️';
+        }
+        slot.appendChild(nipper);
+        track.appendChild(slot);
+    }
+}
+
+// ─── 解除チップトラッカー ──────────────────────
+function renderDefuseTracker(state) {
+    const track = $('defuse-track');
+    track.innerHTML = '';
+    const goal  = state.scutesGoal;
+    const found = state.scutesFound;
+
+    for (let i = 0; i < goal; i++) {
+        const chip = document.createElement('div');
+        chip.className = 'defuse-chip';
+        if (i < found) {
+            chip.classList.add('found');
+            chip.textContent = '⚡';
+        } else {
+            chip.style.color = 'rgba(255,255,255,.1)';
+            chip.style.fontSize = '.8rem';
+            chip.textContent = '○';
+        }
+        track.appendChild(chip);
+    }
+    // 爆弾チップ
+    const boomChip = document.createElement('div');
+    boomChip.className = 'defuse-chip boom-chip';
+    boomChip.style.marginLeft = '6px';
+    boomChip.textContent = '💣';
+    if (state.status === 'BOMBER_WON') boomChip.classList.add('exploded');
+    track.appendChild(boomChip);
+}
+
+// ─── 手番ボックス ────────────────────────────
+function renderTurnBox(state) {
+    const cutter = state.players.find(p => p.id === state.currentCutterId);
+    const isMyTurn = (state.currentCutterId === MY_ID);
+    $('cutter-name-disp').textContent = cutter ? cutter.name + (isMyTurn ? ' (あなた)' : '') : '—';
+    $('turn-hint-disp').textContent = isMyTurn
+        ? 'の手番 ─ 他のプレイヤーのカードを1枚選んでください'
+        : 'の手番 ─ カードがカットされるのを待ってください';
+}
+
+// ─── ゲームボード ────────────────────────────
+function renderBoard(state) {
+    const board  = $('game-board');
+    board.innerHTML = '';
+    const isMyTurn = (state.currentCutterId === MY_ID);
+
+    state.players.forEach(player => {
+        const isSelf    = (player.id === MY_ID);
+        const isCutter  = (player.id === state.currentCutterId);
+
+        const row = document.createElement('div');
+        row.className = `player-row${isCutter ? ' is-cutter' : ''}${isSelf ? ' is-self' : ''}`;
+
+        // プレイヤー情報
+        const info = document.createElement('div');
+        info.className = 'player-info';
+
+        const nameEl = document.createElement('div');
+        nameEl.className = 'player-name-el';
+        nameEl.textContent = player.name + (isSelf ? ' 👤' : '');
+        info.appendChild(nameEl);
+
+        // 自分の役職バッジ
+        if (isSelf && state.self && state.self.role) {
+            const badge = document.createElement('div');
+            badge.className = `self-role-badge ${state.self.role === 'POLICE' ? 'police' : 'bomber'}`;
+            badge.textContent = state.self.role === 'POLICE' ? '👮 時空警察' : '💣 ボマー団';
+            info.appendChild(badge);
+        }
+
+        // ゲーム終了時の役職開示
+        if ((state.status === 'POLICE_WON' || state.status === 'BOMBER_WON') && player.role !== 'unknown') {
+            const badge = document.createElement('div');
+            badge.className = `self-role-badge ${player.role === 'POLICE' ? 'police' : 'bomber'}`;
+            badge.textContent = player.role === 'POLICE' ? '👮 時空警察' : '💣 ボマー団';
+            if (!isSelf) info.appendChild(badge);
+        }
+
+        row.appendChild(info);
+
+        // カード一覧
+        const cardsDiv = document.createElement('div');
+        cardsDiv.className = 'player-cards';
+
+        const cards = isSelf ? (state.self ? state.self.cards : []) : player.cards;
+        cards.forEach(card => {
+            const cont  = document.createElement('div');
+            const inner = document.createElement('div');
+            const back  = document.createElement('div');
+            const front = document.createElement('div');
+
+            cont.className  = 'card-container';
+            inner.className = 'card-inner';
+            front.className = `card-front ${card.isRevealed ? card.type : 'safe'}`;
+
+            if (card.isRevealed) {
+                // めくられたカード
+                cont.classList.add('flipped');
+                back.className = 'card-back';
+            } else if (isSelf) {
+                // 自分の手札：種類が分かるスタイル
+                cont.classList.add('is-own');
+                back.className = `card-back own-${card.type}`;
+            } else {
+                // 他人の手札
+                back.className = 'card-back';
+                if (isMyTurn && !isSelf) {
+                    cont.classList.add('cuttable');
+                    cont.addEventListener('click', () => onCutWire(player.id, card.id));
+                }
+            }
+
+            // data属性でカードを特定（wire_cut_animation用）
+            cont.setAttribute('data-card-id', card.id);
+            cont.setAttribute('data-player-id', player.id);
+
+            inner.appendChild(back);
+            inner.appendChild(front);
+            cont.appendChild(inner);
+            cardsDiv.appendChild(cont);
+        });
+
+        row.appendChild(cardsDiv);
+        board.appendChild(row);
+    });
+}
+
+// ─── カットアクション ─────────────────────────
+function onCutWire(targetPlayerId, cardId) {
+    socket.emit('cut_wire', { targetPlayerId, cardId });
+}
+
+/* ══════════════════════════════════════════════════
+   ゲーム終了モーダル
+   ══════════════════════════════════════════════════ */
+function showGameEndModal(state, winner) {
+    const isPoliceWin = winner === 'police';
+    $('modal-title').innerHTML = isPoliceWin
+        ? '<span style="color:var(--cyan)">👮 時空警察の勝利！</span>'
+        : '<span style="color:var(--red)">💥 ボマー団の勝利！</span>';
+
+    const msg = isPoliceWin
+        ? 'すべての解除コードがカットされ、爆弾の安全な解除に成功しました！'
+        : (state.status === 'BOMBER_WON' && state.remainingCuts !== undefined && state.remainingCuts === 0
+            ? 'すべてのラウンドが終了しましたが解除コードが足りませんでした。爆弾が爆発しました！'
+            : 'BOOM カードがカットされました！大爆発が起きました！');
+
+    let rolesHtml = `<div style="text-align:left;background:rgba(0,0,0,.3);padding:14px;border-radius:12px;margin-top:14px;">
+        <strong>【全員の陣営公開】</strong><br>`;
+    state.players.forEach(p => {
+        if (p.role && p.role !== 'unknown') {
+            rolesHtml += `${p.name}: <span class="role-badge ${p.role === 'POLICE' ? 'police' : 'bomber'}">${p.role === 'POLICE' ? '👮 時空警察' : '💣 ボマー団'}</span><br>`;
+        }
+    });
+    rolesHtml += '</div>';
+
+    $('modal-body').innerHTML = msg + rolesHtml;
+    $('modal').classList.add('active');
+}
+
+$('modal-back-btn').addEventListener('click', () => {
+    $('modal').classList.remove('active');
+    clearSession();
+    roundSlots = [];
+    showScreen('lobby');
+});
+
+$('modal-abort-btn').addEventListener('click', () => {
+    $('modal-abort').classList.remove('active');
+    clearSession();
+    roundSlots = [];
+    showScreen('lobby');
+});
+
+/* ══════════════════════════════════════════════════
+   ラウンドアナウンス表示
+   ══════════════════════════════════════════════════ */
+function showRoundAnnounce(round, perPlayer) {
+    const el = $('round-announce');
+    el.style.display = 'block';
+    el.innerHTML = `🔄 ラウンド ${round} 開始！<br>
+        <span style="font-size:.88rem;font-weight:400;color:var(--muted)">
+            カードを回収・シャッフルして再配布しました。
+            各自 <strong>${perPlayer} 枚</strong> の手札を確認してください。
+        </span>`;
+    setTimeout(() => { el.style.display = 'none'; }, 2800);
+}
+
+/* ══════════════════════════════════════════════════
+   パーティクル FX
+   ══════════════════════════════════════════════════ */
+const fxLayer = $('fx-layer');
+function spark(x, y, mode) {
+    if (mode === 'boom') {
+        document.body.classList.remove('shake', 'flash-r');
+        void document.body.offsetWidth;
+        document.body.classList.add('shake', 'flash-r');
+        setTimeout(() => document.body.classList.remove('shake', 'flash-r'), 900);
+    } else {
+        document.body.classList.remove('flash-g');
+        void document.body.offsetWidth;
+        document.body.classList.add('flash-g');
+        setTimeout(() => document.body.classList.remove('flash-g'), 600);
+    }
+    const cnt   = mode === 'boom' ? 110 : 45;
+    const cols  = mode === 'boom'
+        ? ['#ffa502','#ff4757','#ff6b81','#ffdd59','#ff3838']
+        : ['#05c46b','#0be881','#00d2d3','#81ecec','#fff'];
+    for (let i = 0; i < cnt; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const sz  = Math.random() * (mode === 'boom' ? 16 : 8) + (mode === 'boom' ? 8 : 4);
+        p.style.cssText = `width:${sz}px;height:${sz}px;left:${x}px;top:${y}px;`;
+        const ang  = mode === 'boom' ? Math.random() * Math.PI * 2 : (i / cnt) * Math.PI * 2 + Math.random() * .3;
+        const dist = Math.random() * (mode === 'boom' ? 480 : 140) + (mode === 'boom' ? 100 : 50);
+        p.style.setProperty('--tx', `${Math.cos(ang) * dist}px`);
+        p.style.setProperty('--ty', `${Math.sin(ang) * dist}px`);
+        const c = cols[Math.floor(Math.random() * cols.length)];
+        p.style.background  = `radial-gradient(circle,#fff 0%,${c} 65%,transparent 100%)`;
+        p.style.boxShadow   = `0 0 ${mode === 'boom' ? 12 : 8}px ${c}88`;
+        fxLayer.appendChild(p);
+        setTimeout(() => p.remove(), 1200);
+    }
+}
+
+/* ══════════════════════════════════════════════════
+   初期化 - セッション復旧チェック
+   ══════════════════════════════════════════════════ */
+// ページ読み込み時: セッションが残っていたら自動接続を試みる
+(function init() {
+    const saved = loadSession();
+    if (saved) {
+        const url = localStorage.getItem('timebomb_server_url') || 'http://localhost:3001';
+        $('server-url').value = url;
+        // 自動再接続を促す表示
+        $('connecting-text').textContent = 'セッションを復旧中...';
+        $('connecting-spinner').classList.remove('hidden');
+        $('connect-btn').disabled = true;
+        attemptConnect(url);
+    }
+})();
+
+// サーバーURLを記憶
+$('connect-btn').addEventListener('click', () => {
+    localStorage.setItem('timebomb_server_url', $('server-url').value.trim());
+}, { capture: true });
+</script>
+</body>
+</html>

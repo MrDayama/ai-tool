@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: timebomb-backend
+    env: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: node src/server.js
+    plan: free
+    envVars:
+      - key: PORT
+        value: 3001
