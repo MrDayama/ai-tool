@@ -1,15 +1,17 @@
 {
-  "buildCommand": "",
-  "outputDirectory": ".",
+  "installCommand": "echo skip",
+  "buildCommand": "echo skip",
+  "outputDirectory": "timebomb-game/frontend",
   "framework": null,
+  "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/timebomb",
-      "destination": "/timebomb-game/frontend/index.html"
+      "source": "/",
+      "destination": "/index.html"
     },
     {
-      "source": "/timebomb/spec",
-      "destination": "/timebomb-game/frontend/spec.html"
+      "source": "/spec",
+      "destination": "/spec.html"
     }
   ]
 }
