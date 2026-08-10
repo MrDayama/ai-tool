@@ -127,10 +127,180 @@
         body.theme-light h1 { color: #2563eb; text-shadow: none; }
 
         /* ═══════════════════════════════════════
-           ユーティリティ & Win98 ウィンドウ
+           ユーティリティ & 3カラムレイアウト & 背景演出
            ═══════════════════════════════════════ */
         .hidden { display: none !important; }
-        .container { width: 100%; max-width: 640px; padding: 12px; }
+        
+        .app-layout {
+            display: flex;
+            gap: 20px;
+            align-items: flex-start;
+            justify-content: center;
+            width: 100%;
+            max-width: 1600px;
+            padding: 12px 20px;
+            z-index: 10;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            max-width: 1040px;
+            min-height: 80vh;
+        }
+        
+        .side-panel {
+            width: 280px;
+            flex-shrink: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        @media (max-width: 1200px) {
+            .app-layout {
+                flex-direction: column;
+                align-items: center;
+                padding: 12px;
+            }
+            .side-panel {
+                display: none !important; /* スマホやタブレットではサイドパネルを隠す */
+            }
+            .main-content {
+                width: 100%;
+                max-width: 640px;
+            }
+            body {
+                padding-bottom: 50px;
+            }
+        }
+
+        /* 進行ログBOX */
+        .game-log-box {
+            background: #fff;
+            border: 2px inset var(--win-dark);
+            color: #000;
+        }
+        body.theme-cyberpunk .game-log-box {
+            background: rgba(26,9,51,0.2) !important;
+            border-color: rgba(0,210,211,0.4) !important;
+            color: #e8eaf0 !important;
+        }
+        body.theme-8bit .game-log-box {
+            background: #f8f0e0 !important;
+            border: 3px solid #000 !important;
+            color: #000 !important;
+        }
+        body.theme-light .game-log-box {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            color: #0f172a !important;
+        }
+
+        /* Win98デスクトップアイコン */
+        .win98-desktop-icons {
+            position: fixed;
+            top: 24px;
+            left: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 1;
+            pointer-events: auto;
+        }
+        body:not(.theme-win98) .win98-desktop-icons {
+            display: none !important;
+        }
+        @media (max-width: 1200px) {
+            .win98-desktop-icons { display: none !important; }
+        }
+        .win98-desktop-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 76px;
+            cursor: pointer;
+            text-align: center;
+            user-select: none;
+        }
+        .win98-desktop-icon .icon-emoji {
+            font-size: 2.2rem;
+            text-shadow: 1px 1px 0px rgba(0,0,0,0.5);
+            margin-bottom: 4px;
+        }
+        .win98-desktop-icon .icon-label {
+            font-size: 11px;
+            color: #fff;
+            background: transparent;
+            padding: 2px 4px;
+            font-family: 'Tahoma', 'MS Sans Serif', sans-serif;
+            text-shadow: 1px 1px 1px #000;
+        }
+        .win98-desktop-icon:hover .icon-label {
+            background: var(--win-blue1);
+            text-shadow: none;
+        }
+
+        /* アニメーション背景 - サイバーネオン (動くグリッド) */
+        body.theme-cyberpunk {
+            background-color: #07090f;
+            background-image: linear-gradient(rgba(0, 210, 211, 0.07) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(0, 210, 211, 0.07) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: cyberpunk-grid-move 25s linear infinite;
+        }
+        @keyframes cyberpunk-grid-move {
+            0% { background-position: 0 0; }
+            100% { background-position: 40px 40px; }
+        }
+
+        /* アニメーション背景 - 8bitレトロ (星空スクロール) */
+        body.theme-8bit {
+            background-color: #1a0f30;
+            background-image: radial-gradient(#fff 1px, transparent 0);
+            background-size: 24px 24px;
+            animation: star-scroll 30s linear infinite;
+        }
+        @keyframes star-scroll {
+            0% { background-position: 0 0; }
+            100% { background-position: -48px 48px; }
+        }
+
+        /* アニメーション背景 - ライトテーマ (柔らかいグラデーション・フロート) */
+        body.theme-light {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            position: relative;
+            overflow-x: hidden;
+        }
+        body.theme-light::before {
+            content: "";
+            position: fixed;
+            top: -20%; left: -20%; width: 60vw; height: 60vh;
+            background: radial-gradient(circle, rgba(37,99,235,0.08) 0%, transparent 70%);
+            filter: blur(80px);
+            animation: blob-float 20s ease-in-out infinite alternate;
+            z-index: 0;
+            pointer-events: none;
+        }
+        body.theme-light::after {
+            content: "";
+            position: fixed;
+            bottom: -20%; right: -20%; width: 60vw; height: 60vh;
+            background: radial-gradient(circle, rgba(16,185,129,0.06) 0%, transparent 70%);
+            filter: blur(80px);
+            animation: blob-float 25s ease-in-out infinite alternate-reverse;
+            z-index: 0;
+            pointer-events: none;
+        }
+        @keyframes blob-float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(60px, 60px) scale(1.15); }
+        }
+
+        .container { width: 100%; max-width: 640px; padding: 12px; z-index: 10; }
         .container.wide { max-width: 1040px; }
 
         .glass, .win98-window {
@@ -480,6 +650,35 @@
 <body>
 <div id="fx-layer" class="fx-layer"></div>
 
+<div class="win98-desktop-icons">
+    <div class="win98-desktop-icon" onclick="window.open('https://mrdayama.github.io/ai-tool/timebomb-spec.html', '_blank')">
+        <span class="icon-emoji">📄</span>
+        <span class="icon-label">仕様書.txt</span>
+    </div>
+    <div class="win98-desktop-icon" onclick="alert('タイムボム Online v1.998\n開発元: Advanced Agentic Coding')">
+        <span class="icon-emoji">💻</span>
+        <span class="icon-label">マイ コンピュータ</span>
+    </div>
+</div>
+
+<div class="app-layout">
+    <!-- 左パネル: 進行ログ -->
+    <div id="side-left" class="side-panel hidden">
+        <div class="win98-window" style="width: 100%;">
+            <div class="win98-titlebar">
+                <span class="win98-title">📋 進行ログ</span>
+            </div>
+            <div class="win98-window-body" style="padding: 6px;">
+                <div id="game-logs" class="game-log-box" style="height: 480px; overflow-y: auto; padding: 8px; font-size: 0.82rem; line-height: 1.5; text-align: left;">
+                    <div style="color: var(--win-dark); text-align: center; margin-top: 20px;">ログはまだありません。</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 中央メインコンテンツ -->
+    <div class="main-content">
+
 <!-- ══════════════════════════════════════
      画面① 接続画面
      ══════════════════════════════════════ -->
@@ -609,11 +808,11 @@
         <!-- トラッカーエリア -->
         <div class="tracker-row">
             <div class="tracker-box">
-                <div class="tracker-label">✂️ このラウンドの残りカット</div>
+                <div class="tracker-label" id="wire-track-label">✂️ このラウンドの残りカット</div>
                 <div id="wire-track" class="wire-track"></div>
             </div>
             <div class="tracker-box">
-                <div class="tracker-label">⚡ 解除コード進捗</div>
+                <div class="tracker-label" id="defuse-track-label">⚡ 解除コード進捗</div>
                 <div id="defuse-track" class="defuse-track"></div>
             </div>
         </div>
@@ -736,6 +935,35 @@
     </div>
 </div>
 </div>
+
+    </div> <!-- .main-content 閉じる -->
+
+    <!-- 右パネル: クイックヘルプ -->
+    <div id="side-right" class="side-panel hidden">
+        <div class="win98-window" style="width: 100%;">
+            <div class="win98-titlebar">
+                <span class="win98-title">📖 クイックルール</span>
+            </div>
+            <div class="win98-window-body" style="padding: 10px; font-size: 0.78rem; line-height: 1.6; text-align: left;">
+                <div style="font-weight: bold; border-bottom: 2px solid var(--red); margin-bottom: 6px; color: var(--red);">🚔 時空警察 (警察)</div>
+                <p style="margin-bottom: 8px; font-weight: bold;">・目標：解除コード「⚡」を人数分すべてめくる。</p>
+                
+                <div style="font-weight: bold; border-bottom: 2px solid var(--cyan); margin-bottom: 6px; color: var(--cyan);">💣 ボマー団 (ボマー)</div>
+                <p style="margin-bottom: 12px; font-weight: bold;">・目標：爆弾「💣」をめくらせるか、4ラウンド耐えきる。</p>
+
+                <div style="font-weight: bold; border-bottom: 1px solid var(--win-dark); margin-bottom: 6px;">👥 人数ごとの構成表</div>
+                <div style="font-size:0.75rem; font-family:var(--mono); line-height: 1.5;">
+                    ・3人：警察2 / ボマー1 (解除3枚)<br>
+                    ・4人：警察3 / ボマー1 (解除4枚)<br>
+                    ・5人：警察3 / ボマー2 (解除5枚)<br>
+                    ・6人：警察4 / ボマー2 (解除6枚)<br>
+                    ・7人：警察5 / ボマー2 (解除7枚)<br>
+                    ・8人：警察5 / ボマー3 (解除8枚)
+                </div>
+            </div>
+        </div>
+    </div>
+</div> <!-- .app-layout 閉じる -->
 
 <!-- ══════════════════════════════════════
      ゲーム終了モーダル
@@ -916,6 +1144,58 @@ function showScreen(name) {
     Object.entries(screens).forEach(([k, el]) => {
         el.classList.toggle('hidden', k !== name);
     });
+    // 待機室とゲーム中のみサイドパネルを表示
+    toggleSidePanels(name === 'waiting' || name === 'game');
+}
+
+function toggleSidePanels(show) {
+    const leftPanel = $('side-left');
+    const rightPanel = $('side-right');
+    if (show) {
+        leftPanel.classList.remove('hidden');
+        rightPanel.classList.remove('hidden');
+    } else {
+        leftPanel.classList.add('hidden');
+        rightPanel.classList.add('hidden');
+    }
+}
+
+function addGameLog(text, type = 'info') {
+    const logsEl = $('game-logs');
+    if (!logsEl) return;
+    
+    if (logsEl.innerHTML.includes('ログはまだありません')) {
+        logsEl.innerHTML = '';
+    }
+    
+    const div = document.createElement('div');
+    div.style.marginBottom = '6px';
+    div.style.borderBottom = '1px dashed rgba(128,128,128,0.15)';
+    div.style.paddingBottom = '4px';
+    
+    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const timeSpan = `<span style="color:var(--win-dark); font-size:0.75rem; margin-right:6px; font-family:var(--mono);">[${time}]</span>`;
+    
+    let content = '';
+    if (type === 'start') {
+        content = `<span style="color:var(--win-blue1); font-weight:bold;">🚀 ${text}</span>`;
+    } else if (type === 'cut_safe') {
+        content = `<span style="color:var(--muted); font-weight:bold;">💤 ${text}</span>`;
+    } else if (type === 'cut_scute') {
+        content = `<span style="color:var(--green); font-weight:bold;">⚡ ${text}</span>`;
+    } else if (type === 'cut_boom') {
+        content = `<span style="color:var(--red); font-weight:bold; font-size:0.88rem;">💥 ${text}</span>`;
+    } else if (type === 'round') {
+        content = `<span style="color:var(--win-blue2); font-weight:bold;">🔄 ${text}</span>`;
+    } else if (type === 'end') {
+        content = `<span style="color:var(--gold); font-weight:bold; font-size:0.88rem;">🏆 ${text}</span>`;
+    } else {
+        content = `<span>${text}</span>`;
+    }
+    
+    div.innerHTML = timeSpan + content;
+    logsEl.appendChild(div);
+    logsEl.scrollTop = logsEl.scrollHeight;
 }
 
 // ─── エラー表示ヘルパー ────────────────────────────
@@ -1020,10 +1300,12 @@ function initSocket(serverUrl) {
             if (lastRoomState && lastRoomState.currentRound !== state.currentRound && state.currentRound > 1) {
                 roundSlots = [];
                 showRoundAnnounce(state.currentRound, PER_ROUND[state.currentRound]);
+                addGameLog(`第 ${state.currentRound} ラウンド開始（手札 ${PER_ROUND[state.currentRound]}枚）`, 'round');
             }
             // 初回ゲーム開始検知（LOBBY→PLAYING）
             if (!lastRoomState || lastRoomState.status === 'LOBBY') {
                 roundSlots = [];
+                addGameLog('ゲームが開始されました！', 'start');
             }
             lastRoomState = state;
             myHostId = state.hostId || myHostId;
@@ -1032,8 +1314,10 @@ function initSocket(serverUrl) {
 
             if (state.status === 'POLICE_WON') {
                 setTimeout(() => showGameEndModal(state, 'police'), 600);
+                addGameLog('時空警察の勝利！爆弾は安全に解除されました。', 'end');
             } else if (state.status === 'BOMBER_WON') {
                 setTimeout(() => showGameEndModal(state, 'bomber'), 600);
+                addGameLog('ボマー団の勝利！爆弾が爆発しました。', 'end');
             } else if (state.status === 'ROUND_END') {
                 // ラウンド終了 → ホストが自動的に next_round を送信
                 if (state.hostId === MY_ID || myHostId === MY_ID) {
@@ -1046,6 +1330,26 @@ function initSocket(serverUrl) {
     });
 
     socket.on('wire_cut_animation', ({ cutterId, targetId, cardId, type }) => {
+        // 進行ログの出力
+        const cutter = lastRoomState ? lastRoomState.players.find(p => p.id === cutterId) : null;
+        const target = lastRoomState ? lastRoomState.players.find(p => p.id === targetId) : null;
+        const cutterName = cutter ? cutter.name + (cutter.id === MY_ID ? ' (あなた)' : '') : '誰か';
+        const targetName = target ? target.name + (target.id === MY_ID ? ' (あなた)' : '') : '誰か';
+        
+        let resultText = '';
+        let logType = 'info';
+        if (type === 'scute') {
+            resultText = '解除コード！(⚡)';
+            logType = 'cut_scute';
+        } else if (type === 'boom') {
+            resultText = '爆弾！！！(💣)';
+            logType = 'cut_boom';
+        } else {
+            resultText = 'し〜ん... (💤)';
+            logType = 'cut_safe';
+        }
+        addGameLog(`${cutterName} が ${targetName} のカードをカット ➔ ${resultText}`, logType);
+
         // カードをフリップする演出 (wire-card クラスに対応)
         const cardEl = document.querySelector(`[data-card-id="${cardId}"]`);
         if (cardEl) {
@@ -1226,6 +1530,10 @@ function renderWireTracker(slots, state) {
     track.innerHTML = '';
     const n = state ? state.players.length : (lastRoomState ? lastRoomState.players.length : 0);
     const cutsThisRound = slots ? slots.filter(s => s !== null).length : 0;
+    const remainingCuts = n - cutsThisRound;
+
+    // 残りカット数の数値を動的に追加
+    $('wire-track-label').innerHTML = `✂️ このラウンドの残りカット: <span style="font-family:var(--mono); font-size:1.1rem; color:var(--win-blue1); font-weight:bold;">${remainingCuts} / ${n}</span>`;
 
     for (let i = 0; i < n; i++) {
         const slot = document.createElement('div');
@@ -1251,6 +1559,9 @@ function renderDefuseTracker(state) {
     track.innerHTML = '';
     const goal  = state.scutesGoal;
     const found = state.scutesFound;
+
+    // 解除チップの数値を動的に追加
+    $('defuse-track-label').innerHTML = `⚡ 解除コード進捗: <span style="font-family:var(--mono); font-size:1.1rem; color:var(--green); font-weight:bold;">${found} / ${goal}</span>`;
 
     for (let i = 0; i < goal; i++) {
         const chip = document.createElement('div');
@@ -1423,6 +1734,7 @@ $('modal-back-btn').addEventListener('click', () => {
     $('modal').classList.remove('active');
     clearSession();
     roundSlots = [];
+    $('game-logs').innerHTML = '<div style="color: var(--win-dark); text-align: center; margin-top: 20px;">ログはまだありません。</div>';
     showScreen('lobby');
 });
 
@@ -1437,6 +1749,7 @@ $('modal-abort-btn').addEventListener('click', () => {
     $('modal-abort').classList.remove('active');
     clearSession();
     roundSlots = [];
+    $('game-logs').innerHTML = '<div style="color: var(--win-dark); text-align: center; margin-top: 20px;">ログはまだありません。</div>';
     showScreen('lobby');
 });
 
