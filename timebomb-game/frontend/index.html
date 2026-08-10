@@ -406,7 +406,7 @@
 
     <div class="form-group">
         <label for="server-url">バックエンドサーバーURL</label>
-        <input type="url" id="server-url" placeholder="https://your-app.onrender.com" value="http://localhost:3001">
+        <input type="url" id="server-url" placeholder="https://your-app.onrender.com" value="https://timebomb-backend.onrender.com">
     </div>
     <button id="connect-btn" class="btn">接続する</button>
 
@@ -1150,7 +1150,7 @@ function spark(x, y, mode) {
 (function init() {
     const saved = loadSession();
     if (saved) {
-        const url = localStorage.getItem('timebomb_server_url') || 'http://localhost:3001';
+        const url = localStorage.getItem('timebomb_server_url') || 'https://timebomb-backend.onrender.com';
         $('server-url').value = url;
         // 自動再接続を促す表示
         $('connecting-text').textContent = 'セッションを復旧中...';
