@@ -146,7 +146,7 @@
             flex: 1;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             max-width: 1040px;
             min-height: 80vh;
         }
@@ -157,6 +157,156 @@
             display: flex;
             flex-direction: column;
             gap: 16px;
+        }
+
+        /* ──── デスクトップのウィンドウ形式から画面全体のレイアウトへ統合 ──── */
+        body:not(.theme-win98) .container .win98-titlebar {
+            display: none !important;
+        }
+        body:not(.theme-win98) .side-panel .win98-titlebar {
+            display: none !important;
+        }
+        body:not(.theme-win98) .container,
+        body:not(.theme-win98) .main-content {
+            padding: 0;
+            margin: 0;
+        }
+        body:not(.theme-win98) .win98-window {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+        }
+        body:not(.theme-win98) .win98-window-body {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+
+        /* 接続/ロビー/待機室は中央に浮かぶカード形式にする */
+        body:not(.theme-win98) #screen-connect .win98-window-body,
+        body:not(.theme-win98) #screen-lobby .win98-window-body,
+        body:not(.theme-win98) #screen-waiting .win98-window-body {
+            padding: 32px !important;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 100%;
+            margin: 40px auto !important;
+        }
+        body.theme-cyberpunk #screen-connect .win98-window-body,
+        body.theme-cyberpunk #screen-lobby .win98-window-body,
+        body.theme-cyberpunk #screen-waiting .win98-window-body {
+            background: rgba(14, 17, 32, 0.88);
+            border: 1px solid rgba(0, 210, 211, 0.4);
+            box-shadow: 0 0 30px rgba(0, 210, 211, 0.25);
+        }
+        body.theme-light #screen-connect .win98-window-body,
+        body.theme-light #screen-lobby .win98-window-body,
+        body.theme-light #screen-waiting .win98-window-body {
+            background: #ffffff;
+            border: 1px solid #cbd5e1;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        }
+        body.theme-8bit #screen-connect .win98-window-body,
+        body.theme-8bit #screen-lobby .win98-window-body,
+        body.theme-8bit #screen-waiting .win98-window-body {
+            background: #f8f0e0;
+            border: 4px solid #000;
+            box-shadow: 8px 8px 0px #000;
+            border-radius: 0;
+        }
+
+        /* 対戦中・ウィジェットのテーマ別コンポーネント化 */
+        /* 🌌 Cyberpunk Components */
+        body.theme-cyberpunk .tracker-box,
+        body.theme-cyberpunk .turn-box,
+        body.theme-cyberpunk .player-card-box,
+        body.theme-cyberpunk .game-log-box,
+        body.theme-cyberpunk #side-right .win98-window-body,
+        body.theme-cyberpunk #round-announce {
+            background: rgba(14, 17, 32, 0.8) !important;
+            border: 1px solid rgba(0, 210, 211, 0.4) !important;
+            box-shadow: 0 0 15px rgba(0, 210, 211, 0.15) !important;
+            color: #e8eaf0 !important;
+            border-radius: 12px;
+            padding: 12px !important;
+        }
+        body.theme-cyberpunk .tracker-label,
+        body.theme-cyberpunk .turn-hint {
+            color: #b0b8db !important;
+        }
+        body.theme-cyberpunk .cutter-name {
+            color: #00d2d3 !important;
+            text-shadow: 0 0 8px rgba(0, 210, 211, 0.5);
+        }
+        body.theme-cyberpunk .player-box-header {
+            background: linear-gradient(90deg, #ff3838, #00d2d3) !important;
+            color: #fff !important;
+            border-radius: 6px;
+        }
+        body.theme-cyberpunk .player-card-box.is-cutter {
+            border-color: #ff3838 !important;
+            box-shadow: 0 0 12px rgba(255, 56, 56, 0.5) !important;
+        }
+
+        /* ☀️ Clean Light Components */
+        body.theme-light .tracker-box,
+        body.theme-light .turn-box,
+        body.theme-light .player-card-box,
+        body.theme-light .game-log-box,
+        body.theme-light #side-right .win98-window-body,
+        body.theme-light #round-announce {
+            background: #ffffff !important;
+            border: 1px solid #cbd5e1 !important;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important;
+            border-radius: 12px;
+            color: #0f172a !important;
+            padding: 12px !important;
+        }
+        body.theme-light .tracker-label,
+        body.theme-light .turn-hint {
+            color: #64748b !important;
+        }
+        body.theme-light .cutter-name {
+            color: #2563eb !important;
+        }
+        body.theme-light .player-box-header {
+            background: #f1f5f9 !important;
+            color: #0f172a !important;
+            border-radius: 6px;
+        }
+        body.theme-light .player-card-box.is-cutter {
+            border-color: #2563eb !important;
+            box-shadow: 0 0 0 2px rgba(37,99,235,0.2) !important;
+        }
+
+        /* 🎮 8-Bit Components */
+        body.theme-8bit .tracker-box,
+        body.theme-8bit .turn-box,
+        body.theme-8bit .player-card-box,
+        body.theme-8bit .game-log-box,
+        body.theme-8bit #side-right .win98-window-body,
+        body.theme-8bit #round-announce {
+            background: #f8f0e0 !important;
+            border: 4px solid #000 !important;
+            box-shadow: 5px 5px 0px #000 !important;
+            border-radius: 0 !important;
+            color: #000 !important;
+            padding: 12px !important;
+        }
+        body.theme-8bit .tracker-label,
+        body.theme-8bit .turn-hint {
+            color: #000 !important;
+        }
+        body.theme-8bit .cutter-name {
+            color: #e04000 !important;
+        }
+        body.theme-8bit .player-box-header {
+            background: #b80000 !important;
+            color: #fff !important;
+            border: 2px solid #000;
+        }
+        body.theme-8bit .player-card-box.is-cutter {
+            border-color: #000 !important;
+            box-shadow: 0 0 0 3px #e04000 !important;
         }
 
         @media (max-width: 1200px) {
