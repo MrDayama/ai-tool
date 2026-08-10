@@ -329,13 +329,23 @@
         }
         .tracker-label { font-size: .8rem; font-weight: bold; color: #000; margin-bottom: 8px; }
         .wire-track, .defuse-track { display: flex; gap: 6px; flex-wrap: wrap; }
-        .track-slot {
-            width: 32px; height: 32px; border: 2px inset var(--win-dark); background: #fff;
+        /* ワイヤースロット（wire_cut_animation と統一） */
+        .wire-slot {
+            width: 36px; height: 36px; border: 2px inset var(--win-dark); background: #fff;
             display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold;
         }
-        .track-slot.filled.safe  { background: #e0e0e0; }
-        .track-slot.filled.scute { background: #c8e6c9; color: #2e7d32; }
-        .track-slot.filled.boom  { background: #ffcdd2; color: #c62828; }
+        .wire-slot.active { background: #fff9c4; border-color: #f57f17; }
+        .wire-slot.cut.safe  { background: #e0e0e0; }
+        .wire-slot.cut.scute { background: #c8e6c9; color: #2e7d32; }
+        .wire-slot.cut.boom  { background: #ffcdd2; color: #c62828; }
+        /* 解除チップ */
+        .defuse-chip {
+            width: 34px; height: 34px; border: 2px solid var(--win-dark); background: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+        }
+        .defuse-chip.found { background: #c8e6c9; border-color: #2e7d32; }
+        .defuse-chip.boom-chip { border-style: dashed; background: #ffebee; }
+        .defuse-chip.boom-chip.exploded { border-color: #c62828; background: #ffcdd2; }
 
         #round-announce {
             text-align: center; font-weight: bold; font-size: 1.1rem; color: var(--win-blue1);
@@ -353,6 +363,7 @@
             display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;
         }
 
+        /* プレイヤー行（Win98スタイル） */
         .player-card-box {
             background: var(--win-bg); border: 2px solid;
             border-color: var(--win-light) var(--win-dark) var(--win-dark) var(--win-light);
@@ -367,36 +378,51 @@
         }
         .cards-grid { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
+        /* 役職バッジ */
+        .self-role-badge {
+            font-size: .75rem; font-weight: 800; padding: 2px 8px;
+            display: inline-block; border: 1px solid;
+        }
+        .self-role-badge.police { background: #e3f2fd; border-color: #1565c0; color: #1565c0; }
+        .self-role-badge.bomber { background: #ffebee; border-color: #c62828; color: #c62828; }
+        .role-badge { display: inline-block; padding: 2px 8px; border: 1px solid; font-weight: bold; font-size: .8rem; }
+        .role-badge.police { background: #e3f2fd; border-color: #1565c0; color: #1565c0; }
+        .role-badge.bomber { background: #ffebee; border-color: #c62828; color: #c62828; }
+
         /* カードの Win98 レトロスタイル */
         .wire-card {
-            width: 54px; height: 76px; perspective: 600px; cursor: pointer; position: relative;
+            width: 54px; height: 76px; perspective: 600px; cursor: default; position: relative;
         }
+        .wire-card.cuttable { cursor: pointer; }
+        .wire-card.cuttable:hover .wire-card-back { border-color: #c62828; background: #ffebee; }
         .wire-card-inner {
             width: 100%; height: 100%; position: relative;
             transform-style: preserve-3d; transition: transform .5s;
         }
         .wire-card.flipped .wire-card-inner { transform: rotateY(180deg); }
 
-        .card-front, .card-back {
+        .wire-card-front, .wire-card-back {
             position: absolute; width: 100%; height: 100%;
             backface-visibility: hidden; display: flex; flex-direction: column;
             align-items: center; justify-content: center;
             border: 2px solid; font-weight: bold; font-size: .8rem;
         }
-        .card-back {
+        .wire-card-back {
             background: #1a237e; color: #fff;
             border-color: var(--win-light) var(--win-black) var(--win-black) var(--win-light);
             background-image: repeating-linear-gradient(45deg, #1a237e, #1a237e 5px, #283593 5px, #283593 10px);
         }
-        .card-back::after { content: '💣'; font-size: 1.4rem; }
-
-        .card-front {
+        /* 自分のカード種類表示 */
+        .wire-card-back.own-safe  { background: #e8eaf6; }
+        .wire-card-back.own-scute { background: #1b5e20; }
+        .wire-card-back.own-boom  { background: #b71c1c; }
+        .wire-card-front {
             transform: rotateY(180deg); background: #fff; color: #000;
             border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
         }
-        .card-front.safe  { background: #f5f5f5; color: #616161; }
-        .card-front.scute { background: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
-        .card-front.boom  { background: #ffebee; color: #c62828; border-color: #c62828; }
+        .wire-card-front.safe  { background: #f5f5f5; color: #616161; }
+        .wire-card-front.scute { background: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
+        .wire-card-front.boom  { background: #ffebee; color: #c62828; border-color: #c62828; }
         .card-icon { font-size: 1.5rem; margin-bottom: 2px; }
 
         /* ═══════════════════════════════════════
@@ -879,6 +905,10 @@ function initSocket(serverUrl) {
                 roundSlots = [];
                 showRoundAnnounce(state.currentRound, PER_ROUND[state.currentRound]);
             }
+            // 初回ゲーム開始検知（LOBBY→PLAYING）
+            if (!lastRoomState || lastRoomState.status === 'LOBBY') {
+                roundSlots = [];
+            }
             lastRoomState = state;
             myHostId = state.hostId || myHostId;
             renderGameScreen(state);
@@ -888,12 +918,19 @@ function initSocket(serverUrl) {
                 setTimeout(() => showGameEndModal(state, 'police'), 600);
             } else if (state.status === 'BOMBER_WON') {
                 setTimeout(() => showGameEndModal(state, 'bomber'), 600);
+            } else if (state.status === 'ROUND_END') {
+                // ラウンド終了 → ホストが自動的に next_round を送信
+                if (state.hostId === MY_ID || myHostId === MY_ID) {
+                    setTimeout(() => {
+                        socket.emit('next_round');
+                    }, 1800);
+                }
             }
         }
     });
 
     socket.on('wire_cut_animation', ({ cutterId, targetId, cardId, type }) => {
-        // カードをフリップする演出
+        // カードをフリップする演出 (wire-card クラスに対応)
         const cardEl = document.querySelector(`[data-card-id="${cardId}"]`);
         if (cardEl) {
             cardEl.classList.add('flipped');
@@ -903,15 +940,12 @@ function initSocket(serverUrl) {
                 const cy = rect.top  + rect.height / 2;
                 if (type === 'scute') { spark(cx, cy, 'green'); SoundFX.playSuccess(); }
                 else if (type === 'boom') { spark(cx, cy, 'boom'); SoundFX.playBoom(); }
-                else { SoundFX.playCut(); } // safe (空振り)
+                else { SoundFX.playCut(); }
             }, 300);
         }
 
-        // ラウンドスロット更新
-        const cutCount = roundSlots.filter(s => s !== null).length;
-        if (cutCount < roundSlots.length) {
-            roundSlots[cutCount] = { type };
-        }
+        // ラウンドスロット更新（配列を伸ばしながら記録）
+        roundSlots.push({ type });
         renderWireTracker(roundSlots);
     });
 
@@ -1072,21 +1106,18 @@ function renderWireTracker(slots, state) {
 
     for (let i = 0; i < n; i++) {
         const slot = document.createElement('div');
-        slot.className = 'wire-slot';
-        const nipper = document.createElement('span');
-        nipper.className = 'nipper';
         const slotData = slots ? slots[i] : null;
 
         if (slotData) {
-            slot.classList.add('cut');
-            nipper.textContent = slotData.type === 'scute' ? '⚡' : slotData.type === 'boom' ? '💥' : '✂️';
+            slot.className = `wire-slot cut ${slotData.type}`;
+            slot.textContent = slotData.type === 'scute' ? '⚡' : slotData.type === 'boom' ? '💥' : '✂️';
         } else if (i === cutsThisRound) {
-            slot.classList.add('active');
-            nipper.textContent = '✂️';
+            slot.className = 'wire-slot active';
+            slot.textContent = '✂️';
         } else {
-            nipper.textContent = '✂️';
+            slot.className = 'wire-slot';
+            slot.textContent = '✂️';
         }
-        slot.appendChild(nipper);
         track.appendChild(slot);
     }
 }
@@ -1100,23 +1131,15 @@ function renderDefuseTracker(state) {
 
     for (let i = 0; i < goal; i++) {
         const chip = document.createElement('div');
-        chip.className = 'defuse-chip';
-        if (i < found) {
-            chip.classList.add('found');
-            chip.textContent = '⚡';
-        } else {
-            chip.style.color = 'rgba(255,255,255,.1)';
-            chip.style.fontSize = '.8rem';
-            chip.textContent = '○';
-        }
+        chip.className = i < found ? 'defuse-chip found' : 'defuse-chip';
+        chip.textContent = i < found ? '⚡' : '○';
         track.appendChild(chip);
     }
     // 爆弾チップ
     const boomChip = document.createElement('div');
-    boomChip.className = 'defuse-chip boom-chip';
+    boomChip.className = 'defuse-chip boom-chip' + (state.status === 'BOMBER_WON' ? ' exploded' : '');
     boomChip.style.marginLeft = '6px';
     boomChip.textContent = '💣';
-    if (state.status === 'BOMBER_WON') boomChip.classList.add('exploded');
     track.appendChild(boomChip);
 }
 
@@ -1124,10 +1147,15 @@ function renderDefuseTracker(state) {
 function renderTurnBox(state) {
     const cutter = state.players.find(p => p.id === state.currentCutterId);
     const isMyTurn = (state.currentCutterId === MY_ID);
-    $('cutter-name-disp').textContent = cutter ? cutter.name + (isMyTurn ? ' (あなた)' : '') : '—';
-    $('turn-hint-disp').textContent = isMyTurn
-        ? 'の手番 ─ 他のプレイヤーのカードを1枚選んでください'
-        : 'の手番 ─ カードがカットされるのを待ってください';
+    const cutterName = cutter ? cutter.name + (isMyTurn ? ' (あなた)' : '') : '—';
+    $('cutter-name-disp').textContent = cutterName;
+    if (state.status === 'ROUND_END') {
+        $('turn-hint-disp').textContent = '— ラウンド終了。カードを再配布中...';
+    } else {
+        $('turn-hint-disp').textContent = isMyTurn
+            ? 'の手番 ─ 他のプレイヤーのカードを1枚選んでください'
+            : 'の手番 ─ カードがカットされるのを待ってください';
+    }
 }
 
 // ─── ゲームボード ────────────────────────────
@@ -1135,85 +1163,86 @@ function renderBoard(state) {
     const board  = $('game-board');
     board.innerHTML = '';
     const isMyTurn = (state.currentCutterId === MY_ID);
+    const isGameOver = (state.status === 'POLICE_WON' || state.status === 'BOMBER_WON');
 
     state.players.forEach(player => {
         const isSelf    = (player.id === MY_ID);
         const isCutter  = (player.id === state.currentCutterId);
 
-        const row = document.createElement('div');
-        row.className = `player-row${isCutter ? ' is-cutter' : ''}${isSelf ? ' is-self' : ''}`;
+        // Win98スタイルのプレイヤーボックス
+        const box = document.createElement('div');
+        box.className = `player-card-box${isCutter ? ' is-cutter' : ''}`;
 
-        // プレイヤー情報
-        const info = document.createElement('div');
-        info.className = 'player-info';
+        // ヘッダー
+        const header = document.createElement('div');
+        header.className = 'player-box-header';
 
-        const nameEl = document.createElement('div');
-        nameEl.className = 'player-name-el';
-        nameEl.textContent = player.name + (isSelf ? ' 👤' : '');
-        info.appendChild(nameEl);
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = player.name + (isSelf ? ' 👤' : '') + (isCutter ? ' ✂️' : '');
+        header.appendChild(nameSpan);
 
-        // 自分の役職バッジ
-        if (isSelf && state.self && state.self.role) {
-            const badge = document.createElement('div');
-            badge.className = `self-role-badge ${state.self.role === 'POLICE' ? 'police' : 'bomber'}`;
-            badge.textContent = state.self.role === 'POLICE' ? '👮 時空警察' : '💣 ボマー団';
-            info.appendChild(badge);
+        // 役職バッジ（自分のみ or ゲーム終了時全員）
+        const roleToShow = isSelf ? (state.self && state.self.role) : (isGameOver ? player.role : null);
+        if (roleToShow && roleToShow !== 'unknown') {
+            const badge = document.createElement('span');
+            badge.className = `self-role-badge ${roleToShow === 'POLICE' ? 'police' : 'bomber'}`;
+            badge.textContent = roleToShow === 'POLICE' ? '👮 警察' : '💣 ボマー';
+            header.appendChild(badge);
         }
-
-        // ゲーム終了時の役職開示
-        if ((state.status === 'POLICE_WON' || state.status === 'BOMBER_WON') && player.role !== 'unknown') {
-            const badge = document.createElement('div');
-            badge.className = `self-role-badge ${player.role === 'POLICE' ? 'police' : 'bomber'}`;
-            badge.textContent = player.role === 'POLICE' ? '👮 時空警察' : '💣 ボマー団';
-            if (!isSelf) info.appendChild(badge);
-        }
-
-        row.appendChild(info);
+        box.appendChild(header);
 
         // カード一覧
-        const cardsDiv = document.createElement('div');
-        cardsDiv.className = 'player-cards';
+        const cardsGrid = document.createElement('div');
+        cardsGrid.className = 'cards-grid';
 
         const cards = isSelf ? (state.self ? state.self.cards : []) : player.cards;
         cards.forEach(card => {
-            const cont  = document.createElement('div');
-            const inner = document.createElement('div');
-            const back  = document.createElement('div');
-            const front = document.createElement('div');
+            const cardWrap  = document.createElement('div');
+            const cardInner = document.createElement('div');
+            const cardBack  = document.createElement('div');
+            const cardFront = document.createElement('div');
 
-            cont.className  = 'card-container';
-            inner.className = 'card-inner';
-            front.className = `card-front ${card.isRevealed ? card.type : 'safe'}`;
+            cardWrap.className  = 'wire-card';
+            cardInner.className = 'wire-card-inner';
 
             if (card.isRevealed) {
-                // めくられたカード
-                cont.classList.add('flipped');
-                back.className = 'card-back';
+                cardWrap.classList.add('flipped');
+                cardBack.className = 'wire-card-back';
+                cardFront.className = `wire-card-front ${card.type}`;
+                const icon = document.createElement('span');
+                icon.className = 'card-icon';
+                icon.textContent = card.type === 'scute' ? '⚡' : card.type === 'boom' ? '💥' : '💤';
+                cardFront.appendChild(icon);
             } else if (isSelf) {
-                // 自分の手札：種類が分かるスタイル
-                cont.classList.add('is-own');
-                back.className = `card-back own-${card.type}`;
+                // 自分の手札：裏面に種類のヒント色
+                cardBack.className = `wire-card-back own-${card.type}`;
+                const icon = document.createElement('span');
+                icon.className = 'card-icon';
+                icon.textContent = card.type === 'scute' ? '⚡' : card.type === 'boom' ? '💣' : '💤';
+                cardBack.appendChild(icon);
+                cardFront.className = 'wire-card-front';
             } else {
                 // 他人の手札
-                back.className = 'card-back';
-                if (isMyTurn && !isSelf) {
-                    cont.classList.add('cuttable');
-                    cont.addEventListener('click', () => onCutWire(player.id, card.id));
+                cardBack.className = 'wire-card-back';
+                cardFront.className = 'wire-card-front';
+                if (isMyTurn && !card.isRevealed) {
+                    cardWrap.classList.add('cuttable');
+                    cardWrap.addEventListener('click', () => onCutWire(player.id, card.id));
                 }
             }
 
             // data属性でカードを特定（wire_cut_animation用）
-            cont.setAttribute('data-card-id', card.id);
-            cont.setAttribute('data-player-id', player.id);
+            cardWrap.setAttribute('data-card-id', card.id);
+            cardWrap.setAttribute('data-player-id', player.id);
 
-            inner.appendChild(back);
-            inner.appendChild(front);
-            cont.appendChild(inner);
-            cardsDiv.appendChild(cont);
+            cardInner.appendChild(cardBack);
+            cardInner.appendChild(cardFront);
+            cardWrap.appendChild(cardInner);
+            cardsGrid.appendChild(cardWrap);
         });
 
-        row.appendChild(cardsDiv);
-        board.appendChild(row);
+        box.appendChild(cardsGrid);
+        board.appendChild(box);
     });
 }
 
