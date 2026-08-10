@@ -19,6 +19,7 @@ status: active
 | [[ai-agent/README\|自律AIエージェント]] | [[01_Imo/Poker_Strategy_Embed\|戦略ツール一覧]] | [[05_Bases/全リサーチノート\|🔍 リサーチ検索]] |
 | [[03_AI/MOC_AI_Tools\|AIツール総合ハブ]] | [[poker-ev/index\|EVシミュレーター]] | [[05_Bases/アクティブ戦略\|🎯 アクティブ戦略]] |
 | [[CLAUDE\|AI向け指示書]] | [[icm-calculator/README\|ICM計算ツール]] | [[05_Bases/全ツイート調査\|🐦 ツイート調査]] |
+| [[03_AI/game_ui_research_project\|🎮 UI調査・改善案]] | | |
 
 ---
 

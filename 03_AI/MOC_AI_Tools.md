@@ -19,7 +19,7 @@ status: active
 |:---|:---|:---|
 | [[ai-agent/README\|自律型AIエージェント]] | [[03_AI/X_Tweet_Research_20260707\|X投稿調査まとめ]] | [[CLAUDE\|AI統合指示書]] |
 | [[03_AI/codex_multi_agent_research\|Codexマルチエージェント研究]] | [[03_AI/basic_memory_integration\|Basic Memory統合設計]] | [[01_Imo/Obsidian_Usage_Rules\|Vault運用ルール]] |
-| [[05_Bases/全リサーチノート\|🔍 AIリサーチ検索]] | | [[Dashboard\|🏠 ダッシュボード]] |
+| [[05_Bases/全リサーチノート\|🔍 AIリサーチ検索]] | [[03_AI/game_ui_research_project\|🎮 ゲームUI調査・改善案]] | [[Dashboard\|🏠 ダッシュボード]] |
 
 ---
 
