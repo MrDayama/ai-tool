@@ -1021,6 +1021,7 @@
 
         <button id="add-bot-btn" class="btn secondary hidden" style="margin-bottom:8px">🤖 ダミーBotを追加 (1人テスト用)</button>
         <button id="start-game-btn" class="btn green hidden">⚡ ゲームスタート（ホストのみ）</button>
+        <button id="exit-waiting-btn" class="btn" style="background:#b71c1c; color:#fff; border-color:#b71c1c; margin-bottom:8px;">🚪 退出してロビーに戻る</button>
         <p id="waiting-hint" class="waiting-hint">ホストがゲームを開始するまでお待ちください…</p>
 
         <div id="waiting-error" class="error-toast"></div>
@@ -1063,7 +1064,10 @@
                 <div class="cutter-name" id="cutter-name-disp">—</div>
                 <div class="turn-hint" id="turn-hint-disp">の手番</div>
             </div>
-            <button id="abort-game-btn" class="btn hidden" style="margin-top:0; padding:6px 12px; font-size:0.8rem; width:auto; min-height:auto; color:#b71c1c;">⚠️ ゲーム中断</button>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <button id="abort-game-btn" class="btn hidden" style="margin-top:0; padding:6px 12px; font-size:0.8rem; width:auto; min-height:auto; color:#b71c1c; border-color:#b71c1c;">⚠️ ゲーム中断</button>
+                <button id="exit-game-btn" class="btn" style="margin-top:0; padding:6px 12px; font-size:0.8rem; width:auto; min-height:auto; background:#b71c1c; color:#fff; border-color:#b71c1c;">🚪 退出する</button>
+            </div>
         </div>
 
         <!-- ボード -->
@@ -1637,6 +1641,20 @@ function initSocket(serverUrl) {
             socket.emit('abort_game_manually');
         }
     };
+
+    // 🚪 ルームを退出してロビーに戻るボタン（待機室・ゲーム中共通）
+    const leaveLobbyAction = () => {
+        if (confirm('ルームを退出してロビーに戻りますか？')) {
+            socket.emit('leave_room');
+            clearSession();
+            roundSlots = [];
+            $('game-logs').innerHTML = '<div style="color: var(--win-dark); text-align: center; margin-top: 20px;">ログはまだありません。</div>';
+            showScreen('lobby');
+        }
+    };
+
+    $('exit-waiting-btn').onclick = leaveLobbyAction;
+    $('exit-game-btn').onclick = leaveLobbyAction;
 
     socket.on('disconnect', () => {
         console.warn('Socket disconnected');

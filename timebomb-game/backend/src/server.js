@@ -345,6 +345,49 @@ io.on('connection', (socket) => {
         }
     });
 
+    // 4-A4. ルームからの自発的な退出
+    socket.on('leave_room', () => {
+        let foundRoomId = null;
+        let requestPlayerId = null;
+
+        for (const [rId, room] of Object.entries(rooms)) {
+            const player = room.players.find(p => p.socketId === socket.id);
+            if (player) {
+                foundRoomId = rId;
+                requestPlayerId = player.id;
+                break;
+            }
+        }
+
+        if (!foundRoomId) return;
+        const room = rooms[foundRoomId];
+
+        // プレイヤーを即座に削除
+        const leavingPlayer = room.players.find(p => p.id === requestPlayerId);
+        room.players = room.players.filter(p => p.id !== requestPlayerId);
+        delete playerSessionMap[requestPlayerId];
+        console.log(`Player Manual Exit: ${leavingPlayer ? leavingPlayer.name : 'Unknown'} from Room ${foundRoomId}`);
+
+        if (room.players.length === 0) {
+            delete rooms[foundRoomId];
+            console.log(`Room Deleted (Empty): ${foundRoomId}`);
+        } else {
+            // ホストの移譲
+            if (room.hostId === requestPlayerId) {
+                room.hostId = room.players[0].id;
+                console.log(`Host Transferred to: ${room.players[0].name} in Room ${foundRoomId}`);
+            }
+            
+            // ゲーム進行中に退出した場合はゲーム強制終了して全員待機室に戻す
+            if (room.engine) {
+                room.engine = null;
+                io.to(foundRoomId).emit('game_aborted', `${leavingPlayer ? leavingPlayer.name : 'メンバー'}さんが退出したため、ゲームを中止して待機室に戻りました。`);
+            }
+            
+            broadcastRoomState(foundRoomId);
+        }
+    });
+
     // 4-B. ダミーBot追加
     socket.on('add_bot', () => {
         let foundRoomId = null;
