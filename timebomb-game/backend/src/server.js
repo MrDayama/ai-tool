@@ -313,6 +313,38 @@ io.on('connection', (socket) => {
         }
     });
 
+    // 4-A3. ゲームの手動中断（ホストのみ、待機室に戻す）
+    socket.on('abort_game_manually', () => {
+        let foundRoomId = null;
+        let requestPlayerId = null;
+
+        for (const [rId, room] of Object.entries(rooms)) {
+            const player = room.players.find(p => p.socketId === socket.id);
+            if (player) {
+                foundRoomId = rId;
+                requestPlayerId = player.id;
+                break;
+            }
+        }
+
+        if (!foundRoomId) return;
+        const room = rooms[foundRoomId];
+
+        if (room.hostId !== requestPlayerId) {
+            socket.emit('error', 'ゲームを中断できるのはホストのみです。');
+            return;
+        }
+
+        if (room.engine) {
+            room.engine = null; // ゲームエンジンを破棄
+            console.log(`Game Aborted Manually by Host in Room: ${foundRoomId}`);
+            
+            const hostPlayer = room.players.find(p => p.id === requestPlayerId);
+            io.to(foundRoomId).emit('game_aborted_manually', `${hostPlayer ? hostPlayer.name : 'ホスト'}さんによってゲームが中断されました。待機室に戻ります。`);
+            broadcastRoomState(foundRoomId);
+        }
+    });
+
     // 4-B. ダミーBot追加
     socket.on('add_bot', () => {
         let foundRoomId = null;

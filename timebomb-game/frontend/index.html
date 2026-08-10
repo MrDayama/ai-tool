@@ -622,9 +622,12 @@
         <div id="round-announce"></div>
 
         <!-- 手番表示 -->
-        <div class="turn-box">
-            <div class="cutter-name" id="cutter-name-disp">—</div>
-            <div class="turn-hint" id="turn-hint-disp">の手番</div>
+        <div class="turn-box" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                <div class="cutter-name" id="cutter-name-disp">—</div>
+                <div class="turn-hint" id="turn-hint-disp">の手番</div>
+            </div>
+            <button id="abort-game-btn" class="btn hidden" style="margin-top:0; padding:6px 12px; font-size:0.8rem; width:auto; min-height:auto; color:#b71c1c;">⚠️ ゲーム中断</button>
         </div>
 
         <!-- ボード -->
@@ -1073,6 +1076,17 @@ function initSocket(serverUrl) {
         $('modal-abort').classList.add('active');
     });
 
+    socket.on('game_aborted_manually', (msg) => {
+        alert(msg);
+    });
+
+    // ⚠️ ゲーム中断ボタンのクリックハンドラ
+    $('abort-game-btn').onclick = () => {
+        if (confirm('本当にゲームを中断して待機室に戻りますか？')) {
+            socket.emit('abort_game_manually');
+        }
+    };
+
     socket.on('disconnect', () => {
         console.warn('Socket disconnected');
     });
@@ -1264,6 +1278,14 @@ function renderTurnBox(state) {
         $('turn-hint-disp').textContent = isMyTurn
             ? 'の手番 ─ 他のプレイヤーのカードを1枚選んでください'
             : 'の手番 ─ カードがカットされるのを待ってください';
+    }
+
+    // 中断ボタンをホストのみに表示
+    const abortBtn = $('abort-game-btn');
+    if (state.hostId === MY_ID) {
+        abortBtn.classList.remove('hidden');
+    } else {
+        abortBtn.classList.add('hidden');
     }
 }
 
