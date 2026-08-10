@@ -1127,6 +1127,16 @@ let roundSlots = [];      // ワイヤートラッカー用: [{type}|null]
 
 // ─── DOM ─────────────────────────────────────────
 const $ = id => document.getElementById(id);
+const escapeHTML = str => {
+    if (!str) return '';
+    return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        "'": '&#39;',
+        '"': '&quot;'
+    }[tag] || tag));
+};
 
 const screens = {
     connect: $('screen-connect'),
@@ -1333,8 +1343,8 @@ function initSocket(serverUrl) {
         // 進行ログの出力
         const cutter = lastRoomState ? lastRoomState.players.find(p => p.id === cutterId) : null;
         const target = lastRoomState ? lastRoomState.players.find(p => p.id === targetId) : null;
-        const cutterName = cutter ? cutter.name + (cutter.id === MY_ID ? ' (あなた)' : '') : '誰か';
-        const targetName = target ? target.name + (target.id === MY_ID ? ' (あなた)' : '') : '誰か';
+        const cutterName = cutter ? escapeHTML(cutter.name) + (cutter.id === MY_ID ? ' (あなた)' : '') : '誰か';
+        const targetName = target ? escapeHTML(target.name) + (target.id === MY_ID ? ' (あなた)' : '') : '誰か';
         
         let resultText = '';
         let logType = 'info';
@@ -1712,7 +1722,7 @@ function showGameEndModal(state, winner) {
         <strong>【全員の陣営公開】</strong><br>`;
     state.players.forEach(p => {
         if (p.role && p.role !== 'unknown') {
-            rolesHtml += `${p.name}: <span class="role-badge ${p.role === 'POLICE' ? 'police' : 'bomber'}">${p.role === 'POLICE' ? '👮 時空警察' : '💣 ボマー団'}</span><br>`;
+            rolesHtml += `${escapeHTML(p.name)}: <span class="role-badge ${p.role === 'POLICE' ? 'police' : 'bomber'}">${p.role === 'POLICE' ? '👮 時空警察' : '💣 ボマー団'}</span><br>`;
         }
     });
     rolesHtml += '</div>';
