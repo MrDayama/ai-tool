@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>タイムボム (Timebomb) Online</title>
+    <meta name="description" content="正体隠匿ボードゲーム『タイムボム』のオンラインマルチプレイヤー版。友人と手軽に心理戦が楽しめます。">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
+    <!-- Socket.io クライアント (CDN) -->
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        /* ═══════════════════════════════════════
+           マルチテーマ CSS 定義
+           ═══════════════════════════════════════ */
+        :root, body.theme-win98 {
+            --win-teal:  #008080;
+            --win-bg:    #c0c0c0;
+            --win-light: #ffffff;
+            --win-dark:  #808080;
+            --win-black: #000000;
+            --win-blue1: #000080;
+            --win-blue2: #1084d0;
+            --red:       #d32f2f;
+            --green:     #2e7d32;
+            --cyan:      #00838f;
+            --gold:      #f57f17;
+            --muted:     #424242;
+            --light:     #000000;
+            --font:      'Pixelify Sans', 'Tahoma', 'MS Sans Serif', sans-serif;
+            --mono:      'VT323', monospace;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: var(--font);
+            background: var(--win-teal);
+            color: #000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding-bottom: 45px;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 8px 8px;
+        }
+
+        /* 2. Cyberpunk Theme */
+        body.theme-cyberpunk {
+            --win-teal: #07090f; --win-bg: #0e1120; --win-light: #00d2d3;
+            --win-dark: #ff3838; --win-black: #000000; --win-blue1: #1a0933; --win-blue2: #38006b;
+            --font: 'Pixelify Sans', sans-serif;
+            background: #07090f; color: #e8eaf0;
+            background-image: radial-gradient(ellipse at 0% 0%, rgba(255,56,56,.15) 0, transparent 65%), radial-gradient(ellipse at 100% 100%, rgba(0,210,211,.15) 0, transparent 65%);
+        }
+        body.theme-cyberpunk .glass, body.theme-cyberpunk .win98-window {
+            background: rgba(14,17,32,0.92); border: 1px solid rgba(0,210,211,0.4);
+            box-shadow: 0 0 25px rgba(0,210,211,0.25); border-radius: 14px;
+        }
+        body.theme-cyberpunk .win98-titlebar {
+            background: linear-gradient(90deg, #ff3838, #00d2d3); color: #fff; border-radius: 10px 10px 0 0;
+        }
+        body.theme-cyberpunk .btn {
+            background: linear-gradient(135deg, #ff3838, #ff6060); color: #fff; border: none; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(255,56,56,0.4);
+        }
+        body.theme-cyberpunk input {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(0,210,211,0.3); color: #fff; border-radius: 8px;
+        }
+        body.theme-cyberpunk .win98-taskbar {
+            background: #0e1120; border-top: 1px solid rgba(0,210,211,0.4); color: #fff;
+        }
+        body.theme-cyberpunk .win98-start-btn, body.theme-cyberpunk .win98-task-item, body.theme-cyberpunk .win98-clock {
+            background: #161b33; color: #00d2d3; border: 1px solid rgba(0,210,211,0.4); box-shadow: none;
+        }
+        body.theme-cyberpunk h1 { color: #00d2d3; text-shadow: 0 0 10px rgba(0,210,211,0.5); }
+
+        /* 3. 8-Bit Retro Famicom Theme */
+        body.theme-8bit {
+            --font: 'VT323', monospace;
+            background: #e0d0b0; color: #000;
+        }
+        body.theme-8bit .glass, body.theme-8bit .win98-window {
+            background: #f8f0e0; border: 4px solid #000; box-shadow: 6px 6px 0px #000; border-radius: 0;
+        }
+        body.theme-8bit .win98-titlebar {
+            background: #b80000; color: #fff; border-bottom: 4px solid #000; font-size: 1.1rem;
+        }
+        body.theme-8bit .btn {
+            background: #e04000; color: #fff; border: 3px solid #000; box-shadow: 4px 4px 0px #000;
+            font-size: 1.2rem; border-radius: 0;
+        }
+        body.theme-8bit .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+        body.theme-8bit input {
+            background: #fff; border: 3px solid #000; box-shadow: 3px 3px 0px #000; font-size: 1.2rem; border-radius: 0;
+        }
+        body.theme-8bit .win98-taskbar { background: #b80000; border-top: 4px solid #000; color: #fff; }
+        body.theme-8bit .win98-start-btn, body.theme-8bit .win98-task-item, body.theme-8bit .win98-clock {
+            background: #f8f0e0; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0px #000;
+        }
+        body.theme-8bit h1 { color: #b80000; text-shadow: 2px 2px 0px #000; }
+
+        /* 4. Clean Light Theme */
+        body.theme-light {
+            --font: Tahoma, sans-serif;
+            background: #f1f5f9; color: #0f172a;
+        }
+        body.theme-light .glass, body.theme-light .win98-window {
+            background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px rgba(0,0,0,0.06); border-radius: 12px;
+        }
+        body.theme-light .win98-titlebar {
+            background: #e2e8f0; color: #0f172a; border-bottom: 1px solid #cbd5e1; border-radius: 10px 10px 0 0;
+        }
+        body.theme-light .btn {
+            background: #2563eb; color: #ffffff; border: none; border-radius: 8px; box-shadow: 0 4px 10px rgba(37,99,235,0.2);
+        }
+        body.theme-light input {
+            background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; border-radius: 8px;
+        }
+        body.theme-light .win98-taskbar { background: #ffffff; border-top: 1px solid #cbd5e1; color: #0f172a; }
+        body.theme-light .win98-start-btn, body.theme-light .win98-task-item, body.theme-light .win98-clock {
+            background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; box-shadow: none; border-radius: 6px;
+        }
+        body.theme-light h1 { color: #2563eb; text-shadow: none; }
+
+        /* ═══════════════════════════════════════
+           ユーティリティ & Win98 ウィンドウ
+           ═══════════════════════════════════════ */
+        .hidden { display: none !important; }
+        .container { width: 100%; max-width: 640px; padding: 12px; }
+        .container.wide { max-width: 1040px; }
+
+        .glass, .win98-window {
+            background: var(--win-bg);
+            border: 2px solid;
+            border-color: var(--win-light) var(--win-black) var(--win-black) var(--win-light);
+            box-shadow: 1px 1px 0px var(--win-dark) inset, -1px -1px 0px var(--win-bg) inset;
+            padding: 3px;
+            box-shadow: 4px 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .win98-titlebar {
+            background: linear-gradient(90deg, var(--win-blue1), var(--win-blue2));
+            color: #fff;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 8px;
+            font-size: 14px;
+            letter-spacing: 0.5px;
+            user-select: none;
+        }
+
+        .win98-controls {
+            display: flex;
+            gap: 2px;
+        }
+
+        .win98-control-btn {
+            background: var(--win-bg);
+            border: 1px solid;
+            border-color: var(--win-light) var(--win-black) var(--win-black) var(--win-light);
+            width: 16px;
+            height: 14px;
+            font-size: 10px;
+            line-height: 12px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            color: #000;
+        }
+
+        .win98-window-body {
+            padding: 24px;
+            background: var(--win-bg);
+        }
+
+        h1 {
+            font-size: 2.4rem; font-weight: 800; text-align: center; margin-bottom: 12px;
+            color: var(--win-blue1);
+            text-shadow: 1px 1px 0px #fff;
+            letter-spacing: 3px;
+        }
+        h2 {
+            font-size: 1.3rem; font-weight: 800; margin-bottom: 18px;
+            background: var(--win-blue1); color: #fff; padding: 4px 10px;
+            border: 1px solid var(--win-black);
+        }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+        .form-group label {
+            font-size: .85rem; color: #000; font-weight: bold;
+        }
+        input[type="text"], input[type="url"] {
+            background: #fff;
+            color: #000;
+            border: 2px solid;
+            border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
+            box-shadow: 1px 1px 0px var(--win-black) inset;
+            padding: 8px 12px;
+            font-size: 1rem;
+            font-family: Tahoma, sans-serif;
+            width: 100%;
+        }
+        input:focus {
+            outline: 1px dotted #000;
+        }
+
+        /* 3Dボタン */
+        .btn, .copy-btn {
+            background: var(--win-bg);
+            color: #000;
+            border: 2px solid;
+            border-color: var(--win-light) var(--win-dark) var(--win-dark) var(--win-light);
+            box-shadow: 1px 1px 0px var(--win-black);
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            font-family: var(--font);
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            margin-top: 6px;
+        }
+        .btn:hover, .copy-btn:hover { background: #d0d0d0; }
+        .btn:active:not(:disabled), .copy-btn:active:not(:disabled) {
+            border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
+            box-shadow: none;
+            padding: 11px 19px 9px 21px;
+        }
+        .btn.secondary { background: var(--win-bg); }
+        .btn.green { color: #004d40; }
+        .btn.blue { color: #0d47a1; }
+        .btn:disabled { color: #808080; cursor: not-allowed; text-shadow: 1px 1px 0px #fff; }
+
+        /* エラー通知 */
+        .error-toast {
+            display: none; margin-top: 16px; padding: 10px 14px;
+            background: #ffcdd2; border: 2px inset var(--red);
+            color: #b71c1c; font-size: .9rem; font-weight: bold;
+        }
+
+        /* ═══════════════════════════════════════
+           画面① 接続画面
+           ═══════════════════════════════════════ */
+        #screen-connect .subtitle {
+            text-align: center; color: #424242; font-size: .9rem; margin-bottom: 20px; font-weight: bold;
+        }
+        .connect-spinner {
+            display: flex; align-items: center; justify-content: center; gap: 14px;
+            margin-top: 16px; padding: 12px;
+            border: 2px inset var(--win-dark); background: #fff;
+        }
+        .spinner-ring {
+            width: 20px; height: 20px; border: 3px solid var(--win-bg);
+            border-top-color: var(--win-blue1); border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        .connect-hint {
+            font-size: .8rem; color: #424242; text-align: center;
+            margin-top: 12px; line-height: 1.4;
+        }
+
+        /* ═══════════════════════════════════════
+           画面② ロビー画面
+           ═══════════════════════════════════════ */
+        .lobby-divider {
+            display: flex; align-items: center; gap: 12px; margin: 20px 0;
+            color: #424242; font-size: .85rem; font-weight: bold;
+        }
+        .lobby-divider::before, .lobby-divider::after {
+            content: ''; flex: 1; height: 2px; background: var(--win-dark); border-bottom: 1px solid #fff;
+        }
+        .join-section {
+            border: 2px groove var(--win-light); padding: 14px; background: #d0d0d0;
+        }
+        .join-row { display: flex; gap: 8px; }
+        .join-row input { flex: 1; }
+        .join-row .btn { width: auto; padding: 8px 18px; margin-top: 0; }
+
+        /* ═══════════════════════════════════════
+           画面③ 待機室
+           ═══════════════════════════════════════ */
+        .room-code-box {
+            background: #fff; border: 2px inset var(--win-dark);
+            padding: 14px; text-align: center; margin-bottom: 18px;
+        }
+        .room-code-label { font-size: .85rem; color: #424242; font-weight: bold; }
+        .room-code-value {
+            font-family: var(--mono); font-size: 2.5rem; letter-spacing: 6px;
+            color: var(--win-blue1); font-weight: bold; margin: 4px 0 10px;
+        }
+        .copy-btn { width: auto; margin: 0 auto; display: block; font-size: .85rem; padding: 6px 16px; }
+
+        .player-list-title { font-size: .9rem; font-weight: bold; margin-bottom: 8px; color: #000; }
+        .player-list {
+            display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px;
+            max-height: 200px; overflow-y: auto; background: #fff; border: 2px inset var(--win-dark); padding: 8px;
+        }
+        .player-list-item {
+            display: flex; align-items: center; gap: 10px; padding: 6px 10px;
+            background: var(--win-bg); border: 1px solid var(--win-dark);
+        }
+        .player-dot {
+            width: 10px; height: 10px; border-radius: 50%; background: #2e7d32; border: 1px solid #000;
+        }
+        .player-dot.offline { background: #757575; }
+        .player-list-name { font-weight: bold; flex: 1; font-size: .95rem; }
+        .host-badge {
+            background: var(--win-blue1); color: #fff; font-size: .7rem; padding: 2px 6px; font-weight: bold;
+        }
+        .waiting-hint { font-size: .85rem; color: #424242; text-align: center; margin-top: 10px; }
+
+        /* ═══════════════════════════════════════
+           画面④ ゲーム画面
+           ═══════════════════════════════════════ */
+        .tracker-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+        @media(max-width:600px){ .tracker-row { grid-template-columns: 1fr; } }
+
+        .tracker-box {
+            background: var(--win-bg); border: 2px groove var(--win-light); padding: 12px;
+        }
+        .tracker-label { font-size: .8rem; font-weight: bold; color: #000; margin-bottom: 8px; }
+        .wire-track, .defuse-track { display: flex; gap: 6px; flex-wrap: wrap; }
+        /* ワイヤースロット（wire_cut_animation と統一） */
+        .wire-slot {
+            width: 36px; height: 36px; border: 2px inset var(--win-dark); background: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem; font-weight: bold;
+        }
+        .wire-slot.active { background: #fff9c4; border-color: #f57f17; }
+        .wire-slot.cut.safe  { background: #e0e0e0; }
+        .wire-slot.cut.scute { background: #c8e6c9; color: #2e7d32; }
+        .wire-slot.cut.boom  { background: #ffcdd2; color: #c62828; }
+        /* 解除チップ */
+        .defuse-chip {
+            width: 34px; height: 34px; border: 2px solid var(--win-dark); background: #fff;
+            display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+        }
+        .defuse-chip.found { background: #c8e6c9; border-color: #2e7d32; }
+        .defuse-chip.boom-chip { border-style: dashed; background: #ffebee; }
+        .defuse-chip.boom-chip.exploded { border-color: #c62828; background: #ffcdd2; }
+
+        #round-announce {
+            text-align: center; font-weight: bold; font-size: 1.1rem; color: var(--win-blue1);
+            margin-bottom: 12px; background: #fff; border: 2px inset var(--win-dark); padding: 6px;
+        }
+
+        .turn-box {
+            background: #fff; border: 2px inset var(--win-dark); padding: 10px;
+            text-align: center; margin-bottom: 20px;
+        }
+        .cutter-name { font-size: 1.3rem; font-weight: bold; color: var(--win-blue1); display: inline-block; }
+        .turn-hint   { font-size: .95rem; font-weight: bold; display: inline-block; margin-left: 6px; }
+
+        .players-board {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;
+        }
+
+        /* プレイヤー行（Win98スタイル） */
+        .player-card-box {
+            background: var(--win-bg); border: 2px solid;
+            border-color: var(--win-light) var(--win-dark) var(--win-dark) var(--win-light);
+            padding: 10px;
+        }
+        .player-card-box.is-cutter {
+            border-color: var(--win-blue1); box-shadow: 0 0 0 2px var(--win-blue2);
+        }
+        .player-box-header {
+            display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;
+            background: var(--win-blue1); color: #fff; padding: 3px 6px; font-weight: bold; font-size: .9rem;
+        }
+        .cards-grid { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+        /* 役職バッジ */
+        .self-role-badge {
+            font-size: .75rem; font-weight: 800; padding: 2px 8px;
+            display: inline-block; border: 1px solid;
+        }
+        .self-role-badge.police { background: #e3f2fd; border-color: #1565c0; color: #1565c0; }
+        .self-role-badge.bomber { background: #ffebee; border-color: #c62828; color: #c62828; }
+        .role-badge { display: inline-block; padding: 2px 8px; border: 1px solid; font-weight: bold; font-size: .8rem; }
+        .role-badge.police { background: #e3f2fd; border-color: #1565c0; color: #1565c0; }
+        .role-badge.bomber { background: #ffebee; border-color: #c62828; color: #c62828; }
+
+        /* カードの Win98 レトロスタイル */
+        .wire-card {
+            width: 54px; height: 76px; perspective: 600px; cursor: default; position: relative;
+        }
+        .wire-card.cuttable { cursor: pointer; }
+        .wire-card.cuttable:hover .wire-card-back { border-color: #c62828; background: #ffebee; }
+        .wire-card-inner {
+            width: 100%; height: 100%; position: relative;
+            transform-style: preserve-3d; transition: transform .5s;
+        }
+        .wire-card.flipped .wire-card-inner { transform: rotateY(180deg); }
+
+        .wire-card-front, .wire-card-back {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            border: 2px solid; font-weight: bold; font-size: .8rem;
+        }
+        .wire-card-back {
+            background: #1a237e; color: #fff;
+            border-color: var(--win-light) var(--win-black) var(--win-black) var(--win-light);
+            background-image: repeating-linear-gradient(45deg, #1a237e, #1a237e 5px, #283593 5px, #283593 10px);
+        }
+        /* 自分のカード種類表示 */
+        .wire-card-back.own-safe  { background: #e8eaf6; }
+        .wire-card-back.own-scute { background: #1b5e20; }
+        .wire-card-back.own-boom  { background: #b71c1c; }
+        .wire-card-front {
+            transform: rotateY(180deg); background: #fff; color: #000;
+            border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
+        }
+        .wire-card-front.safe  { background: #f5f5f5; color: #616161; }
+        .wire-card-front.scute { background: #e8f5e9; color: #2e7d32; border-color: #2e7d32; }
+        .wire-card-front.boom  { background: #ffebee; color: #c62828; border-color: #c62828; }
+        .card-icon { font-size: 1.5rem; margin-bottom: 2px; }
+
+        /* ═══════════════════════════════════════
+           Win98 モーダル
+           ═══════════════════════════════════════ */
+        .modal {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.4); z-index: 999;
+            align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal.active { display: flex; }
+        .modal-content {
+            width: 100%; max-width: 440px;
+            border: 2px solid; border-color: var(--win-light) var(--win-black) var(--win-black) var(--win-light);
+            background: var(--win-bg); padding: 3px;
+        }
+        .modal-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 12px; }
+        .modal-body { margin-bottom: 20px; font-size: 1rem; line-height: 1.5; font-weight: bold; }
+
+        /* ═══════════════════════════════════════
+           Win98 タスクバー
+           ═══════════════════════════════════════ */
+        .win98-taskbar {
+            position: fixed; bottom: 0; left: 0; right: 0; height: 36px;
+            background: var(--win-bg); border-top: 2px solid var(--win-light);
+            box-shadow: 0 -1px 0 var(--win-dark); display: flex; align-items: center;
+            justify-content: space-between; padding: 2px 4px; z-index: 9999;
+        }
+        .win98-start-btn {
+            background: var(--win-bg); border: 2px solid;
+            border-color: var(--win-light) var(--win-dark) var(--win-dark) var(--win-light);
+            box-shadow: 1px 1px 0px var(--win-black); padding: 3px 8px; font-weight: bold;
+            display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 13px;
+        }
+        .win98-start-btn:active {
+            border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
+            padding: 4px 7px 2px 9px;
+        }
+        .win98-task-item {
+            background: var(--win-bg); border: 2px solid;
+            border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
+            padding: 3px 12px; font-size: 12px; font-weight: bold; display: flex; align-items: center; gap: 6px;
+        }
+        .win98-clock {
+            border: 2px solid; border-color: var(--win-dark) var(--win-light) var(--win-light) var(--win-dark);
+            padding: 2px 10px; font-size: 12px; background: var(--win-bg); font-weight: bold;
+        }
+
+        /* アニメーション用 */
+        @keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+        .fx-layer { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; }
+        .particle { position: absolute; border-radius: 50%; animation: flyOut 0.8s ease-out forwards; }
+    </style>
+</head>
+<body>
+<div id="fx-layer" class="fx-layer"></div>
+
+<!-- ══════════════════════════════════════
+     画面① 接続画面
+     ══════════════════════════════════════ -->
+<div id="screen-connect" class="container">
+<div class="win98-window">
+    <div class="win98-titlebar">
+        <span class="win98-title">💣 タイムボム Online - [接続]</span>
+        <div class="win98-controls">
+            <button class="win98-control-btn">_</button>
+            <button class="win98-control-btn">⃞</button>
+            <button class="win98-control-btn close">✕</button>
+        </div>
+    </div>
+    <div class="win98-window-body">
+        <h1>TIME BOMB</h1>
+        <p class="subtitle">オンラインマルチプレイヤー版 v1.998</p>
+
+        <div class="form-group">
+            <label for="server-url">バックエンドサーバーURL</label>
+            <input type="url" id="server-url" placeholder="https://your-app.onrender.com" value="https://timebomb-backend.onrender.com">
+        </div>
+        <button id="connect-btn" class="btn">🔌 サーバーに接続する</button>
+
+        <div id="connecting-spinner" class="connect-spinner hidden">
+            <div class="spinner-ring"></div>
+            <span id="connecting-text">サーバーに接続中...</span>
+        </div>
+        <p class="connect-hint">
+            ※ 初回接続時、Render.comの無料サーバーが<br>起動するまで最大1分かかることがあります。
+        </p>
+        <div id="connect-error" class="error-toast"></div>
+    </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     画面② ロビー画面
+     ══════════════════════════════════════ -->
+<div id="screen-lobby" class="container hidden">
+<div class="win98-window">
+    <div class="win98-titlebar">
+        <span class="win98-title">💣 タイムボム Online - [ロビー]</span>
+        <div class="win98-controls">
+            <button class="win98-control-btn">_</button>
+            <button class="win98-control-btn">⃞</button>
+            <button class="win98-control-btn close">✕</button>
+        </div>
+    </div>
+    <div class="win98-window-body">
+        <h1>TIME BOMB</h1>
+        <div class="form-group">
+            <label for="nickname">ニックネーム</label>
+            <input type="text" id="nickname" placeholder="あなたの名前" maxlength="16">
+        </div>
+
+        <button id="create-room-btn" class="btn blue">🏠 新しいルームを作る</button>
+
+        <div class="lobby-divider">または</div>
+
+        <div class="join-section">
+            <div class="form-group" style="margin-bottom:10px">
+                <label for="room-code-input">ルームコード (4文字)</label>
+            </div>
+            <div class="join-row">
+                <input type="text" id="room-code-input" placeholder="ABCD" maxlength="4">
+                <button id="join-room-btn" class="btn secondary">参加</button>
+            </div>
+        </div>
+
+        <div style="margin-top:16px; text-align:center">
+            <button id="show-rules-btn" class="btn" style="background:linear-gradient(135deg,#4a90d9,#357abd); font-size:0.85rem; padding:10px 20px;">📖 遊び方・ルール説明</button>
+        </div>
+
+        <div id="lobby-error" class="error-toast"></div>
+    </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     画面③ 待機室
+     ══════════════════════════════════════ -->
+<div id="screen-waiting" class="container hidden">
+<div class="win98-window">
+    <div class="win98-titlebar">
+        <span class="win98-title">💣 タイムボム Online - [待機室]</span>
+        <div class="win98-controls">
+            <button class="win98-control-btn">_</button>
+            <button class="win98-control-btn">⃞</button>
+            <button class="win98-control-btn close">✕</button>
+        </div>
+    </div>
+    <div class="win98-window-body">
+        <h2>待機室</h2>
+
+        <div class="room-code-box">
+            <div class="room-code-label">ルームコードを友達に伝えよう</div>
+            <div class="room-code-value" id="display-room-code">——</div>
+            <button class="copy-btn" id="copy-code-btn">📋 コードをコピー</button>
+        </div>
+
+        <div class="player-list-title">参加中のプレイヤー</div>
+        <div id="waiting-player-list" class="player-list"></div>
+
+        <button id="add-bot-btn" class="btn secondary hidden" style="margin-bottom:8px">🤖 ダミーBotを追加 (1人テスト用)</button>
+        <button id="start-game-btn" class="btn green hidden">⚡ ゲームスタート（ホストのみ）</button>
+        <p id="waiting-hint" class="waiting-hint">ホストがゲームを開始するまでお待ちください…</p>
+
+        <div id="waiting-error" class="error-toast"></div>
+    </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     画面④ ゲーム画面
+     ══════════════════════════════════════ -->
+<div id="screen-game" class="container wide hidden">
+<div class="win98-window">
+    <div class="win98-titlebar">
+        <span class="win98-title">💣 タイムボム Online - [対戦中]</span>
+        <div class="win98-controls">
+            <button class="win98-control-btn">_</button>
+            <button class="win98-control-btn">⃞</button>
+            <button class="win98-control-btn close">✕</button>
+        </div>
+    </div>
+    <div class="win98-window-body">
+        <!-- トラッカーエリア -->
+        <div class="tracker-row">
+            <div class="tracker-box">
+                <div class="tracker-label">✂️ このラウンドの残りカット</div>
+                <div id="wire-track" class="wire-track"></div>
+            </div>
+            <div class="tracker-box">
+                <div class="tracker-label">⚡ 解除コード進捗</div>
+                <div id="defuse-track" class="defuse-track"></div>
+            </div>
+        </div>
+
+        <!-- ラウンドアナウンス -->
+        <div id="round-announce"></div>
+
+        <!-- 手番表示 -->
+        <div class="turn-box">
+            <div class="cutter-name" id="cutter-name-disp">—</div>
+            <div class="turn-hint" id="turn-hint-disp">の手番</div>
+        </div>
+
+        <!-- ボード -->
+        <div id="game-board" class="players-board"></div>
+    </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     画面⑤ 遊び方・ルール説明
+     ══════════════════════════════════════ -->
+<div id="screen-rules" class="container hidden">
+<div class="win98-window" style="max-width:700px">
+    <div class="win98-titlebar">
+        <span class="win98-title">📖 タイムボム Online - [遊び方]</span>
+        <div class="win98-controls">
+            <button class="win98-control-btn">_</button>
+            <button class="win98-control-btn">⃞</button>
+            <button class="win98-control-btn close">✕</button>
+        </div>
+    </div>
+    <div class="win98-window-body" style="max-height:70vh; overflow-y:auto; font-size:0.9rem; line-height:1.7">
+        <div style="text-align:center; margin-bottom:20px">
+            <h1 style="font-size:1.6rem; margin-bottom:4px">💣 タイムボム</h1>
+            <p style="color:var(--muted); font-size:0.8rem">正体隠匿 × ワイヤーカットゲーム</p>
+        </div>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">🎯 ゲーム概要</h2>
+        <p>プレイヤーは<strong>🚔 時空警察</strong>か<strong>💣 ボマー団</strong>のどちらかの陣営に分かれます。自分の役職は見えますが、他のプレイヤーの役職はわかりません。</p>
+        <ul style="margin:8px 0 16px 20px">
+            <li><strong>🚔 時空警察</strong>：爆弾の「解除コード」をすべて見つけ出して爆弾を解除するのが目標</li>
+            <li><strong>💣 ボマー団</strong>：爆弾を爆発させる（または時間切れまで耐える）のが目標</li>
+        </ul>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">👥 プレイ人数と構成</h2>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:16px; font-size:0.82rem">
+            <thead>
+                <tr style="background:rgba(255,255,255,0.05)">
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">人数</th>
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">🚔 警察</th>
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">💣 ボマー</th>
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">⚡ 解除</th>
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">💤 空</th>
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">💣 爆弾</th>
+                </tr>
+            </thead>
+            <tbody style="text-align:center">
+                <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">4人</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">3</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">4</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">15</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td></tr>
+                <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">5人</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">3</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">2</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">5</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">19</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td></tr>
+                <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">6人</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">4</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">2</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">6</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">23</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td></tr>
+                <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">7人</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">5</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">2</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">7</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">27</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td></tr>
+                <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">8人</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">5</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">3</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">8</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">31</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td></tr>
+            </tbody>
+        </table>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">📜 ゲームの流れ</h2>
+        <ol style="margin:8px 0 16px 20px">
+            <li><strong>カード配布</strong>：全カードをシャッフルし、各プレイヤーに均等配布。自分の手札の種類は自分だけに見えます。</li>
+            <li><strong>ニッパー（✂️）でカット</strong>：現在のニッパー保持者が、<strong>自分以外</strong>のプレイヤーのカードを1枚選んでめくります。</li>
+            <li><strong>ニッパーの移動</strong>：カードをめくられたプレイヤーが次のニッパー保持者になります。</li>
+            <li><strong>ラウンド終了</strong>：全プレイヤー分（＝人数分）のカードがめくられたら1ラウンド終了。カードを回収してシャッフル・再配布し、次のラウンドへ。</li>
+        </ol>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">🏆 勝敗条件</h2>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:16px; font-size:0.85rem">
+            <tr style="background:rgba(76,175,80,0.15)">
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px; font-weight:bold">🚔 警察の勝利</td>
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px">解除コード（⚡）を<strong>全枚数</strong>めくった</td>
+            </tr>
+            <tr style="background:rgba(244,67,54,0.15)">
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px; font-weight:bold">💣 ボマーの勝利</td>
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px">爆弾カード（💣）がめくられた</td>
+            </tr>
+            <tr style="background:rgba(244,67,54,0.1)">
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px; font-weight:bold">💣 ボマーの勝利</td>
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px">第4ラウンドが終了しても解除コードが足りない</td>
+            </tr>
+        </table>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">🃏 ラウンドごとの手札枚数</h2>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:16px; font-size:0.85rem; text-align:center">
+            <tr style="background:rgba(255,255,255,0.05)"><th style="border:1px solid rgba(255,255,255,0.15); padding:6px">ラウンド</th><th style="border:1px solid rgba(255,255,255,0.15); padding:6px">1</th><th style="border:1px solid rgba(255,255,255,0.15); padding:6px">2</th><th style="border:1px solid rgba(255,255,255,0.15); padding:6px">3</th><th style="border:1px solid rgba(255,255,255,0.15); padding:6px">4</th></tr>
+            <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:6px">手札枚数</td><td style="border:1px solid rgba(255,255,255,0.1); padding:6px">5枚</td><td style="border:1px solid rgba(255,255,255,0.1); padding:6px">4枚</td><td style="border:1px solid rgba(255,255,255,0.1); padding:6px">3枚</td><td style="border:1px solid rgba(255,255,255,0.1); padding:6px">2枚</td></tr>
+        </table>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">💡 コツ・ヒント</h2>
+        <ul style="margin:8px 0 16px 20px">
+            <li>自分の手札に何があるかは重要な情報。でもそれを正直に言うかは自由！</li>
+            <li>ボマーは「解除コードがある」と嘘をつき、ニッパーを自分に誘導すると有効。</li>
+            <li>警察は、他のプレイヤーの反応やカットの選択から嘘を見抜こう。</li>
+            <li>全員の発言と行動を注意深く観察するのが勝利の鍵！</li>
+        </ul>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">🌐 オンライン版について</h2>
+        <ul style="margin:8px 0 16px 20px">
+            <li>各プレイヤーが自分のスマホ/PCでアクセス</li>
+            <li>ルームコード（4文字）を共有して合流</li>
+            <li>UIテーマはプレイヤーごとに自由に選択可能</li>
+            <li>ゲーム中に退出するとゲームが中断されます</li>
+            <li>ダミーBot追加で1人テストも可能</li>
+        </ul>
+
+        <div style="text-align:center; margin-top:24px">
+            <button id="rules-back-btn" class="btn blue" style="min-width:200px">🔙 ロビーに戻る</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     ゲーム終了モーダル
+     ══════════════════════════════════════ -->
+<div id="modal" class="modal">
+<div class="win98-window modal-content">
+    <div class="win98-titlebar">
+        <span id="modal-window-title">📢 システムメッセージ</span>
+        <div class="win98-controls">
+            <button class="win98-control-btn close">✕</button>
+        </div>
+    </div>
+    <div class="win98-window-body">
+        <div id="modal-title" class="modal-title"></div>
+        <div id="modal-body"  class="modal-body"></div>
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px">
+            <button id="modal-restart-btn" class="btn green hidden" style="min-width:160px">🔄 次のゲームへ</button>
+            <button id="modal-back-btn" class="btn blue" style="min-width:160px">🚪 ロビーに戻る</button>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- ゲーム中断モーダル -->
+<div id="modal-abort" class="modal">
+<div class="win98-window modal-content">
+    <div class="win98-titlebar">
+        <span>⚠️ ゲーム中断通知</span>
+        <div class="win98-controls">
+            <button class="win98-control-btn close">✕</button>
+        </div>
+    </div>
+    <div class="win98-window-body">
+        <div class="modal-title" style="color:#b71c1c">⚠️ 通信切断</div>
+        <div id="modal-abort-body" class="modal-body"></div>
+        <button id="modal-abort-btn" class="btn secondary">ロビーに戻る</button>
+    </div>
+</div>
+</div>
+
+<!-- Win98 タスクバー -->
+<div class="win98-taskbar">
+    <div class="win98-start-btn">
+        <span style="color:#000080">❖</span> スタート
+    </div>
+    <div class="win98-task-item">
+        💣 タイムボム Online.exe
+    </div>
+    <div style="display:flex; align-items:center; gap:8px;">
+        <select id="theme-selector" style="font-family:var(--font); font-weight:bold; font-size:12px; padding:2px 6px; background:#fff; color:#000; border:2px inset #808080; cursor:pointer;">
+            <option value="theme-win98">🖥️ Windows 98</option>
+            <option value="theme-cyberpunk">🌃 サイバーネオン</option>
+            <option value="theme-8bit">🎮 8-Bit レトロ</option>
+            <option value="theme-light">☀️ シンプルライト</option>
+        </select>
+        <div class="win98-clock" id="win98-clock">
+            12:00 PM
+        </div>
+    </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   サウンドエフェクト (Web Audio API)
+   ══════════════════════════════════════════════════ */
+const SoundFX = {
+    ctx: null,
+    init() {
+        if (!this.ctx) {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) this.ctx = new AudioContext();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+    },
+    playCut() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.1);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.1);
+    },
+    playBoom() {
+        if (!this.ctx) return;
+        const bufferSize = this.ctx.sampleRate * 1.5;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1000, this.ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 1.5);
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.8, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 1.5);
+        noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+        noise.start();
+    },
+    playSuccess() {
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain); gain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, this.ctx.currentTime); // C5
+        osc.frequency.setValueAtTime(659.25, this.ctx.currentTime + 0.1); // E5
+        osc.frequency.setValueAtTime(783.99, this.ctx.currentTime + 0.2); // G5
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.5);
+        osc.start(); osc.stop(this.ctx.currentTime + 0.5);
+    }
+};
+document.addEventListener('click', () => SoundFX.init(), { once: true });
+
+/* ══════════════════════════════════════════════════
+   タイムボム オンライン クライアント
+   ══════════════════════════════════════════════════ */
+
+const PER_ROUND = {1:5, 2:4, 3:3, 4:2};
+
+// ─── セッション管理 ───────────────────────────────
+function getOrCreatePlayerId() {
+    let id = localStorage.getItem('timebomb_player_id');
+    if (!id) {
+        // UUID v4 生成
+        id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+            const r = Math.random() * 16 | 0;
+            return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+        });
+        localStorage.setItem('timebomb_player_id', id);
+    }
+    return id;
+}
+function saveSession(roomId, nickname) {
+    localStorage.setItem('timebomb_session', JSON.stringify({ roomId, nickname }));
+}
+function clearSession() {
+    localStorage.removeItem('timebomb_session');
+}
+function loadSession() {
+    try { return JSON.parse(localStorage.getItem('timebomb_session')); }
+    catch { return null; }
+}
+
+// ─── 状態 ────────────────────────────────────────
+let socket = null;
+const MY_ID = getOrCreatePlayerId();
+let myNickname = '';
+let myRoomId   = '';
+let myHostId   = '';
+let lastRoomState = null; // 最後に受信した room_state
+let roundSlots = [];      // ワイヤートラッカー用: [{type}|null]
+
+// ─── DOM ─────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+const screens = {
+    connect: $('screen-connect'),
+    lobby:   $('screen-lobby'),
+    waiting: $('screen-waiting'),
+    game:    $('screen-game'),
+    rules:   $('screen-rules'),
+};
+
+// 📖 遊び方画面
+$('show-rules-btn').addEventListener('click', () => showScreen('rules'));
+$('rules-back-btn').addEventListener('click', () => showScreen('lobby'));
+
+function showScreen(name) {
+    Object.entries(screens).forEach(([k, el]) => {
+        el.classList.toggle('hidden', k !== name);
+    });
+}
+
+// ─── エラー表示ヘルパー ────────────────────────────
+function showError(el, msg) {
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 5000);
+}
+
+/* ══════════════════════════════════════════════════
+   画面① 接続
+   ══════════════════════════════════════════════════ */
+$('connect-btn').addEventListener('click', () => {
+    const url = $('server-url').value.trim();
+    if (!url) return;
+    attemptConnect(url);
+});
+
+function attemptConnect(serverUrl) {
+    const spinner = $('connecting-spinner');
+    const errEl   = $('connect-error');
+    spinner.classList.remove('hidden');
+    $('connect-btn').disabled = true;
+    $('connecting-text').textContent = 'サーバーに接続中...';
+
+    // ヘルスチェック（Renderのスリープ解除を待つ）
+    let attempts = 0;
+    const maxAttempts = 14; // 最大約70秒
+    const healthUrl = serverUrl.replace(/\/$/, '') + '/health';
+
+    const tryHealth = () => {
+        attempts++;
+        $('connecting-text').textContent = `サーバー起動確認中... (${attempts}/${maxAttempts})`;
+
+        fetch(healthUrl, { signal: AbortSignal.timeout(6000) })
+            .then(r => {
+                if (r.ok) {
+                    // サーバー起動確認 → Socket.io 接続
+                    spinner.classList.add('hidden');
+                    initSocket(serverUrl);
+                } else {
+                    throw new Error('not ok');
+                }
+            })
+            .catch(() => {
+                if (attempts < maxAttempts) {
+                    setTimeout(tryHealth, 5000);
+                } else {
+                    spinner.classList.add('hidden');
+                    $('connect-btn').disabled = false;
+                    showError(errEl, 'サーバーへの接続に失敗しました。URLを確認してください。');
+                }
+            });
+    };
+    tryHealth();
+}
+
+function initSocket(serverUrl) {
+    socket = io(serverUrl, {
+        transports: ['websocket', 'polling'],
+        reconnectionAttempts: 5,
+    });
+
+    socket.on('connect', () => {
+        console.log('Socket connected:', socket.id);
+
+        // セッション復旧を試みる
+        const saved = loadSession();
+        if (saved) {
+            $('connecting-text').textContent = 'セッションを復旧中...';
+            $('connecting-spinner').classList.remove('hidden');
+            socket.emit('reconnect_session', { playerId: MY_ID });
+        } else {
+            showLobby();
+        }
+    });
+
+    socket.on('reconnect_success', ({ roomId, nickname }) => {
+        myRoomId = roomId;
+        myNickname = nickname;
+        $('connecting-spinner').classList.add('hidden');
+        // room_state を待ってから画面遷移（すぐに来る）
+    });
+
+    socket.on('reconnect_failed', () => {
+        clearSession();
+        $('connecting-spinner').classList.add('hidden');
+        showLobby();
+    });
+
+    socket.on('room_state', (state) => {
+        console.log('room_state:', state);
+
+        if (state.status === 'LOBBY') {
+            myHostId = state.hostId;
+            myRoomId = state.roomId;
+            lastRoomState = state;
+            renderWaitingRoom(state);
+            showScreen('waiting');
+        } else {
+            // ラウンド変化検知（ここでリセット）
+            if (lastRoomState && lastRoomState.currentRound !== state.currentRound && state.currentRound > 1) {
+                roundSlots = [];
+                showRoundAnnounce(state.currentRound, PER_ROUND[state.currentRound]);
+            }
+            // 初回ゲーム開始検知（LOBBY→PLAYING）
+            if (!lastRoomState || lastRoomState.status === 'LOBBY') {
+                roundSlots = [];
+            }
+            lastRoomState = state;
+            myHostId = state.hostId || myHostId;
+            renderGameScreen(state);
+            showScreen('game');
+
+            if (state.status === 'POLICE_WON') {
+                setTimeout(() => showGameEndModal(state, 'police'), 600);
+            } else if (state.status === 'BOMBER_WON') {
+                setTimeout(() => showGameEndModal(state, 'bomber'), 600);
+            } else if (state.status === 'ROUND_END') {
+                // ラウンド終了 → ホストが自動的に next_round を送信
+                if (state.hostId === MY_ID || myHostId === MY_ID) {
+                    setTimeout(() => {
+                        socket.emit('next_round');
+                    }, 1800);
+                }
+            }
+        }
+    });
+
+    socket.on('wire_cut_animation', ({ cutterId, targetId, cardId, type }) => {
+        // カードをフリップする演出 (wire-card クラスに対応)
+        const cardEl = document.querySelector(`[data-card-id="${cardId}"]`);
+        if (cardEl) {
+            cardEl.classList.add('flipped');
+            setTimeout(() => {
+                const rect = cardEl.getBoundingClientRect();
+                const cx = rect.left + rect.width  / 2;
+                const cy = rect.top  + rect.height / 2;
+                if (type === 'scute') { spark(cx, cy, 'green'); SoundFX.playSuccess(); }
+                else if (type === 'boom') { spark(cx, cy, 'boom'); SoundFX.playBoom(); }
+                else { SoundFX.playCut(); }
+            }, 300);
+        }
+
+        // ラウンドスロット更新（配列を伸ばしながら記録）
+        roundSlots.push({ type });
+        renderWireTracker(roundSlots);
+    });
+
+    socket.on('error', (msg) => {
+        // 現在の画面に応じてエラー表示
+        const errId = screens.waiting.classList.contains('hidden') ? 'lobby-error' : 'waiting-error';
+        showError($(errId), msg);
+    });
+
+    socket.on('game_aborted', (msg) => {
+        $('modal-abort-body').textContent = msg;
+        $('modal-abort').classList.add('active');
+    });
+
+    socket.on('disconnect', () => {
+        console.warn('Socket disconnected');
+    });
+}
+
+/* ══════════════════════════════════════════════════
+   画面② ロビー
+   ══════════════════════════════════════════════════ */
+function showLobby() {
+    // 保存済みニックネームを復元
+    const saved = localStorage.getItem('timebomb_nickname');
+    if (saved) $('nickname').value = saved;
+    showScreen('lobby');
+}
+
+$('create-room-btn').addEventListener('click', () => {
+    const name = $('nickname').value.trim();
+    if (!name) { showError($('lobby-error'), 'ニックネームを入力してください。'); return; }
+    myNickname = name;
+    localStorage.setItem('timebomb_nickname', name);
+    socket.emit('create_room', { playerId: MY_ID, nickname: name });
+});
+
+$('join-room-btn').addEventListener('click', () => {
+    const name = $('nickname').value.trim();
+    const code = $('room-code-input').value.trim().toUpperCase();
+    if (!name) { showError($('lobby-error'), 'ニックネームを入力してください。'); return; }
+    if (!code || code.length !== 4) { showError($('lobby-error'), 'ルームコードは4文字で入力してください。'); return; }
+    myNickname = name;
+    localStorage.setItem('timebomb_nickname', name);
+    socket.emit('join_room', { roomId: code, playerId: MY_ID, nickname: name });
+});
+
+$('room-code-input').addEventListener('input', e => {
+    e.target.value = e.target.value.toUpperCase();
+});
+
+/* ══════════════════════════════════════════════════
+   画面③ 待機室
+   ══════════════════════════════════════════════════ */
+function renderWaitingRoom(state) {
+    $('display-room-code').textContent = state.roomId;
+    saveSession(state.roomId, myNickname);
+
+    const list = $('waiting-player-list');
+    list.innerHTML = '';
+    state.players.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'player-list-item';
+        const dot  = document.createElement('div');
+        dot.className = `player-dot${p.connected ? '' : ' offline'}`;
+        const name = document.createElement('span');
+        name.className = 'player-list-name';
+        name.textContent = p.name + (p.id === MY_ID ? ' (あなた)' : '');
+        item.appendChild(dot);
+        item.appendChild(name);
+        if (p.id === state.hostId) {
+            const badge = document.createElement('span');
+            badge.className = 'host-badge';
+            badge.textContent = 'ホスト';
+            item.appendChild(badge);
+        }
+        list.appendChild(item);
+    });
+
+    const isHost = (state.hostId === MY_ID);
+    $('start-game-btn').classList.toggle('hidden', !isHost);
+    $('add-bot-btn').classList.toggle('hidden', !isHost || state.players.length >= 8);
+    $('waiting-hint').classList.toggle('hidden', isHost);
+
+    // 人数不足ならボタンを無効化
+    if (isHost) {
+        $('start-game-btn').disabled = state.players.length < 3;
+        $('start-game-btn').textContent = state.players.length < 3
+            ? `⚡ ゲームスタート（あと${3 - state.players.length}人必要）`
+            : '⚡ ゲームスタート';
+    }
+}
+
+$('copy-code-btn').addEventListener('click', () => {
+    const code = $('display-room-code').textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        $('copy-code-btn').textContent = '✅ コピーしました！';
+        setTimeout(() => { $('copy-code-btn').textContent = '📋 コードをコピー'; }, 2000);
+    });
+});
+
+$('add-bot-btn').addEventListener('click', () => {
+    socket.emit('add_bot');
+});
+
+$('start-game-btn').addEventListener('click', () => {
+    socket.emit('start_game');
+});
+
+// Win98 時計更新
+function updateClock() {
+    const clockEl = $('win98-clock');
+    if (clockEl) {
+        const now = new Date();
+        clockEl.textContent = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+/* ══════════════════════════════════════════════════
+   テーマセレクター（UI切り替え）
+   ══════════════════════════════════════════════════ */
+const THEMES = ['theme-win98', 'theme-cyberpunk', 'theme-8bit', 'theme-light'];
+function applyTheme(theme) {
+    document.body.classList.remove(...THEMES);
+    document.body.classList.add(theme);
+    localStorage.setItem('timebomb_theme', theme);
+    const sel = $('theme-selector');
+    if (sel) sel.value = theme;
+}
+// ページ読み込み時に保存済みテーマを復元
+(function initTheme() {
+    const saved = localStorage.getItem('timebomb_theme') || 'theme-win98';
+    applyTheme(saved);
+})();
+// セレクトボックス変更時にテーマ適用
+$('theme-selector').addEventListener('change', (e) => {
+    applyTheme(e.target.value);
+});
+
+/* ══════════════════════════════════════════════════
+   画面④ ゲーム
+   ══════════════════════════════════════════════════ */
+function renderGameScreen(state) {
+    renderWireTracker(roundSlots, state);
+    renderDefuseTracker(state);
+    renderTurnBox(state);
+    renderBoard(state);
+}
+
+// ─── ワイヤートラッカー ─────────────────────────
+function renderWireTracker(slots, state) {
+    const track = $('wire-track');
+    track.innerHTML = '';
+    const n = state ? state.players.length : (lastRoomState ? lastRoomState.players.length : 0);
+    const cutsThisRound = slots ? slots.filter(s => s !== null).length : 0;
+
+    for (let i = 0; i < n; i++) {
+        const slot = document.createElement('div');
+        const slotData = slots ? slots[i] : null;
+
+        if (slotData) {
+            slot.className = `wire-slot cut ${slotData.type}`;
+            slot.textContent = slotData.type === 'scute' ? '⚡' : slotData.type === 'boom' ? '💥' : '✂️';
+        } else if (i === cutsThisRound) {
+            slot.className = 'wire-slot active';
+            slot.textContent = '✂️';
+        } else {
+            slot.className = 'wire-slot';
+            slot.textContent = '✂️';
+        }
+        track.appendChild(slot);
+    }
+}
+
+// ─── 解除チップトラッカー ──────────────────────
+function renderDefuseTracker(state) {
+    const track = $('defuse-track');
+    track.innerHTML = '';
+    const goal  = state.scutesGoal;
+    const found = state.scutesFound;
+
+    for (let i = 0; i < goal; i++) {
+        const chip = document.createElement('div');
+        chip.className = i < found ? 'defuse-chip found' : 'defuse-chip';
+        chip.textContent = i < found ? '⚡' : '○';
+        track.appendChild(chip);
+    }
+    // 爆弾チップ
+    const boomChip = document.createElement('div');
+    boomChip.className = 'defuse-chip boom-chip' + (state.status === 'BOMBER_WON' ? ' exploded' : '');
+    boomChip.style.marginLeft = '6px';
+    boomChip.textContent = '💣';
+    track.appendChild(boomChip);
+}
+
+// ─── 手番ボックス ────────────────────────────
+function renderTurnBox(state) {
+    const cutter = state.players.find(p => p.id === state.currentCutterId);
+    const isMyTurn = (state.currentCutterId === MY_ID);
+    const cutterName = cutter ? cutter.name + (isMyTurn ? ' (あなた)' : '') : '—';
+    $('cutter-name-disp').textContent = cutterName;
+    if (state.status === 'ROUND_END') {
+        $('turn-hint-disp').textContent = '— ラウンド終了。カードを再配布中...';
+    } else {
+        $('turn-hint-disp').textContent = isMyTurn
+            ? 'の手番 ─ 他のプレイヤーのカードを1枚選んでください'
+            : 'の手番 ─ カードがカットされるのを待ってください';
+    }
+}
+
+// ─── ゲームボード ────────────────────────────
+function renderBoard(state) {
+    const board  = $('game-board');
+    board.innerHTML = '';
+    const isMyTurn = (state.currentCutterId === MY_ID);
+    const isGameOver = (state.status === 'POLICE_WON' || state.status === 'BOMBER_WON');
+
+    state.players.forEach(player => {
+        const isSelf    = (player.id === MY_ID);
+        const isCutter  = (player.id === state.currentCutterId);
+
+        // Win98スタイルのプレイヤーボックス
+        const box = document.createElement('div');
+        box.className = `player-card-box${isCutter ? ' is-cutter' : ''}`;
+
+        // ヘッダー
+        const header = document.createElement('div');
+        header.className = 'player-box-header';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.textContent = player.name + (isSelf ? ' 👤' : '') + (isCutter ? ' ✂️' : '');
+        header.appendChild(nameSpan);
+
+        // 役職バッジ（自分のみ or ゲーム終了時全員）
+        const roleToShow = isSelf ? (state.self && state.self.role) : (isGameOver ? player.role : null);
+        if (roleToShow && roleToShow !== 'unknown') {
+            const badge = document.createElement('span');
+            badge.className = `self-role-badge ${roleToShow === 'POLICE' ? 'police' : 'bomber'}`;
+            badge.textContent = roleToShow === 'POLICE' ? '👮 警察' : '💣 ボマー';
+            header.appendChild(badge);
+        }
+        box.appendChild(header);
+
+        // カード一覧
+        const cardsGrid = document.createElement('div');
+        cardsGrid.className = 'cards-grid';
+
+        const cards = isSelf ? (state.self ? state.self.cards : []) : player.cards;
+        cards.forEach(card => {
+            const cardWrap  = document.createElement('div');
+            const cardInner = document.createElement('div');
+            const cardBack  = document.createElement('div');
+            const cardFront = document.createElement('div');
+
+            cardWrap.className  = 'wire-card';
+            cardInner.className = 'wire-card-inner';
+
+            if (card.isRevealed) {
+                cardWrap.classList.add('flipped');
+                cardBack.className = 'wire-card-back';
+                cardFront.className = `wire-card-front ${card.type}`;
+                const icon = document.createElement('span');
+                icon.className = 'card-icon';
+                icon.textContent = card.type === 'scute' ? '⚡' : card.type === 'boom' ? '💥' : '💤';
+                cardFront.appendChild(icon);
+            } else if (isSelf) {
+                // 自分の手札：裏面に種類のヒント色
+                cardBack.className = `wire-card-back own-${card.type}`;
+                const icon = document.createElement('span');
+                icon.className = 'card-icon';
+                icon.textContent = card.type === 'scute' ? '⚡' : card.type === 'boom' ? '💣' : '💤';
+                cardBack.appendChild(icon);
+                cardFront.className = 'wire-card-front';
+            } else {
+                // 他人の手札
+                cardBack.className = 'wire-card-back';
+                cardFront.className = 'wire-card-front';
+                if (isMyTurn && !card.isRevealed) {
+                    cardWrap.classList.add('cuttable');
+                    cardWrap.addEventListener('click', () => onCutWire(player.id, card.id));
+                }
+            }
+
+            // data属性でカードを特定（wire_cut_animation用）
+            cardWrap.setAttribute('data-card-id', card.id);
+            cardWrap.setAttribute('data-player-id', player.id);
+
+            cardInner.appendChild(cardBack);
+            cardInner.appendChild(cardFront);
+            cardWrap.appendChild(cardInner);
+            cardsGrid.appendChild(cardWrap);
+        });
+
+        box.appendChild(cardsGrid);
+        board.appendChild(box);
+    });
+}
+
+// ─── カットアクション ─────────────────────────
+function onCutWire(targetPlayerId, cardId) {
+    socket.emit('cut_wire', { targetPlayerId, cardId });
+}
+
+/* ══════════════════════════════════════════════════
+   ゲーム終了モーダル
+   ══════════════════════════════════════════════════ */
+function showGameEndModal(state, winner) {
+    const isPoliceWin = winner === 'police';
+    $('modal-title').innerHTML = isPoliceWin
+        ? '<span style="color:var(--cyan)">👮 時空警察の勝利！</span>'
+        : '<span style="color:var(--red)">💥 ボマー団の勝利！</span>';
+
+    const msg = isPoliceWin
+        ? 'すべての解除コードがカットされ、爆弾の安全な解除に成功しました！'
+        : (state.status === 'BOMBER_WON' && state.remainingCuts !== undefined && state.remainingCuts === 0
+            ? 'すべてのラウンドが終了しましたが解除コードが足りませんでした。爆弾が爆発しました！'
+            : 'BOOM カードがカットされました！大爆発が起きました！');
+
+    let rolesHtml = `<div style="text-align:left;background:rgba(0,0,0,.3);padding:14px;border-radius:12px;margin-top:14px;">
+        <strong>【全員の陣営公開】</strong><br>`;
+    state.players.forEach(p => {
+        if (p.role && p.role !== 'unknown') {
+            rolesHtml += `${p.name}: <span class="role-badge ${p.role === 'POLICE' ? 'police' : 'bomber'}">${p.role === 'POLICE' ? '👮 時空警察' : '💣 ボマー団'}</span><br>`;
+        }
+    });
+    rolesHtml += '</div>';
+
+    $('modal-body').innerHTML = msg + rolesHtml;
+
+    // ホストなら「次のゲームへ」ボタンを表示
+    const restartBtn = $('modal-restart-btn');
+    if (myHostId === MY_ID) {
+        restartBtn.classList.remove('hidden');
+    } else {
+        restartBtn.classList.add('hidden');
+    }
+
+    $('modal').classList.add('active');
+}
+
+$('modal-back-btn').addEventListener('click', () => {
+    $('modal').classList.remove('active');
+    clearSession();
+    roundSlots = [];
+    showScreen('lobby');
+});
+
+// 🔄 次のゲームへ（同じルーム・メンバーで再開）
+$('modal-restart-btn').addEventListener('click', () => {
+    $('modal').classList.remove('active');
+    roundSlots = [];
+    socket.emit('restart_game');
+});
+
+$('modal-abort-btn').addEventListener('click', () => {
+    $('modal-abort').classList.remove('active');
+    clearSession();
+    roundSlots = [];
+    showScreen('lobby');
+});
+
+/* ══════════════════════════════════════════════════
+   ラウンドアナウンス表示
+   ══════════════════════════════════════════════════ */
+function showRoundAnnounce(round, perPlayer) {
+    const el = $('round-announce');
+    el.style.display = 'block';
+    el.innerHTML = `🔄 ラウンド ${round} 開始！<br>
+        <span style="font-size:.88rem;font-weight:400;color:var(--muted)">
+            カードを回収・シャッフルして再配布しました。
+            各自 <strong>${perPlayer} 枚</strong> の手札を確認してください。
+        </span>`;
+    setTimeout(() => { el.style.display = 'none'; }, 2800);
+}
+
+/* ══════════════════════════════════════════════════
+   パーティクル FX
+   ══════════════════════════════════════════════════ */
+const fxLayer = $('fx-layer');
+function spark(x, y, mode) {
+    if (mode === 'boom') {
+        document.body.classList.remove('shake', 'flash-r');
+        void document.body.offsetWidth;
+        document.body.classList.add('shake', 'flash-r');
+        setTimeout(() => document.body.classList.remove('shake', 'flash-r'), 900);
+    } else {
+        document.body.classList.remove('flash-g');
+        void document.body.offsetWidth;
+        document.body.classList.add('flash-g');
+        setTimeout(() => document.body.classList.remove('flash-g'), 600);
+    }
+    const cnt   = mode === 'boom' ? 110 : 45;
+    const cols  = mode === 'boom'
+        ? ['#ffa502','#ff4757','#ff6b81','#ffdd59','#ff3838']
+        : ['#05c46b','#0be881','#00d2d3','#81ecec','#fff'];
+    for (let i = 0; i < cnt; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        const sz  = Math.random() * (mode === 'boom' ? 16 : 8) + (mode === 'boom' ? 8 : 4);
+        p.style.cssText = `width:${sz}px;height:${sz}px;left:${x}px;top:${y}px;`;
+        const ang  = mode === 'boom' ? Math.random() * Math.PI * 2 : (i / cnt) * Math.PI * 2 + Math.random() * .3;
+        const dist = Math.random() * (mode === 'boom' ? 480 : 140) + (mode === 'boom' ? 100 : 50);
+        p.style.setProperty('--tx', `${Math.cos(ang) * dist}px`);
+        p.style.setProperty('--ty', `${Math.sin(ang) * dist}px`);
+        const c = cols[Math.floor(Math.random() * cols.length)];
+        p.style.background  = `radial-gradient(circle,#fff 0%,${c} 65%,transparent 100%)`;
+        p.style.boxShadow   = `0 0 ${mode === 'boom' ? 12 : 8}px ${c}88`;
+        fxLayer.appendChild(p);
+        setTimeout(() => p.remove(), 1200);
+    }
+}
+
+/* ══════════════════════════════════════════════════
+   初期化 - セッション復旧チェック
+   ══════════════════════════════════════════════════ */
+// ページ読み込み時: セッションが残っていたら自動接続を試みる
+(function init() {
+    const saved = loadSession();
+    if (saved) {
+        const url = localStorage.getItem('timebomb_server_url') || 'https://timebomb-backend.onrender.com';
+        $('server-url').value = url;
+        // 自動再接続を促す表示
+        $('connecting-text').textContent = 'セッションを復旧中...';
+        $('connecting-spinner').classList.remove('hidden');
+        $('connect-btn').disabled = true;
+        attemptConnect(url);
+    }
+})();
+
+// サーバーURLを記憶
+$('connect-btn').addEventListener('click', () => {
+    localStorage.setItem('timebomb_server_url', $('server-url').value.trim());
+}, { capture: true });
+</script>
+</body>
+</html>
