@@ -71,6 +71,55 @@ function broadcastRoomState(roomId) {
     });
 }
 
+// Botの手番を自動進行する処理
+function triggerBotTurnIfNeeded(roomId) {
+    const room = rooms[roomId];
+    if (!room || !room.engine) return;
+
+    const gameStatus = room.engine.getGameStatus();
+    if (gameStatus !== 'PLAYING') return;
+
+    const currentCutter = room.engine.players[room.engine.currentCutterIdx];
+    const currentCutterRoomPlayer = room.players.find(p => p.id === currentCutter.id);
+
+    if (currentCutterRoomPlayer && currentCutterRoomPlayer.isBot) {
+        setTimeout(() => {
+            const activeRoom = rooms[roomId];
+            if (!activeRoom || !activeRoom.engine) return;
+            if (activeRoom.engine.getGameStatus() !== 'PLAYING') return;
+
+            const validTargets = activeRoom.engine.players.filter(p => 
+                p.id !== currentCutter.id && p.cards.some(c => !c.isRevealed)
+            );
+
+            if (validTargets.length === 0) return;
+
+            const randomTarget = validTargets[Math.floor(Math.random() * validTargets.length)];
+            const unrevealedCards = randomTarget.cards.filter(c => !c.isRevealed);
+            const randomCard = unrevealedCards[Math.floor(Math.random() * unrevealedCards.length)];
+
+            try {
+                const card = activeRoom.engine.cutWire(randomTarget.id, randomCard.id, currentCutter.id);
+                console.log(`[Bot Turn] ${currentCutter.name} cut ${randomTarget.name}'s card (type: ${card.type})`);
+
+                io.to(roomId).emit('wire_cut_animation', {
+                    cutterId: currentCutter.id,
+                    targetId: randomTarget.id,
+                    cardId: randomCard.id,
+                    type: card.type
+                });
+
+                setTimeout(() => {
+                    broadcastRoomState(roomId);
+                    triggerBotTurnIfNeeded(roomId);
+                }, 600);
+            } catch (err) {
+                console.error(`Bot Turn Error: ${err.message}`);
+            }
+        }, 1200);
+    }
+}
+
 io.on('connection', (socket) => {
     console.log(`Connected: ${socket.id}`);
 
@@ -170,7 +219,6 @@ io.on('connection', (socket) => {
 
     // 4. ゲーム開始
     socket.on('start_game', () => {
-        // 送信元ソケットが所属するルームを探す
         let foundRoomId = null;
         let requestPlayerId = null;
 
@@ -186,7 +234,6 @@ io.on('connection', (socket) => {
         if (!foundRoomId) return;
         const room = rooms[foundRoomId];
 
-        // ホスト権限チェック
         if (room.hostId !== requestPlayerId) {
             socket.emit('error', 'ゲームを開始できるのはホストのみです。');
             return;
@@ -204,9 +251,55 @@ io.on('connection', (socket) => {
             
             console.log(`Game Started in Room: ${foundRoomId}`);
             broadcastRoomState(foundRoomId);
+
+            // Botの手番チェック
+            triggerBotTurnIfNeeded(foundRoomId);
         } catch (err) {
             socket.emit('error', `ゲーム開始エラー: ${err.message}`);
         }
+    });
+
+    // 4-B. ダミーBot追加
+    socket.on('add_bot', () => {
+        let foundRoomId = null;
+        let requestPlayerId = null;
+
+        for (const [rId, room] of Object.entries(rooms)) {
+            const player = room.players.find(p => p.socketId === socket.id);
+            if (player) {
+                foundRoomId = rId;
+                requestPlayerId = player.id;
+                break;
+            }
+        }
+
+        if (!foundRoomId) return;
+        const room = rooms[foundRoomId];
+
+        if (room.hostId !== requestPlayerId) {
+            socket.emit('error', 'Botを追加できるのはホストのみです。');
+            return;
+        }
+
+        if (room.players.length >= 8) {
+            socket.emit('error', 'ルームが満員です。');
+            return;
+        }
+
+        const botNum = room.players.filter(p => p.isBot).length + 1;
+        const botId = `bot-${Date.now()}-${botNum}`;
+        const botName = `🤖 Bot ${botNum}`;
+
+        room.players.push({
+            id: botId,
+            name: botName,
+            socketId: null,
+            connected: true,
+            isBot: true
+        });
+
+        console.log(`Bot Added: ${botName} to ${foundRoomId}`);
+        broadcastRoomState(foundRoomId);
     });
 
     // 5. ワイヤーカット（カードめくり）
@@ -246,6 +339,7 @@ io.on('connection', (socket) => {
             // 少し遅れて状態をブロードキャスト（フリップアニメーションと同期させるため）
             setTimeout(() => {
                 broadcastRoomState(foundRoomId);
+                triggerBotTurnIfNeeded(foundRoomId);
             }, 600);
 
         } catch (err) {
