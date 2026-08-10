@@ -453,6 +453,8 @@ io.on('connection', (socket) => {
             room.engine.nextRound();
             console.log(`Next Round ${room.engine.currentRound} in ${foundRoomId}`);
             broadcastRoomState(foundRoomId);
+            // 次のラウンドの手番プレイヤーがBotの場合に自動進行を開始
+            triggerBotTurnIfNeeded(foundRoomId);
         } catch (err) {
             socket.emit('error', err.message);
         }
