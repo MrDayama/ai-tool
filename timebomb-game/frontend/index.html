@@ -544,7 +544,7 @@
                 <label for="room-code-input">ルームコード (4文字)</label>
             </div>
             <div class="join-row">
-                <input type="text" id="room-code-input" placeholder="ABCD" maxlength="4">
+                <input type="text" id="room-code-input" placeholder="ABCD" maxlength="4" style="text-transform: uppercase;">
                 <button id="join-room-btn" class="btn secondary">参加</button>
             </div>
         </div>
@@ -1104,10 +1104,6 @@ $('join-room-btn').addEventListener('click', () => {
     myNickname = name;
     localStorage.setItem('timebomb_nickname', name);
     socket.emit('join_room', { roomId: code, playerId: MY_ID, nickname: name });
-});
-
-$('room-code-input').addEventListener('input', e => {
-    e.target.value = e.target.value.toUpperCase();
 });
 
 /* ══════════════════════════════════════════════════
