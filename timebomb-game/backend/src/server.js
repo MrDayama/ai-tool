@@ -276,6 +276,43 @@ io.on('connection', (socket) => {
         }
     });
 
+    // 4-A2. 次のゲーム（同じルーム・メンバーで再開）
+    socket.on('restart_game', () => {
+        let foundRoomId = null;
+        let requestPlayerId = null;
+
+        for (const [rId, room] of Object.entries(rooms)) {
+            const player = room.players.find(p => p.socketId === socket.id);
+            if (player) {
+                foundRoomId = rId;
+                requestPlayerId = player.id;
+                break;
+            }
+        }
+
+        if (!foundRoomId) return;
+        const room = rooms[foundRoomId];
+
+        if (room.hostId !== requestPlayerId) {
+            socket.emit('error', '次のゲームを開始できるのはホストのみです。');
+            return;
+        }
+
+        try {
+            const ids = room.players.map(p => p.id);
+            const names = room.players.map(p => p.name);
+            room.engine = new GameEngine(ids, names);
+            
+            console.log(`Game Restarted in Room: ${foundRoomId}`);
+            broadcastRoomState(foundRoomId);
+
+            // Botの手番チェック
+            triggerBotTurnIfNeeded(foundRoomId);
+        } catch (err) {
+            socket.emit('error', `ゲーム再開エラー: ${err.message}`);
+        }
+    });
+
     // 4-B. ダミーBot追加
     socket.on('add_bot', () => {
         let foundRoomId = null;

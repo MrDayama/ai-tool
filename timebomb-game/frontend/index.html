@@ -748,7 +748,10 @@
     <div class="win98-window-body">
         <div id="modal-title" class="modal-title"></div>
         <div id="modal-body"  class="modal-body"></div>
-        <button id="modal-back-btn" class="btn blue">ロビーに戻る</button>
+        <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:16px">
+            <button id="modal-restart-btn" class="btn green hidden" style="min-width:160px">🔄 次のゲームへ</button>
+            <button id="modal-back-btn" class="btn blue" style="min-width:160px">🚪 ロビーに戻る</button>
+        </div>
     </div>
 </div>
 </div>
@@ -1386,6 +1389,15 @@ function showGameEndModal(state, winner) {
     rolesHtml += '</div>';
 
     $('modal-body').innerHTML = msg + rolesHtml;
+
+    // ホストなら「次のゲームへ」ボタンを表示
+    const restartBtn = $('modal-restart-btn');
+    if (myHostId === MY_ID) {
+        restartBtn.classList.remove('hidden');
+    } else {
+        restartBtn.classList.add('hidden');
+    }
+
     $('modal').classList.add('active');
 }
 
@@ -1394,6 +1406,13 @@ $('modal-back-btn').addEventListener('click', () => {
     clearSession();
     roundSlots = [];
     showScreen('lobby');
+});
+
+// 🔄 次のゲームへ（同じルーム・メンバーで再開）
+$('modal-restart-btn').addEventListener('click', () => {
+    $('modal').classList.remove('active');
+    roundSlots = [];
+    socket.emit('restart_game');
 });
 
 $('modal-abort-btn').addEventListener('click', () => {
