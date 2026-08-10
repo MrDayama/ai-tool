@@ -1,8 +1,15 @@
 {
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "framework": null,
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/timebomb",
       "destination": "/timebomb-game/frontend/index.html"
+    },
+    {
+      "source": "/timebomb/spec",
+      "destination": "/timebomb-game/frontend/spec.html"
     }
   ]
 }
