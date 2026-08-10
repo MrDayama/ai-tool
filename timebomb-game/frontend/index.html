@@ -12,9 +12,9 @@
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         /* ═══════════════════════════════════════
-           Windows 98 レトロ CSS
+           マルチテーマ CSS 定義
            ═══════════════════════════════════════ */
-        :root {
+        :root, body.theme-win98 {
             --win-teal:  #008080;
             --win-bg:    #c0c0c0;
             --win-light: #ffffff;
@@ -47,6 +47,84 @@
             background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
             background-size: 8px 8px;
         }
+
+        /* 2. Cyberpunk Theme */
+        body.theme-cyberpunk {
+            --win-teal: #07090f; --win-bg: #0e1120; --win-light: #00d2d3;
+            --win-dark: #ff3838; --win-black: #000000; --win-blue1: #1a0933; --win-blue2: #38006b;
+            --font: 'Pixelify Sans', sans-serif;
+            background: #07090f; color: #e8eaf0;
+            background-image: radial-gradient(ellipse at 0% 0%, rgba(255,56,56,.15) 0, transparent 65%), radial-gradient(ellipse at 100% 100%, rgba(0,210,211,.15) 0, transparent 65%);
+        }
+        body.theme-cyberpunk .glass, body.theme-cyberpunk .win98-window {
+            background: rgba(14,17,32,0.92); border: 1px solid rgba(0,210,211,0.4);
+            box-shadow: 0 0 25px rgba(0,210,211,0.25); border-radius: 14px;
+        }
+        body.theme-cyberpunk .win98-titlebar {
+            background: linear-gradient(90deg, #ff3838, #00d2d3); color: #fff; border-radius: 10px 10px 0 0;
+        }
+        body.theme-cyberpunk .btn {
+            background: linear-gradient(135deg, #ff3838, #ff6060); color: #fff; border: none; border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(255,56,56,0.4);
+        }
+        body.theme-cyberpunk input {
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(0,210,211,0.3); color: #fff; border-radius: 8px;
+        }
+        body.theme-cyberpunk .win98-taskbar {
+            background: #0e1120; border-top: 1px solid rgba(0,210,211,0.4); color: #fff;
+        }
+        body.theme-cyberpunk .win98-start-btn, body.theme-cyberpunk .win98-task-item, body.theme-cyberpunk .win98-clock {
+            background: #161b33; color: #00d2d3; border: 1px solid rgba(0,210,211,0.4); box-shadow: none;
+        }
+        body.theme-cyberpunk h1 { color: #00d2d3; text-shadow: 0 0 10px rgba(0,210,211,0.5); }
+
+        /* 3. 8-Bit Retro Famicom Theme */
+        body.theme-8bit {
+            --font: 'VT323', monospace;
+            background: #e0d0b0; color: #000;
+        }
+        body.theme-8bit .glass, body.theme-8bit .win98-window {
+            background: #f8f0e0; border: 4px solid #000; box-shadow: 6px 6px 0px #000; border-radius: 0;
+        }
+        body.theme-8bit .win98-titlebar {
+            background: #b80000; color: #fff; border-bottom: 4px solid #000; font-size: 1.1rem;
+        }
+        body.theme-8bit .btn {
+            background: #e04000; color: #fff; border: 3px solid #000; box-shadow: 4px 4px 0px #000;
+            font-size: 1.2rem; border-radius: 0;
+        }
+        body.theme-8bit .btn:active { transform: translate(2px, 2px); box-shadow: 2px 2px 0px #000; }
+        body.theme-8bit input {
+            background: #fff; border: 3px solid #000; box-shadow: 3px 3px 0px #000; font-size: 1.2rem; border-radius: 0;
+        }
+        body.theme-8bit .win98-taskbar { background: #b80000; border-top: 4px solid #000; color: #fff; }
+        body.theme-8bit .win98-start-btn, body.theme-8bit .win98-task-item, body.theme-8bit .win98-clock {
+            background: #f8f0e0; color: #000; border: 2px solid #000; box-shadow: 2px 2px 0px #000;
+        }
+        body.theme-8bit h1 { color: #b80000; text-shadow: 2px 2px 0px #000; }
+
+        /* 4. Clean Light Theme */
+        body.theme-light {
+            --font: Tahoma, sans-serif;
+            background: #f1f5f9; color: #0f172a;
+        }
+        body.theme-light .glass, body.theme-light .win98-window {
+            background: #ffffff; border: 1px solid #cbd5e1; box-shadow: 0 10px 25px rgba(0,0,0,0.06); border-radius: 12px;
+        }
+        body.theme-light .win98-titlebar {
+            background: #e2e8f0; color: #0f172a; border-bottom: 1px solid #cbd5e1; border-radius: 10px 10px 0 0;
+        }
+        body.theme-light .btn {
+            background: #2563eb; color: #ffffff; border: none; border-radius: 8px; box-shadow: 0 4px 10px rgba(37,99,235,0.2);
+        }
+        body.theme-light input {
+            background: #f8fafc; border: 1px solid #cbd5e1; color: #0f172a; border-radius: 8px;
+        }
+        body.theme-light .win98-taskbar { background: #ffffff; border-top: 1px solid #cbd5e1; color: #0f172a; }
+        body.theme-light .win98-start-btn, body.theme-light .win98-task-item, body.theme-light .win98-clock {
+            background: #f1f5f9; color: #0f172a; border: 1px solid #cbd5e1; box-shadow: none; border-radius: 6px;
+        }
+        body.theme-light h1 { color: #2563eb; text-shadow: none; }
 
         /* ═══════════════════════════════════════
            ユーティリティ & Win98 ウィンドウ
@@ -569,8 +647,16 @@
     <div class="win98-task-item">
         💣 タイムボム Online.exe
     </div>
-    <div class="win98-clock" id="win98-clock">
-        12:00 PM
+    <div style="display:flex; align-items:center; gap:8px;">
+        <select id="theme-selector" style="font-family:var(--font); font-weight:bold; font-size:12px; padding:2px 6px; background:#fff; color:#000; border:2px inset #808080; cursor:pointer;">
+            <option value="theme-win98">🖥️ Windows 98</option>
+            <option value="theme-cyberpunk">🌃 サイバーネオン</option>
+            <option value="theme-8bit">🎮 8-Bit レトロ</option>
+            <option value="theme-light">☀️ シンプルライト</option>
+        </select>
+        <div class="win98-clock" id="win98-clock">
+            12:00 PM
+        </div>
     </div>
 </div>
 
@@ -945,6 +1031,27 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
+
+/* ══════════════════════════════════════════════════
+   テーマセレクター（UI切り替え）
+   ══════════════════════════════════════════════════ */
+const THEMES = ['theme-win98', 'theme-cyberpunk', 'theme-8bit', 'theme-light'];
+function applyTheme(theme) {
+    document.body.classList.remove(...THEMES);
+    document.body.classList.add(theme);
+    localStorage.setItem('timebomb_theme', theme);
+    const sel = $('theme-selector');
+    if (sel) sel.value = theme;
+}
+// ページ読み込み時に保存済みテーマを復元
+(function initTheme() {
+    const saved = localStorage.getItem('timebomb_theme') || 'theme-win98';
+    applyTheme(saved);
+})();
+// セレクトボックス変更時にテーマ適用
+$('theme-selector').addEventListener('change', (e) => {
+    applyTheme(e.target.value);
+});
 
 /* ══════════════════════════════════════════════════
    画面④ ゲーム
