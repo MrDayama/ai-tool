@@ -30,6 +30,8 @@ status: active
 * `icm-calculator/` (ICM計算ツール)
 * `poker-ev/` (EVシミュレーター)
 * `project/` (Pythonの計算ロジックモジュール)
+* `timebomb-game/` (タイムボム Online)
+* `.agents/` (AIエージェント用カスタムスキル/ルール)
 
 > [!IMPORTANT]
 > これらを `02_Read-only` などに移動させると実行時エラー（パスエラー）の原因となるため、ルートに配置したまま運用します。
