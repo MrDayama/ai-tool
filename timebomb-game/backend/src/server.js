@@ -67,6 +67,8 @@ function broadcastRoomState(roomId) {
         if (room.engine) {
             // ゲーム中ならセキュリティフィルタリングされた状態
             state = room.engine.getFilteredState(player.id);
+            state.roomId = roomId;
+            state.hostId = room.hostId;
         } else {
             // ロビー待機中なら基本情報のみ
             state = {
