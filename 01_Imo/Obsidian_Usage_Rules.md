@@ -1,6 +1,13 @@
+---
+type: meta
+tags: [vault/rules, vault/structure]
+date: 2026-07-07
+status: active
+---
 # Obsidian Vault 運用ルール & 全体構成ガイド
 
-本プロジェクトは、松濤Vimmer氏の提唱する**「AI（Cursor/Claude）と人間が効率的かつ安全に協働する」**ためのフォルダ構成を適用しています。
+> [!abstract] 概要
+> 本プロジェクトは、松濤Vimmer氏の提唱する**「AI（Cursor/Claude）と人間が効率的かつ安全に協働する」**ためのフォルダ構成を適用しています。
 
 ---
 
@@ -37,3 +44,9 @@
   > 「`02_Read-only/Seven_Card_Stud_Strategy.html` の確率計算と私のプレイ方針を踏まえて、新しい戦略を考えて `03_AI/stud_analysis.md` に出力して」
 * **コードを修正する場合**:
   > 「`ai-agent/` のソースコードを解析してバグを修正してください」
+
+---
+
+## 📋 関連ドキュメント
+* AI向け統合指示書: [[CLAUDE]]
+* ダッシュボード: [[Dashboard]]

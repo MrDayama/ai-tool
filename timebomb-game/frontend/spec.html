@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>タイムボム Online 仕様書</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+        font-family: 'Noto Sans JP', sans-serif;
+        color: #222;
+        background: #fff;
+        padding: 40px 50px;
+        font-size: 11pt;
+        line-height: 1.8;
+    }
+    @media print {
+        body { padding: 20px 30px; }
+        .page-break { page-break-before: always; }
+    }
+    h1 {
+        text-align: center;
+        font-size: 22pt;
+        margin-bottom: 4px;
+        color: #1a1a2e;
+    }
+    .subtitle {
+        text-align: center;
+        color: #666;
+        font-size: 10pt;
+        margin-bottom: 30px;
+    }
+    h2 {
+        font-size: 14pt;
+        color: #1a1a2e;
+        border-left: 5px solid #4a90d9;
+        padding-left: 12px;
+        margin: 28px 0 12px 0;
+    }
+    h3 {
+        font-size: 11pt;
+        color: #333;
+        margin: 16px 0 8px 0;
+    }
+    p { margin-bottom: 10px; }
+    ul, ol { margin: 8px 0 14px 24px; }
+    li { margin-bottom: 4px; }
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0 18px 0;
+        font-size: 10pt;
+    }
+    th, td {
+        border: 1px solid #ccc;
+        padding: 6px 10px;
+        text-align: center;
+    }
+    th {
+        background: #e8eef5;
+        font-weight: 700;
+        color: #1a1a2e;
+    }
+    tr:nth-child(even) { background: #f8f9fb; }
+    .note {
+        background: #f0f4ff;
+        border-left: 4px solid #4a90d9;
+        padding: 10px 14px;
+        margin: 12px 0;
+        font-size: 10pt;
+        color: #333;
+    }
+    .warning {
+        background: #fff3e0;
+        border-left: 4px solid #ff9800;
+        padding: 10px 14px;
+        margin: 12px 0;
+        font-size: 10pt;
+        color: #333;
+    }
+    .section-divider {
+        border: none;
+        border-top: 2px solid #ddd;
+        margin: 24px 0;
+    }
+    code {
+        background: #f0f0f0;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 10pt;
+    }
+    .footer {
+        margin-top: 40px;
+        text-align: center;
+        color: #999;
+        font-size: 9pt;
+    }
+    .diagram {
+        text-align: center;
+        font-family: monospace;
+        background: #f5f5f5;
+        padding: 16px;
+        border-radius: 6px;
+        margin: 12px 0;
+        font-size: 10pt;
+        line-height: 1.6;
+    }
+</style>
+</head>
+<body>
+
+<h1>💣 タイムボム Online 仕様書</h1>
+<p class="subtitle">正体隠匿 × ワイヤーカット オンラインマルチプレイヤーゲーム — v1.998</p>
+
+<hr class="section-divider">
+
+<h2>1. ゲーム概要</h2>
+<p>「タイムボム」は、プレイヤーが<strong>🚔 時空警察</strong>と<strong>💣 ボマー団</strong>の2陣営に分かれ、導線（ワイヤー）カードをめくることで爆弾の解除を目指す正体隠匿型ボードゲームのオンライン版です。</p>
+<ul>
+    <li><strong>時空警察</strong>：全ての「解除コード（⚡）」カードをめくって爆弾を解除することが目標。</li>
+    <li><strong>ボマー団</strong>：「爆弾（💣）」カードをめくらせるか、4ラウンド耐えきることが目標。</li>
+</ul>
+
+<h2>2. プレイ人数と陣営構成</h2>
+<table>
+    <thead>
+        <tr><th>人数</th><th>🚔 警察</th><th>💣 ボマー</th><th>⚡ 解除コード</th><th>💤 空カード</th><th>💣 爆弾</th><th>総カード数</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>4人</td><td>3人</td><td>1人</td><td>4枚</td><td>15枚</td><td>1枚</td><td>20枚</td></tr>
+        <tr><td>5人</td><td>3人</td><td>2人</td><td>5枚</td><td>19枚</td><td>1枚</td><td>25枚</td></tr>
+        <tr><td>6人</td><td>4人</td><td>2人</td><td>6枚</td><td>23枚</td><td>1枚</td><td>30枚</td></tr>
+        <tr><td>7人</td><td>5人</td><td>2人</td><td>7枚</td><td>27枚</td><td>1枚</td><td>35枚</td></tr>
+        <tr><td>8人</td><td>5人</td><td>3人</td><td>8枚</td><td>31枚</td><td>1枚</td><td>40枚</td></tr>
+    </tbody>
+</table>
+<div class="note">💡 爆弾カードは常に1枚。解除コードの枚数はプレイ人数と同じ。</div>
+
+<h2>3. ゲームルール</h2>
+
+<h3>3.1 ゲームの流れ</h3>
+<ol>
+    <li><strong>カード配布</strong>：全カードをシャッフルし、各プレイヤーに均等配布。自分の手札の種類は自分だけに見える。</li>
+    <li><strong>ニッパーでカット</strong>：現在の「ニッパー保持者」が、<strong>自分以外</strong>のプレイヤーのカードを1枚選んでめくる。</li>
+    <li><strong>ニッパーの移動</strong>：カードをめくられたプレイヤーが次のニッパー保持者になる。</li>
+    <li><strong>ラウンド終了</strong>：人数分のカードがめくられたら1ラウンド終了。残りカードを回収・シャッフルし、再配布。</li>
+    <li><strong>最大4ラウンド</strong>まで繰り返す。</li>
+</ol>
+
+<h3>3.2 ラウンドごとの手札枚数</h3>
+<table>
+    <tr><th>ラウンド</th><th>1</th><th>2</th><th>3</th><th>4</th></tr>
+    <tr><td>手札枚数</td><td>5枚</td><td>4枚</td><td>3枚</td><td>2枚</td></tr>
+</table>
+
+<h3>3.3 勝敗条件</h3>
+<table>
+    <tr><th>条件</th><th>結果</th></tr>
+    <tr><td>解除コード（⚡）を規定枚数すべてめくった</td><td style="color:#2e7d32; font-weight:bold">🚔 警察の勝利</td></tr>
+    <tr><td>爆弾カード（💣）をめくった</td><td style="color:#c62828; font-weight:bold">💣 ボマーの勝利</td></tr>
+    <tr><td>第4ラウンドが終了しても解除コードが足りなかった</td><td style="color:#c62828; font-weight:bold">💣 ボマーの勝利</td></tr>
+</table>
+
+<div class="page-break"></div>
+
+<h2>4. ネットワーク仕様</h2>
+
+<h3>4.1 システム構成</h3>
+<div class="diagram">
+[クライアント（ブラウザ）] ←→ HTTPS / WebSocket ←→ [Render.com バックエンド]<br>
+　　　　　　　　　　　　　　　　　　　　　　　　　　　　↓<br>
+　　　　　　　　　　　　　　　　　　　　[Node.js + Express + Socket.io サーバー]<br>
+　　　　　　　　　　　　　　　　　　　　　　　　(in-memory データ管理)
+</div>
+
+<h3>4.2 デプロイ構成</h3>
+<table>
+    <tr><th>役割</th><th>サービス</th><th>備考</th></tr>
+    <tr><td>フロントエンド</td><td>Vercel</td><td>静的ホスティング（自動デプロイ）</td></tr>
+    <tr><td>バックエンド</td><td>Render.com（無料）</td><td>Node.js サーバー</td></tr>
+</table>
+
+<h3>4.3 通信プロトコル</h3>
+<ul>
+    <li><strong>Socket.io v4.7.5</strong>（WebSocket / HTTP Long-polling フォールバック）</li>
+    <li>CORS: すべてのオリジンから接続を許可</li>
+    <li>再接続試行: 最大5回</li>
+</ul>
+
+<h3>4.4 Socket.io イベント一覧</h3>
+
+<p><strong>クライアント → サーバー</strong></p>
+<table>
+    <tr><th>イベント</th><th>説明</th></tr>
+    <tr><td><code>create_room</code></td><td>ルーム新規作成</td></tr>
+    <tr><td><code>join_room</code></td><td>既存ルームに参加（4文字コード）</td></tr>
+    <tr><td><code>reconnect_session</code></td><td>セッション復旧（リロード後）</td></tr>
+    <tr><td><code>start_game</code></td><td>ゲーム開始（ホストのみ）</td></tr>
+    <tr><td><code>add_bot</code></td><td>ダミーBot追加（ホストのみ）</td></tr>
+    <tr><td><code>cut_wire</code></td><td>カードをめくる（手番プレイヤーのみ）</td></tr>
+    <tr><td><code>next_round</code></td><td>次ラウンドへ移行</td></tr>
+</table>
+
+<p><strong>サーバー → クライアント</strong></p>
+<table>
+    <tr><th>イベント</th><th>説明</th></tr>
+    <tr><td><code>room_state</code></td><td>ルーム最新状態（プレイヤー毎にマスク済み）</td></tr>
+    <tr><td><code>wire_cut_animation</code></td><td>カットアニメーション演出</td></tr>
+    <tr><td><code>reconnect_success</code></td><td>セッション復旧成功</td></tr>
+    <tr><td><code>game_aborted</code></td><td>プレイヤー切断によるゲーム強制終了</td></tr>
+    <tr><td><code>error</code></td><td>エラーメッセージ</td></tr>
+</table>
+
+<h3>4.5 データの秘匿性</h3>
+<ul>
+    <li>他プレイヤーの手札の種類はサーバー側でマスク（<code>type: 'unknown'</code>）して送信</li>
+    <li>役職も自分のもの以外はマスク</li>
+    <li>ゲーム終了時のみ全情報を開示</li>
+</ul>
+
+<h3>4.6 切断・再接続</h3>
+<ul>
+    <li>切断後 <strong>30秒間</strong> 復旧を待機（ページリロードで再接続可能）</li>
+    <li>30秒以内に復旧しない → プレイヤーをルームから削除</li>
+    <li>ゲーム中に退出 → <code>game_aborted</code> で全員にゲーム中断を通知</li>
+    <li>ホスト退出 → 次のプレイヤーにホスト権を自動移譲</li>
+</ul>
+
+<h3>4.7 ルーム管理</h3>
+<ul>
+    <li>ルームコード: <strong>4文字の大文字アルファベット</strong>（例: ABCD）</li>
+    <li>データ保存: サーバーメモリ上のみ（永続化なし）</li>
+</ul>
+
+<div class="page-break"></div>
+
+<h2>5. フロントエンド UI 仕様</h2>
+
+<h3>5.1 画面構成（5画面 + モーダル2種）</h3>
+<table>
+    <tr><th>#</th><th>画面名</th><th>機能</th></tr>
+    <tr><td>①</td><td>接続画面</td><td>バックエンドURL入力 → サーバー接続</td></tr>
+    <tr><td>②</td><td>ロビー画面</td><td>ニックネーム入力 → ルーム作成 or 参加 / 遊び方リンク</td></tr>
+    <tr><td>③</td><td>待機室</td><td>プレイヤー一覧 / ルームコード共有 / ゲーム開始</td></tr>
+    <tr><td>④</td><td>ゲーム画面</td><td>ワイヤートラッカー / 解除コード進捗 / プレイヤーボード</td></tr>
+    <tr><td>⑤</td><td>遊び方画面</td><td>ゲームルール・仕様の説明</td></tr>
+</table>
+
+<h3>5.2 UIテーマ（4種類）</h3>
+<table>
+    <tr><th>テーマ名</th><th>特徴</th></tr>
+    <tr><td>🖥️ Windows 98</td><td>クラシック 3D ベゼル・ティールグリーン背景（デフォルト）</td></tr>
+    <tr><td>🌃 サイバーネオン</td><td>ネオンシアン × レッド・ダークモード</td></tr>
+    <tr><td>🎮 8-Bit レトロ</td><td>ファミコン風・極太枠・ドットフォント</td></tr>
+    <tr><td>☀️ シンプルライト</td><td>フラット・ミニマル・モダンデザイン</td></tr>
+</table>
+<div class="note">💡 テーマはプレイヤーごとに独立して選択可能。<code>localStorage</code> に保存され、次回アクセス時も維持。</div>
+
+<h3>5.3 1人テスト機能（ダミーBot）</h3>
+<ul>
+    <li>ホストが「🤖 ダミーBotを追加」ボタンでBotをルームに追加（最大8人まで）</li>
+    <li>Botの手番は 1.2秒後に自動でランダムなカードをカット</li>
+    <li>1人でもゲームの全進行・勝敗を確認可能</li>
+</ul>
+
+<h3>5.4 その他の機能</h3>
+<ul>
+    <li>ルームコードのクリップボードコピー</li>
+    <li>セッション復旧（リロード後の自動再接続）</li>
+    <li>サウンドエフェクト（Web Audio API、外部ファイル不要）</li>
+    <li>パーティクルエフェクト（カットアニメーション）</li>
+    <li>Win98風リアルタイム時計（タスクバー）</li>
+</ul>
+
+<hr class="section-divider">
+
+<h2>6. 制約・注意事項</h2>
+<div class="warning">
+    <strong>⚠️ Render.com 無料プランの制約</strong><br>
+    • 15分無操作でサーバーがスリープ → 初回接続時に最大60秒のウォームアップ待機<br>
+    • サーバー再起動でルーム情報が消滅（メモリ上のみのため）
+</div>
+<div class="warning">
+    <strong>⚠️ ゲーム中の退出</strong><br>
+    • ゲーム中にプレイヤーが切断・退出するとゲームが強制終了されます
+</div>
+
+<hr class="section-divider">
+
+<div class="footer">
+    タイムボム Online 仕様書 v1.998 — 最終更新: 2026-08-10
+</div>
+
+</body>
+</html>

@@ -1,0 +1,76 @@
+/* Premium UI for Obsidian */
+/* Tags */
+.tag {
+    background-color: var(--color-accent);
+    color: var(--text-on-accent);
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.85em;
+    font-weight: 600;
+    text-decoration: none !important;
+    transition: background-color 0.2s ease;
+}
+.tag:hover {
+    background-color: var(--color-accent-2);
+}
+
+/* Headings */
+.markdown-rendered h1, 
+.markdown-rendered h2 {
+    border-bottom: 2px solid var(--color-accent);
+    padding-bottom: 5px;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+}
+.markdown-rendered h1 {
+    color: var(--text-title-h1);
+    font-weight: 800;
+}
+
+/* Tables (Card Layout) */
+.markdown-rendered table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 8px;
+    background: transparent;
+    border: none;
+}
+.markdown-rendered th {
+    background-color: var(--background-secondary);
+    color: var(--text-normal);
+    font-weight: 700;
+    padding: 12px 15px;
+    border: none;
+    border-radius: 8px;
+    text-align: left;
+}
+.markdown-rendered td {
+    background-color: var(--background-primary-alt);
+    padding: 12px 15px;
+    border: 1px solid var(--background-modifier-border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.markdown-rendered tr td:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+.markdown-rendered tr td:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+.markdown-rendered tbody tr:hover td {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background-color: var(--background-secondary);
+}
+
+/* Callouts */
+.callout {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    margin: 1em 0;
+}
+.callout-title {
+    font-size: 1.05em;
+    font-weight: 700;
+}

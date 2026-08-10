@@ -549,6 +549,10 @@
             </div>
         </div>
 
+        <div style="margin-top:16px; text-align:center">
+            <button id="show-rules-btn" class="btn" style="background:linear-gradient(135deg,#4a90d9,#357abd); font-size:0.85rem; padding:10px 20px;">📖 遊び方・ルール説明</button>
+        </div>
+
         <div id="lobby-error" class="error-toast"></div>
     </div>
 </div>
@@ -625,6 +629,107 @@
 
         <!-- ボード -->
         <div id="game-board" class="players-board"></div>
+    </div>
+</div>
+</div>
+
+<!-- ══════════════════════════════════════
+     画面⑤ 遊び方・ルール説明
+     ══════════════════════════════════════ -->
+<div id="screen-rules" class="container hidden">
+<div class="win98-window" style="max-width:700px">
+    <div class="win98-titlebar">
+        <span class="win98-title">📖 タイムボム Online - [遊び方]</span>
+        <div class="win98-controls">
+            <button class="win98-control-btn">_</button>
+            <button class="win98-control-btn">⃞</button>
+            <button class="win98-control-btn close">✕</button>
+        </div>
+    </div>
+    <div class="win98-window-body" style="max-height:70vh; overflow-y:auto; font-size:0.9rem; line-height:1.7">
+        <div style="text-align:center; margin-bottom:20px">
+            <h1 style="font-size:1.6rem; margin-bottom:4px">💣 タイムボム</h1>
+            <p style="color:var(--muted); font-size:0.8rem">正体隠匿 × ワイヤーカットゲーム</p>
+        </div>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">🎯 ゲーム概要</h2>
+        <p>プレイヤーは<strong>🚔 時空警察</strong>か<strong>💣 ボマー団</strong>のどちらかの陣営に分かれます。自分の役職は見えますが、他のプレイヤーの役職はわかりません。</p>
+        <ul style="margin:8px 0 16px 20px">
+            <li><strong>🚔 時空警察</strong>：爆弾の「解除コード」をすべて見つけ出して爆弾を解除するのが目標</li>
+            <li><strong>💣 ボマー団</strong>：爆弾を爆発させる（または時間切れまで耐える）のが目標</li>
+        </ul>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">👥 プレイ人数と構成</h2>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:16px; font-size:0.82rem">
+            <thead>
+                <tr style="background:rgba(255,255,255,0.05)">
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">人数</th>
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">🚔 警察</th>
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">💣 ボマー</th>
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">⚡ 解除</th>
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">💤 空</th>
+                    <th style="border:1px solid rgba(255,255,255,0.15); padding:6px">💣 爆弾</th>
+                </tr>
+            </thead>
+            <tbody style="text-align:center">
+                <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">4人</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">3</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">4</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">15</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td></tr>
+                <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">5人</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">3</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">2</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">5</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">19</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td></tr>
+                <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">6人</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">4</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">2</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">6</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">23</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td></tr>
+                <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">7人</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">5</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">2</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">7</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">27</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td></tr>
+                <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">8人</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">5</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">3</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">8</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">31</td><td style="border:1px solid rgba(255,255,255,0.1); padding:5px">1</td></tr>
+            </tbody>
+        </table>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">📜 ゲームの流れ</h2>
+        <ol style="margin:8px 0 16px 20px">
+            <li><strong>カード配布</strong>：全カードをシャッフルし、各プレイヤーに均等配布。自分の手札の種類は自分だけに見えます。</li>
+            <li><strong>ニッパー（✂️）でカット</strong>：現在のニッパー保持者が、<strong>自分以外</strong>のプレイヤーのカードを1枚選んでめくります。</li>
+            <li><strong>ニッパーの移動</strong>：カードをめくられたプレイヤーが次のニッパー保持者になります。</li>
+            <li><strong>ラウンド終了</strong>：全プレイヤー分（＝人数分）のカードがめくられたら1ラウンド終了。カードを回収してシャッフル・再配布し、次のラウンドへ。</li>
+        </ol>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">🏆 勝敗条件</h2>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:16px; font-size:0.85rem">
+            <tr style="background:rgba(76,175,80,0.15)">
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px; font-weight:bold">🚔 警察の勝利</td>
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px">解除コード（⚡）を<strong>全枚数</strong>めくった</td>
+            </tr>
+            <tr style="background:rgba(244,67,54,0.15)">
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px; font-weight:bold">💣 ボマーの勝利</td>
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px">爆弾カード（💣）がめくられた</td>
+            </tr>
+            <tr style="background:rgba(244,67,54,0.1)">
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px; font-weight:bold">💣 ボマーの勝利</td>
+                <td style="border:1px solid rgba(255,255,255,0.1); padding:8px">第4ラウンドが終了しても解除コードが足りない</td>
+            </tr>
+        </table>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">🃏 ラウンドごとの手札枚数</h2>
+        <table style="width:100%; border-collapse:collapse; margin-bottom:16px; font-size:0.85rem; text-align:center">
+            <tr style="background:rgba(255,255,255,0.05)"><th style="border:1px solid rgba(255,255,255,0.15); padding:6px">ラウンド</th><th style="border:1px solid rgba(255,255,255,0.15); padding:6px">1</th><th style="border:1px solid rgba(255,255,255,0.15); padding:6px">2</th><th style="border:1px solid rgba(255,255,255,0.15); padding:6px">3</th><th style="border:1px solid rgba(255,255,255,0.15); padding:6px">4</th></tr>
+            <tr><td style="border:1px solid rgba(255,255,255,0.1); padding:6px">手札枚数</td><td style="border:1px solid rgba(255,255,255,0.1); padding:6px">5枚</td><td style="border:1px solid rgba(255,255,255,0.1); padding:6px">4枚</td><td style="border:1px solid rgba(255,255,255,0.1); padding:6px">3枚</td><td style="border:1px solid rgba(255,255,255,0.1); padding:6px">2枚</td></tr>
+        </table>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">💡 コツ・ヒント</h2>
+        <ul style="margin:8px 0 16px 20px">
+            <li>自分の手札に何があるかは重要な情報。でもそれを正直に言うかは自由！</li>
+            <li>ボマーは「解除コードがある」と嘘をつき、ニッパーを自分に誘導すると有効。</li>
+            <li>警察は、他のプレイヤーの反応やカットの選択から嘘を見抜こう。</li>
+            <li>全員の発言と行動を注意深く観察するのが勝利の鍵！</li>
+        </ul>
+
+        <h2 style="font-size:1rem; border-bottom:2px solid var(--accent); padding-bottom:4px; margin-bottom:10px">🌐 オンライン版について</h2>
+        <ul style="margin:8px 0 16px 20px">
+            <li>各プレイヤーが自分のスマホ/PCでアクセス</li>
+            <li>ルームコード（4文字）を共有して合流</li>
+            <li>UIテーマはプレイヤーごとに自由に選択可能</li>
+            <li>ゲーム中に退出するとゲームが中断されます</li>
+            <li>ダミーBot追加で1人テストも可能</li>
+        </ul>
+
+        <div style="text-align:center; margin-top:24px">
+            <button id="rules-back-btn" class="btn blue" style="min-width:200px">🔙 ロビーに戻る</button>
+        </div>
     </div>
 </div>
 </div>
@@ -794,7 +899,12 @@ const screens = {
     lobby:   $('screen-lobby'),
     waiting: $('screen-waiting'),
     game:    $('screen-game'),
+    rules:   $('screen-rules'),
 };
+
+// 📖 遊び方画面
+$('show-rules-btn').addEventListener('click', () => showScreen('rules'));
+$('rules-back-btn').addEventListener('click', () => showScreen('lobby'));
 
 function showScreen(name) {
     Object.entries(screens).forEach(([k, el]) => {

@@ -1,41 +1,43 @@
-# Poker Strategy Portal & Dashboard
+---
+type: meta
+tags: [vault/portal, poker/strategy]
+date: 2026-07-07
+status: active
+---
+# 🏠 Poker Strategy Portal & Dashboard
 
-松濤Vimmer式に整理した、ポーカー学習・戦略ツールの総合ダッシュボードです。
-各ツールは `02_Read-only/` に格納されているHTMLアセットをiframeで直接呼び出して表示しています。
+> [!abstract] 概要
+> 松濤Vimmer式に整理した、ポーカー学習・戦略ツールの総合ダッシュボードです。
+> ここから各戦略ツールやAIナレッジに直接アクセスできます。
 
 ---
 
-## 📊 Starting Hands Mobile
+## 🗂️ メイン・ナビゲーション
+
+| 🤖 AI・自動化 | 🃏 ポーカー戦略 | 🗃️ 管理・検索 |
+|:---|:---|:---|
+| [[ai-agent/README\|自律AIエージェント]] | [[01_Imo/Poker_Strategy_Embed\|戦略ツール一覧]] | [[05_Bases/全リサーチノート\|🔍 リサーチ検索]] |
+| [[03_AI/MOC_AI_Tools\|AIツール総合ハブ]] | [[poker-ev/index\|EVシミュレーター]] | [[05_Bases/アクティブ戦略\|🎯 アクティブ戦略]] |
+| [[CLAUDE\|AI向け指示書]] | [[icm-calculator/README\|ICM計算ツール]] | [[05_Bases/全ツイート調査\|🐦 ツイート調査]] |
+
+---
+
+## 🃏 戦略ツールプレビュー (iframe)
+
+> [!info] 戦略ツールの直接操作
+> 以下のiframeから直接計算機やハンド表を操作できます。すべてのツールは `01_Imo/Poker_Strategy_Embed` に統合されています。
+
+### 📊 Starting Hands Mobile
 モバイルや狭いペインでも快適に動作するスターティングハンド表。
 
-<iframe src="02_Read-only/starting-hands-mobile.html" width="100%" height="800px" style="border: 1px solid #ccc; border-radius: 8px;"></iframe>
+<iframe src="02_Read-only/starting-hands-mobile.html" width="100%" height="600px" style="border: 1px solid var(--background-modifier-border); border-radius: 8px;"></iframe>
 
----
-
-## 🃏 Archie Poker Strategy
-Archie用戦略シミュレーションおよび解説。
-
-<iframe src="02_Read-only/Archie_Poker_Strategy.html" width="100%" height="800px" style="border: 1px solid #ccc; border-radius: 8px;"></iframe>
-
----
-
-## 📈 Starting Hands Integrated
-統合版スターティングハンド表。
-
-<iframe src="02_Read-only/starting-hands-integrated.html" width="100%" height="800px" style="border: 1px solid #ccc; border-radius: 8px;"></iframe>
-
----
-
-## 🤠 Seven Card Stud Strategy
+### 🤠 Seven Card Stud Strategy
 セブンカードスタッドの戦略解説・スターティングハンドTier表。
 
-<iframe src="02_Read-only/Seven_Card_Stud_Strategy.html" width="100%" height="800px" style="border: 1px solid #ccc; border-radius: 8px;"></iframe>
+<iframe src="02_Read-only/Seven_Card_Stud_Strategy.html" width="100%" height="600px" style="border: 1px solid var(--background-modifier-border); border-radius: 8px;"></iframe>
 
 ---
 
-## 📁 リンク・フォルダ構成
-* 運用ルール: [[01_Imo/Obsidian_Usage_Rules]]
-* 思考・プレイ日記: [[01_Imo/Poker_Strategy_Embed]]
-* 静的ソースコード・ツール保管庫: [02_Read-only](file:///c:/work/ai/ai-tool/02_Read-only)
-* AI解析出力・自動化スクリプト: [03_AI](file:///c:/work/ai/ai-tool/03_AI)
-
+> [!tip] さらにツールを見る
+> 上記以外の Archie や統合版ツールを見るには [[01_Imo/Poker_Strategy_Embed]] を開いてください。

@@ -1,3 +1,9 @@
+---
+type: log
+tags: [vault/history, AI/agent]
+date: 2026-07-07
+status: archived
+---
 # 開発経緯と主な変更点 (Development History & Key Changes)
 
 このプロジェクトは、AIエージェントを活用した統合ダッシュボードの構築を目的としています。

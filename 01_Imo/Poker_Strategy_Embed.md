@@ -1,3 +1,10 @@
+---
+type: tool
+tags: [poker/strategy, obsidian/tips]
+date: 2026-07-07
+status: active
+source: https://x.com/shotovim/status/2057469209308004764
+---
 # ポーカー戦略ツール (Obsidian埋め込み)
 
 松濤Vimmerさんのツイート（[HTMLをiframeで埋め込んでObsidian上で見る](https://x.com/shotovim/status/2057469209308004764)）に基づき、本プロジェクト内のポーカー戦略ツールHTML群をObsidian上でシームレスに表示・操作できるようにするための埋め込み用ノートです。

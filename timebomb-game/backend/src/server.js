@@ -7,6 +7,23 @@ const GameEngine = require('./gameEngine');
 const app = express();
 app.use(cors());
 
+// ルートパス - ステータス表示
+app.get('/', (req, res) => {
+    const activeRooms = Object.keys(rooms).length;
+    const totalPlayers = Object.values(rooms).reduce((sum, r) => sum + r.players.length, 0);
+    res.status(200).send(`
+        <!DOCTYPE html>
+        <html><head><meta charset="utf-8"><title>TimeBomb Backend</title>
+        <style>body{font-family:monospace;background:#1a1a2e;color:#0f0;padding:40px;text-align:center}
+        h1{font-size:2rem}p{color:#aaa}span{color:#0ff}</style></head>
+        <body><h1>💣 TimeBomb Backend Server</h1>
+        <p>Status: <span>🟢 ONLINE</span></p>
+        <p>Active Rooms: <span>${activeRooms}</span> | Players: <span>${totalPlayers}</span></p>
+        <p style="margin-top:40px;color:#555">Socket.io endpoint ready for connections</p>
+        </body></html>
+    `);
+});
+
 // Render.com等の死活監視（スリープ防止/ヘルスチェック用）
 app.get('/health', (req, res) => {
     res.status(200).send('OK');
