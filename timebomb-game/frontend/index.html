@@ -409,6 +409,69 @@
             background: #f1f5f9;
         }
 
+        /* ラウンド切替オーバーレイ */
+        .round-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+        .round-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .round-overlay-content {
+            text-align: center;
+            transform: scale(0.8);
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .round-overlay.active .round-overlay-content {
+            transform: scale(1);
+        }
+        .round-overlay-sub {
+            font-size: 1.3rem;
+            font-weight: bold;
+            letter-spacing: 5px;
+            color: var(--win-light);
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+        .round-overlay-main {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+        
+        body.theme-cyberpunk .round-overlay-sub {
+            color: #00d2d3;
+            text-shadow: 0 0 10px rgba(0, 210, 211, 0.6);
+        }
+        body.theme-cyberpunk .round-overlay-main {
+            color: #ff3838;
+            text-shadow: 0 0 15px rgba(255, 56, 56, 0.6);
+        }
+        body.theme-8bit .round-overlay-sub {
+            color: #ffff00;
+        }
+        body.theme-8bit .round-overlay-main {
+            color: #ff0000;
+            font-family: 'VT323', monospace;
+        }
+        body.theme-light .round-overlay-sub {
+            color: #2563eb;
+        }
+        body.theme-light .round-overlay-main {
+            color: #0f172a;
+            text-shadow: none;
+        }
+
         .container { width: 100%; max-width: 640px; padding: 12px; z-index: 10; }
         .container.wide { max-width: 1040px; }
 
@@ -1204,6 +1267,14 @@
 </div>
 </div>
 
+<!-- ラウンド切替オーバーレイ -->
+<div id="round-transition-overlay" class="round-overlay hidden">
+    <div class="round-overlay-content">
+        <div id="round-overlay-sub" class="round-overlay-sub">GAME START</div>
+        <div id="round-overlay-main" class="round-overlay-main">第 1 ラウンド</div>
+    </div>
+</div>
+
 <!-- Win98 タスクバー -->
 <div class="win98-taskbar">
     <div class="win98-start-btn">
@@ -1510,11 +1581,17 @@ function initSocket(serverUrl) {
             if (lastRoomState && lastRoomState.currentRound !== state.currentRound && state.currentRound > 1) {
                 roundSlots = [];
                 showRoundAnnounce(state.currentRound, PER_ROUND[state.currentRound]);
+                showRoundStartBanner(state.currentRound, false);
                 addGameLog(`第 ${state.currentRound} ラウンド開始（手札 ${PER_ROUND[state.currentRound]}枚）`, 'round');
             }
             // 初回ゲーム開始検知（LOBBY→PLAYING）
             if (!lastRoomState || lastRoomState.status === 'LOBBY') {
                 roundSlots = [];
+                if (state.currentRound === 1) {
+                    showRoundStartBanner(state.currentRound, true);
+                } else {
+                    showRoundStartBanner(state.currentRound, false);
+                }
                 addGameLog('ゲームが開始されました！', 'start');
             }
             lastRoomState = state;
@@ -1989,6 +2066,32 @@ function showRoundAnnounce(round, perPlayer) {
             各自 <strong>${perPlayer} 枚</strong> の手札を確認してください。
         </span>`;
     setTimeout(() => { el.style.display = 'none'; }, 2800);
+}
+
+function showRoundStartBanner(roundNum, isGameStart = false) {
+    const overlay = $('round-transition-overlay');
+    const sub = $('round-overlay-sub');
+    const main = $('round-overlay-main');
+    
+    if (isGameStart) {
+        sub.textContent = "GAME START";
+        main.textContent = "ゲームスタート！！";
+    } else {
+        sub.textContent = `ROUND ${roundNum}`;
+        main.textContent = `第 ${roundNum} ラウンド`;
+    }
+    
+    overlay.classList.remove('hidden');
+    // 強制リフロー
+    void overlay.offsetWidth;
+    overlay.classList.add('active');
+    
+    setTimeout(() => {
+        overlay.classList.remove('active');
+        setTimeout(() => {
+            overlay.classList.add('hidden');
+        }, 400);
+    }, 2000); // 2秒間表示
 }
 
 /* ══════════════════════════════════════════════════
