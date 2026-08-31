@@ -19,7 +19,6 @@
       <span id="street-badge" class="badge" style="background:var(--accent);color:#fff;border-radius:6px;padding:2px 8px;font-size:.75rem;font-weight:700;">PREFLOP</span>
     </div>
 
-    <!-- 画面切替 メニューナビゲーション -->
     <nav class="main-nav">
       <button class="nav-item active" onclick="switchView('live')" id="nav-live">🎮 ライブ卓</button>
       <button class="nav-item" onclick="switchView('settings')" id="nav-settings">⚙️ 卓・スタック設定</button>
@@ -27,10 +26,9 @@
     </nav>
   </header>
 
-  <!-- ===== メインコンテンツ (3パネル切替) ===== -->
+  <!-- ===== メインコンテンツ ===== -->
   <main class="app-content">
 
-    <!-- エラー・通知バナー -->
     <div id="error-msg" class="hidden" style="background:var(--red);color:#fff;border-radius:8px;padding:8px 14px;font-size:.85rem;font-weight:600;margin-bottom:12px;"></div>
 
     <!-- VIEW 1: 🎮 ライブ卓 (Live Table) -->
@@ -38,6 +36,7 @@
       <div class="live-table-layout">
 
         <div class="table-center-card">
+
           <div id="table-svg-wrap">
             <svg id="table-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
               <ellipse class="felt" cx="200" cy="200" rx="180" ry="140"/>
@@ -46,18 +45,32 @@
             <div id="seats-container" style="position:absolute;inset:0;"></div>
           </div>
 
-          <div class="board-area">
-            <div class="card-slot" id="board-flop1" onclick="openCardPicker('flop1')">?</div>
-            <div class="card-slot" id="board-flop2" onclick="openCardPicker('flop2')">?</div>
-            <div class="card-slot" id="board-flop3" onclick="openCardPicker('flop3')">?</div>
-            <div style="width:4px;"></div>
-            <div class="card-slot" id="board-turn"  onclick="openCardPicker('turn')">?</div>
-            <div style="width:4px;"></div>
-            <div class="card-slot" id="board-river" onclick="openCardPicker('river')">?</div>
+          <div style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-size:.8rem;color:var(--text-sub);margin-bottom:8px;font-weight:600;">
+              🎴 下のカード枠 [?] をタップしてボードカードを選択
+            </div>
+
+            <div class="board-area" style="margin-bottom:10px;">
+              <div class="card-slot" id="board-flop1" onclick="openCardPicker('flop1')">?</div>
+              <div class="card-slot" id="board-flop2" onclick="openCardPicker('flop2')">?</div>
+              <div class="card-slot" id="board-flop3" onclick="openCardPicker('flop3')">?</div>
+              <div style="width:6px;"></div>
+              <div class="card-slot" id="board-turn"  onclick="openCardPicker('turn')">?</div>
+              <div style="width:6px;"></div>
+              <div class="card-slot" id="board-river" onclick="openCardPicker('river')">?</div>
+            </div>
+
+            <div style="display:flex;gap:6px;justify-content:center;">
+              <button onclick="openCardPicker('flop1')" style="padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">Flop選択</button>
+              <button onclick="openCardPicker('turn')"  style="padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">Turn選択</button>
+              <button onclick="openCardPicker('river')" style="padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">River選択</button>
+            </div>
           </div>
+
         </div>
 
         <div class="live-controls-panel">
+
           <div class="card">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <h3 style="margin-bottom:0">ポット</h3>
@@ -202,14 +215,22 @@
   </div>
 </div>
 
-<!-- 4x13 カードピッカー モーダル -->
+<!-- 4x13 カードピッカー モーダル (明確ガイド付き) -->
 <div class="modal-overlay hidden" id="card-picker-modal">
   <div class="modal-box card-picker-box">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <h2>🎴 カードを選択 (<span id="picker-target-label">--</span>)</h2>
       <button onclick="closeCardPicker()" style="background:transparent;border:none;color:var(--text-sub);font-size:1.2rem;cursor:pointer;">✕</button>
     </div>
+
+    <p style="font-size:.78rem;color:var(--text-sub);margin-bottom:4px;">
+      下の4×13絵柄（♠♥♦♣ A〜K）をタップするか、テキスト手入力で指定してください
+    </p>
+
+    <!-- 4x13 ビジュアルマトリクス -->
     <div class="card-picker-matrix" id="card-picker-matrix"></div>
+
+    <!-- 手入力 -->
     <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
       <input type="text" id="card-manual-input" placeholder="手入力 (例: As, Kh, Td, 2c)" style="flex:1;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem;">
       <button onclick="applyManualCardInput()" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.85rem;font-weight:700;cursor:pointer;">決定</button>

@@ -27,15 +27,13 @@
     </nav>
   </header>
 
-  <!-- ===== メインコンテンツ (3パネル切替) ===== -->
+  <!-- ===== メインコンテンツ ===== -->
   <main class="app-content">
 
     <!-- エラー・通知バナー -->
     <div id="error-msg" class="hidden" style="background:var(--red);color:#fff;border-radius:8px;padding:8px 14px;font-size:.85rem;font-weight:600;margin-bottom:12px;"></div>
 
-    <!-- ==========================================
-         VIEW 1: 🎮 ライブ卓 (Live Table)
-         ========================================== -->
+    <!-- VIEW 1: 🎮 ライブ卓 (Live Table) -->
     <section class="view-panel active" id="view-live">
       <div class="live-table-layout">
 
@@ -51,15 +49,28 @@
             <div id="seats-container" style="position:absolute;inset:0;"></div>
           </div>
 
-          <!-- ボードカード (タップで4x13カードピッカー起動) -->
-          <div class="board-area">
-            <div class="card-slot" id="board-flop1" onclick="openCardPicker('flop1')">?</div>
-            <div class="card-slot" id="board-flop2" onclick="openCardPicker('flop2')">?</div>
-            <div class="card-slot" id="board-flop3" onclick="openCardPicker('flop3')">?</div>
-            <div style="width:4px;"></div>
-            <div class="card-slot" id="board-turn"  onclick="openCardPicker('turn')">?</div>
-            <div style="width:4px;"></div>
-            <div class="card-slot" id="board-river" onclick="openCardPicker('river')">?</div>
+          <!-- ボードカードエリア (明確な指示ガイド付き) -->
+          <div style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;text-align:center;">
+            <div style="font-size:.8rem;color:var(--text-sub);margin-bottom:8px;font-weight:600;">
+              🎴 下のカード枠 [?] をタップしてボードカードを選択
+            </div>
+
+            <div class="board-area" style="margin-bottom:10px;">
+              <div class="card-slot" id="board-flop1" onclick="openCardPicker('flop1')">?</div>
+              <div class="card-slot" id="board-flop2" onclick="openCardPicker('flop2')">?</div>
+              <div class="card-slot" id="board-flop3" onclick="openCardPicker('flop3')">?</div>
+              <div style="width:6px;"></div>
+              <div class="card-slot" id="board-turn"  onclick="openCardPicker('turn')">?</div>
+              <div style="width:6px;"></div>
+              <div class="card-slot" id="board-river" onclick="openCardPicker('river')">?</div>
+            </div>
+
+            <!-- 明示的な選択アシストボタン -->
+            <div style="display:flex;gap:6px;justify-content:center;">
+              <button onclick="openCardPicker('flop1')" style="padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">Flop選択</button>
+              <button onclick="openCardPicker('turn')"  style="padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">Turn選択</button>
+              <button onclick="openCardPicker('river')" style="padding:6px 12px;background:var(--surface);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">River選択</button>
+            </div>
           </div>
 
         </div>
@@ -108,22 +119,16 @@
 
           <!-- ハンド開始 -->
           <button id="btn-new-hand" onclick="startNewHand()" style="padding:12px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;">▶ New Hand 開始</button>
-
         </div>
 
       </div>
     </section>
 
-    <!-- ==========================================
-         VIEW 2: ⚙️ 卓・ブラインド設定 (Settings)
-         ========================================== -->
+    <!-- VIEW 2: ⚙️ 卓・ブラインド設定 -->
     <section class="view-panel" id="view-settings">
       <div class="settings-grid">
-
-        <!-- 卓人数 ＆ レート設定 -->
         <div class="card">
           <h3>テーブル人数 ＆ ブラインド設定</h3>
-
           <div style="margin-bottom:12px;">
             <label style="font-size:.8rem;color:var(--text-sub);display:block;margin-bottom:4px">卓人数</label>
             <select id="seat-count" style="width:100%;padding:8px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:.85rem;">
@@ -165,34 +170,24 @@
           </select>
         </div>
 
-        <!-- プレイヤー名 ＆ スタック個別・全員適用 -->
         <div class="card">
           <h3>プレイヤー名 ＆ スタック設定</h3>
-
           <div style="display:flex;gap:8px;margin-bottom:14px;">
             <input type="number" id="default-stack" placeholder="全員のスタック (BB数)" style="flex:1;padding:8px 10px;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:.85rem;">
             <button onclick="applyDefaultStack()" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.85rem;font-weight:700;cursor:pointer;">全員に一括適用</button>
           </div>
-
           <div class="seat-config-list" id="seat-config-list"></div>
         </div>
-
       </div>
     </section>
 
-    <!-- ==========================================
-         VIEW 3: 🎬 履歴 ＆ リプレイ (History & Share)
-         ========================================== -->
+    <!-- VIEW 3: 🎬 履歴 ＆ リプレイ -->
     <section class="view-panel" id="view-history">
       <div class="history-layout">
-
-        <!-- 左: アクションタイムライン ＆ リプレイ再生 -->
         <div class="card" style="display:flex;flex-direction:column;gap:12px;">
           <h3>アクション履歴 ＆ リプレイ再生</h3>
-
           <div class="timeline" id="action-timeline"></div>
 
-          <!-- リプレイコントロール -->
           <div style="margin-top:auto;padding-top:10px;border-top:1px solid var(--border)">
             <input type="range" id="replay-bar" min="0" value="0" step="1" style="width:100%;accent-color:var(--accent);cursor:pointer;">
             <div style="display:flex;gap:6px;margin-top:8px;align-items:center;flex-wrap:wrap;">
@@ -204,29 +199,24 @@
           </div>
         </div>
 
-        <!-- 右: ハンド共有 ＆ ローカル保存履歴 -->
         <div class="card" style="display:flex;flex-direction:column;gap:12px;">
           <h3>ハンド共有 ＆ 保存履歴管理</h3>
-
           <div style="display:flex;gap:8px;">
             <button onclick="copyHandText()" style="flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:.85rem;font-weight:600;color:var(--text);cursor:pointer;">📋 ハンドテキストをコピー</button>
             <button onclick="exportHandsJSON()" style="flex:1;padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;font-size:.85rem;font-weight:600;color:var(--text);cursor:pointer;">📥 JSONバックアップ保存</button>
           </div>
-
           <div style="margin-top:10px;">
             <h4 style="font-size:.8rem;color:var(--text-sub);margin-bottom:8px;">💾 IndexedDB 保存済みハンド履歴</h4>
             <div id="saved-hands-list" style="max-height:240px;overflow-y:auto;"></div>
           </div>
-
         </div>
-
       </div>
     </section>
 
   </main>
 </div>
 
-<!-- ======= Winner 選択モーダル ======= -->
+<!-- Winner 選択モーダル -->
 <div class="modal-overlay hidden" id="winner-modal">
   <div class="modal-box">
     <h2>🏆 Winner を選択</h2>
@@ -236,13 +226,17 @@
   </div>
 </div>
 
-<!-- ======= 4x13 カードピッカー モーダル ======= -->
+<!-- ======= 4x13 カードピッカー モーダル (明確ガイド付き) ======= -->
 <div class="modal-overlay hidden" id="card-picker-modal">
   <div class="modal-box card-picker-box">
     <div style="display:flex;justify-content:space-between;align-items:center">
       <h2>🎴 カードを選択 (<span id="picker-target-label">--</span>)</h2>
       <button onclick="closeCardPicker()" style="background:transparent;border:none;color:var(--text-sub);font-size:1.2rem;cursor:pointer;">✕</button>
     </div>
+
+    <p style="font-size:.78rem;color:var(--text-sub);margin-bottom:4px;">
+      下の4×13絵柄（♠♥♦♣ A〜K）をタップするか、テキスト手入力で指定してください
+    </p>
 
     <!-- 4x13 ビジュアルマトリクス -->
     <div class="card-picker-matrix" id="card-picker-matrix"></div>
@@ -258,7 +252,6 @@
 
 <script src="app.js"></script>
 <script>
-/* ===== 画面切り替え (View Switcher) ===== */
 function switchView(viewName) {
   document.querySelectorAll('.view-panel').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
