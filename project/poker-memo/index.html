@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎴 Poker Memo Web</title>
+  <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
+  <!-- PWA設定 -->
+  <meta name="theme-color" content="#0d1117">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ===== ヘッダー ===== -->
+<header class="header">
+  <h1>🎴 Poker Memo Web</h1>
+  <span id="street-badge" class="badge">PREFLOP</span>
+
+  <!-- 卓人数 -->
+  <select id="seat-count" title="テーブル人数">
+    <option value="2">2名 (HU)</option>
+    <option value="3">3名</option>
+    <option value="4">4名</option>
+    <option value="5">5名</option>
+    <option value="6" selected>6名 (6-Max)</option>
+    <option value="7">7名</option>
+    <option value="8">8名</option>
+    <option value="9">9名 (Full Ring)</option>
+  </select>
+
+  <!-- 表示単位切替 -->
+  <button id="unit-toggle">表示: BB</button>
+</header>
+
+<!-- ===== PC: 3カラム メインレイアウト ===== -->
+<div class="main-layout">
+
+  <!-- ======= 左パネル: ブラインド/スタック設定 & 入力 ======= -->
+  <aside class="left-panel">
+
+    <!-- ブラインド設定 -->
+    <div class="card">
+      <h3>ブラインド設定</h3>
+      <!-- レートプリセット -->
+      <div class="rate-presets">
+        <button class="rate-preset" data-sb="0.5" data-bb="1">0.5/1</button>
+        <button class="rate-preset" data-sb="1"   data-bb="2">1/2</button>
+        <button class="rate-preset" data-sb="2"   data-bb="5">2/5</button>
+        <button class="rate-preset" data-sb="5"   data-bb="10">5/10</button>
+        <button class="rate-preset" data-sb="10"  data-bb="20">10/20</button>
+        <button class="rate-preset" data-sb="25"  data-bb="50">25/50</button>
+      </div>
+      <!-- カスタム入力 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
+        <label style="font-size:.78rem;color:var(--text-sub)">SB
+          <input type="number" id="input-sb" value="1" min="0.01" step="0.5" style="width:100%;margin-top:3px">
+        </label>
+        <label style="font-size:.78rem;color:var(--text-sub)">BB
+          <input type="number" id="input-bb" value="2" min="0.01" step="0.5" style="width:100%;margin-top:3px">
+        </label>
+      </div>
+      <!-- アンティ種別 -->
+      <label style="font-size:.78rem;color:var(--text-sub);display:block;margin-top:10px">アンティ
+        <select id="ante-type" style="width:100%;margin-top:3px">
+          <option value="none">なし</option>
+          <option value="regular">通常 Ante（全員）</option>
+          <option value="bb" selected>BB Ante（BBが全員分）</option>
+        </select>
+      </label>
+      <!-- Straddle -->
+      <label style="font-size:.78rem;color:var(--text-sub);display:flex;align-items:center;gap:8px;margin-top:10px">
+        <input type="checkbox" id="straddle-toggle">
+        UTG Straddle
+      </label>
+    </div>
+
+    <!-- プレイヤー / スタック設定 -->
+    <div class="card">
+      <h3>プレイヤー & スタック</h3>
+      <div class="seat-config-list" id="seat-config-list">
+        <!-- app.js から動的生成 -->
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <input type="number" id="default-stack" placeholder="全員のスタック (BB数)" style="flex:1;padding:6px 8px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:.8rem;">
+        <button onclick="applyDefaultStack()" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.8rem;cursor:pointer">全員に適用</button>
+      </div>
+    </div>
+
+    <!-- ハンド開始 -->
+    <button id="btn-new-hand">▶ New Hand 開始</button>
+
+    <!-- アクションキーパッド (PCのみ) -->
+    <div class="card" id="action-panel-pc">
+      <h3>アクション入力</h3>
+      <div id="error-msg" class="hidden"></div>
+      <div class="action-grid">
+        <button id="btn-fold"  class="btn-fold">FOLD</button>
+        <button id="btn-call"  class="btn-call">CHECK / CALL</button>
+        <button id="btn-raise" class="btn-raise" onclick="toggleRaisePanel()">RAISE ▾</button>
+        <button id="btn-allin" class="btn-allin">ALL IN</button>
+      </div>
+      <!-- レイズ入力パネル -->
+      <div id="raise-panel" class="hidden" style="margin-top:10px">
+        <div class="raise-presets">
+          <button class="raise-mult" data-mult="2.5">2.5x</button>
+          <button class="raise-mult" data-mult="3">3x</button>
+          <button class="raise-mult" data-mult="3.5">3.5x</button>
+          <button class="raise-mult" data-mult="4">4x</button>
+          <button class="raise-mult" onclick="setPotRaise()">POT</button>
+        </div>
+        <div class="raise-custom">
+          <input type="number" id="raise-input" placeholder="カスタム額" min="0" step="0.5">
+          <button id="btn-raise-confirm">確定</button>
+        </div>
+        <div class="min-raise-label" id="min-raise-label">Min Raise: --</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ======= 中央パネル: SVGポーカー卓 ======= -->
+  <main class="center-panel">
+    <!-- SVG テーブル (座席ノードはapp.jsが描画) -->
+    <div id="table-svg-wrap">
+      <svg id="table-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+        <!-- テーブルフェルト -->
+        <ellipse class="felt" cx="200" cy="200" rx="180" ry="140"/>
+        <ellipse class="felt-inner" cx="200" cy="200" rx="165" ry="125"/>
+      </svg>
+      <!-- 座席ノード (app.jsが .seat-node を動的追加) -->
+      <div id="seats-container" style="position:absolute;inset:0;"></div>
+    </div>
+
+    <!-- ボードカード -->
+    <div class="board-area">
+      <div class="card-slot" id="board-flop1" onclick="promptCard('flop1')">?</div>
+      <div class="card-slot" id="board-flop2" onclick="promptCard('flop2')">?</div>
+      <div class="card-slot" id="board-flop3" onclick="promptCard('flop3')">?</div>
+      <div style="width:4px;"></div>
+      <div class="card-slot" id="board-turn"  onclick="promptCard('turn')">?</div>
+      <div style="width:4px;"></div>
+      <div class="card-slot" id="board-river" onclick="promptCard('river')">?</div>
+    </div>
+  </main>
+
+  <!-- ======= 右パネル: ポット情報 / ログ / リプレイ ======= -->
+  <aside class="right-panel">
+
+    <!-- ポット情報 -->
+    <div class="card pot-info">
+      <h3>ポット</h3>
+      <div class="pot-main" id="pot-main">Main Pot: --</div>
+      <div class="pot-sides" id="pot-sides"></div>
+    </div>
+
+    <!-- アクションログ -->
+    <div class="card" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
+      <h3>アクション履歴</h3>
+      <div class="timeline" id="action-timeline"></div>
+    </div>
+
+    <!-- リプレイコントローラー -->
+    <div class="card replay-ctrl">
+      <h3>リプレイ再生</h3>
+      <input type="range" id="replay-bar" min="0" value="0" step="1">
+      <div class="replay-btns">
+        <button id="btn-replay-prev">⏮</button>
+        <button id="btn-replay-play">▶</button>
+        <button id="btn-replay-pause">⏸</button>
+        <button id="btn-replay-next">⏭</button>
+        <button class="speed-btn" data-speed="0.5">0.5x</button>
+        <button class="speed-btn active" data-speed="1">1x</button>
+        <button class="speed-btn" data-speed="2">2x</button>
+        <button class="speed-btn" data-speed="4">4x</button>
+      </div>
+    </div>
+
+  </aside>
+</div>
+
+<!-- ======= スマホ: ボトムシート ======= -->
+<div class="bottom-sheet">
+  <!-- タブ -->
+  <div class="sheet-tabs">
+    <button class="sheet-tab active" onclick="switchTab('input')">入力</button>
+    <button class="sheet-tab" onclick="switchTab('settings')">ブラインド/スタック</button>
+    <button class="sheet-tab" onclick="switchTab('history')">履歴</button>
+  </div>
+
+  <!-- 入力タブ -->
+  <div class="sheet-content active" id="tab-input">
+    <div id="error-msg-mobile" class="hidden" style="background:var(--red);color:#fff;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:600;margin-bottom:8px;"></div>
+    <div class="action-grid">
+      <button id="btn-fold-m"  class="btn-fold"  onclick="actionFold()">FOLD</button>
+      <button id="btn-call-m"  class="btn-call">CHECK / CALL</button>
+      <button id="btn-raise-m" class="btn-raise" onclick="toggleRaisePanelMobile()">RAISE ▾</button>
+      <button id="btn-allin-m" class="btn-allin" onclick="actionAllIn()">ALL IN</button>
+    </div>
+    <div id="raise-panel-mobile" class="hidden" style="margin-top:10px">
+      <div class="raise-presets">
+        <button class="raise-mult-m" data-mult="2.5">2.5x</button>
+        <button class="raise-mult-m" data-mult="3">3x</button>
+        <button class="raise-mult-m" data-mult="3.5">3.5x</button>
+        <button class="raise-mult-m" data-mult="4">4x</button>
+        <button class="raise-mult-m" onclick="setPotRaise()">POT</button>
+      </div>
+      <div class="raise-custom">
+        <input type="number" id="raise-input-m" placeholder="カスタム額" min="0" step="0.5">
+        <button onclick="actionRaise(parseFloat(document.getElementById('raise-input-m').value))">確定</button>
+      </div>
+      <div class="min-raise-label" id="min-raise-label-m">Min Raise: --</div>
+    </div>
+    <button id="btn-new-hand-m" onclick="startNewHand()" style="width:100%;margin-top:10px;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">▶ New Hand</button>
+  </div>
+
+  <!-- ブラインド/スタック設定タブ -->
+  <div class="sheet-content" id="tab-settings">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
+      <label style="font-size:.78rem;color:var(--text-sub)">SB
+        <input type="number" id="input-sb-m" value="1" min="0.01" step="0.5" style="width:100%;margin-top:3px">
+      </label>
+      <label style="font-size:.78rem;color:var(--text-sub)">BB
+        <input type="number" id="input-bb-m" value="2" min="0.01" step="0.5" style="width:100%;margin-top:3px">
+      </label>
+    </div>
+    <div class="rate-presets" id="rate-presets-m" style="margin-bottom:10px;">
+      <button class="rate-preset" data-sb="0.5" data-bb="1">0.5/1</button>
+      <button class="rate-preset" data-sb="1"   data-bb="2">1/2</button>
+      <button class="rate-preset" data-sb="2"   data-bb="5">2/5</button>
+      <button class="rate-preset" data-sb="5"   data-bb="10">5/10</button>
+    </div>
+    <div class="seat-config-list" id="seat-config-list-m"></div>
+  </div>
+
+  <!-- 履歴タブ -->
+  <div class="sheet-content" id="tab-history">
+    <div class="timeline" id="action-timeline-m"></div>
+    <input type="range" id="replay-bar-m" min="0" value="0" step="1" style="width:100%;margin-top:8px;accent-color:var(--accent);">
+    <div style="display:flex;gap:6px;margin-top:8px;justify-content:center;">
+      <button onclick="Replay.stepTo(--Replay.index)">⏮</button>
+      <button onclick="Replay.play()">▶</button>
+      <button onclick="Replay.pause()">⏸</button>
+      <button onclick="Replay.stepTo(++Replay.index)">⏭</button>
+    </div>
+  </div>
+</div>
+
+<!-- ======= Winner 選択モーダル ======= -->
+<div class="modal-overlay hidden" id="winner-modal">
+  <div class="modal-box">
+    <h2>🏆 Winner を選択</h2>
+    <p style="font-size:.8rem;color:var(--text-sub)">複数選択するとスプリットポット（チョップ）になります</p>
+    <div id="winner-list"></div>
+    <button id="btn-confirm-winner">確定して配当</button>
+    <button onclick="document.getElementById('winner-modal').classList.add('hidden')"
+      style="padding:8px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);cursor:pointer;font-size:.8rem;">
+      キャンセル
+    </button>
+  </div>
+</div>
+
+<script src="app.js"></script>
+<script>
+/* ===== UI補助関数 ===== */
+
+// タブ切替（スマホボトムシート）
+function switchTab(tab) {
+  document.querySelectorAll('.sheet-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.sheet-tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  document.querySelectorAll('.sheet-tab').forEach((el, i) => {
+    if (['input','settings','history'][i] === tab) el.classList.add('active');
+  });
+}
+
+// レイズパネル表示切替（PC）
+function toggleRaisePanel() {
+  document.getElementById('raise-panel').classList.toggle('hidden');
+}
+// レイズパネル表示切替（スマホ）
+function toggleRaisePanelMobile() {
+  document.getElementById('raise-panel-mobile').classList.toggle('hidden');
+}
+
+// ポットレイズ計算
+function setPotRaise() {
+  const potSize = AppState.pot.main;
+  const currentCall = getCallAmount(AppState.currentSeatIndex);
+  const potRaise = (potSize + currentCall) + currentCall;
+  const pcInput = document.getElementById('raise-input');
+  const mobileInput = document.getElementById('raise-input-m');
+  if (pcInput) pcInput.value = potRaise.toFixed(1);
+  if (mobileInput) mobileInput.value = potRaise.toFixed(1);
+}
+
+// デフォルトスタック全員に適用
+function applyDefaultStack() {
+  const bbVal = AppState.blind.bb;
+  const input = document.getElementById('default-stack');
+  const bbCount = parseFloat(input?.value) || 100;
+  AppState.seats.forEach(s => { s.stack = bbCount * bbVal; });
+  renderAll();
+  renderSeatConfigUI();
+}
+
+// カード入力
+function promptCard(slotId) {
+  const val = prompt('カードを入力 (例: As, Kh, Td, 2c)');
+  if (!val) return;
+  const map = { flop1:0, flop2:1, flop3:2, turn:3, river:4 };
+  AppState.board[map[slotId]] = val.trim();
+  renderBoard();
+}
+
+// ===== 座席設定UIの動的描画 =====
+function renderSeatConfigUI() {
+  ['seat-config-list', 'seat-config-list-m'].forEach(listId => {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.innerHTML = '';
+    AppState.seats.forEach((seat, i) => {
+      const row = document.createElement('div');
+      row.className = 'seat-config-row';
+      row.innerHTML = `
+        <span style="font-size:.72rem;color:var(--text-sub);min-width:32px">${getPositionName(i)}</span>
+        <input type="text" value="${seat.name}" data-seat="${i}" class="player-name-input" placeholder="プレイヤー名">
+        <input type="number" value="${seat.stack}" data-seat="${i}" class="stack-input" min="0" step="1" style="width:70px">
+        <button class="away-toggle ${seat.isAway ? 'away-on' : ''}" data-seat="${i}">
+          ${seat.isAway ? '離席中' : '在席'}
+        </button>`;
+      list.appendChild(row);
+    });
+    // イベント再バインド
+    list.querySelectorAll('.player-name-input').forEach(input => {
+      input.addEventListener('change', e => {
+        const idx = parseInt(input.dataset.seat);
+        AppState.seats[idx].name = e.target.value;
+        renderSeats();
+      });
+    });
+    list.querySelectorAll('.stack-input').forEach(input => {
+      input.addEventListener('change', e => {
+        const idx = parseInt(input.dataset.seat);
+        AppState.seats[idx].stack = parseFloat(e.target.value) || 0;
+        renderSeats();
+      });
+    });
+    list.querySelectorAll('.away-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.seat);
+        AppState.seats[idx].isAway = !AppState.seats[idx].isAway;
+        btn.textContent = AppState.seats[idx].isAway ? '離席中' : '在席';
+        btn.classList.toggle('away-on', AppState.seats[idx].isAway);
+        renderSeats();
+      });
+    });
+  });
+}
+
+// ===== 座席ノード (SVG上) の動的描画 =====
+function renderSeatsDOM() {
+  const container = document.getElementById('seats-container');
+  if (!container) return;
+  const n = AppState.seatCount;
+  const cx = 50, cy = 50;  // % 中心
+  const rx = 40, ry = 30;  // % 半径
+  // 既存ノードを更新 or 生成
+  AppState.seats.forEach((seat, i) => {
+    let node = document.getElementById(`seat-${i}`);
+    if (!node) {
+      node = document.createElement('div');
+      node.className = 'seat-node';
+      node.id = `seat-${i}`;
+      node.innerHTML = `
+        <div class="seat-avatar">
+          <span class="seat-action"></span>
+        </div>
+        <div class="seat-pos"></div>
+        <div class="seat-name"></div>
+        <div class="seat-stack"></div>
+        <div class="seat-bet"></div>`;
+      container.appendChild(node);
+    }
+    // 座席位置を円形に配置
+    const angle = (2 * Math.PI * i / n) - Math.PI / 2;
+    const x = cx + rx * Math.cos(angle);
+    const y = cy + ry * Math.sin(angle);
+    node.style.left = `${x}%`;
+    node.style.top  = `${y}%`;
+  });
+  // 余分なノードを削除
+  document.querySelectorAll('.seat-node').forEach(node => {
+    const idx = parseInt(node.id.replace('seat-',''));
+    if (idx >= n) node.remove();
+  });
+}
+
+// アクションタイムラインを更新
+function updateTimeline() {
+  ['action-timeline', 'action-timeline-m'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+    let lastStreet = '';
+    AppState.history.forEach((step, i) => {
+      if (step.street !== lastStreet) {
+        const label = document.createElement('div');
+        label.className = 'street-label';
+        label.textContent = step.street.toUpperCase();
+        el.appendChild(label);
+        lastStreet = step.street;
+      }
+      const item = document.createElement('div');
+      item.className = 'timeline-item';
+      item.innerHTML = `
+        <span>${AppState.seats[step.seatIndex]?.name ?? `Seat ${step.seatIndex+1}`}</span>
+        <span class="action">${step.action.toUpperCase()} ${step.amount > 0 ? formatAmount(step.amount) : ''}</span>`;
+      el.appendChild(item);
+    });
+    el.scrollTop = el.scrollHeight;
+  });
+  // リプレイバー最大値更新
+  const bars = ['replay-bar', 'replay-bar-m'];
+  bars.forEach(id => {
+    const bar = document.getElementById(id);
+    if (bar) bar.max = Math.max(0, AppState.history.length - 1);
+  });
+}
+
+// renderAll をオーバーライドして座席DOM描画・タイムライン更新も含める
+const _origRenderAll = renderAll;
+window.renderAll = function() {
+  renderSeatsDOM();
+  renderSeatConfigUI();
+  _origRenderAll();
+  updateTimeline();
+};
+
+// スピードボタンのトグル
+document.querySelectorAll('.speed-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// コールボタン（スマホ側）
+document.getElementById('btn-call-m')?.addEventListener('click', actionCall);
+document.getElementById('btn-fold-m')?.addEventListener('click', actionFold);
+document.getElementById('btn-allin-m')?.addEventListener('click', actionAllIn);
+document.querySelectorAll('.raise-mult-m').forEach(btn => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.mult) {
+      const mult = parseFloat(btn.dataset.mult);
+      const maxBet = Math.max(...AppState.seats.map(s => s.betAmount));
+      const raiseAmount = maxBet + Math.max(AppState.lastRaiseDelta, AppState.blind.bb) * mult;
+      const input = document.getElementById('raise-input-m');
+      if (input) input.value = raiseAmount.toFixed(1);
+    }
+  });
+});
+
+// 入力同期（SB/BB モバイル版）
+document.getElementById('input-sb-m')?.addEventListener('input', e => {
+  AppState.blind.sb = parseFloat(e.target.value) || 1;
+  const pc = document.getElementById('input-sb');
+  if (pc) pc.value = e.target.value;
+});
+document.getElementById('input-bb-m')?.addEventListener('input', e => {
+  AppState.blind.bb = parseFloat(e.target.value) || 2;
+  const pc = document.getElementById('input-bb');
+  if (pc) pc.value = e.target.value;
+});
+</script>
+</body>
+</html>
