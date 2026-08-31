@@ -916,19 +916,63 @@ function bindEvents() {
     btn.addEventListener('click', () => Replay.setSpeed(parseFloat(btn.dataset.speed)));
   });
 
-  document.getElementById('btn-confirm-winner')?.addEventListener('click', () => {
-    const selected = [...document.querySelectorAll('.winner-btn.selected')]
-      .map(b => parseInt(b.dataset.seat));
-    if (selected.length === 0) return;
-    splitPot(selected, AppState.pot.main);
-    AppState.pot.sides.forEach(side => {
-      const eligible = selected.filter(s => side.eligibleSeats.includes(s));
-      if (eligible.length > 0) splitPot(eligible, side.amount);
-    });
-    saveHand({ history: AppState.history, seats: AppState.seats, board: AppState.board });
-    document.getElementById('winner-modal').classList.add('hidden');
-    renderAll();
-  });
+  document.getElementById('btn-confirm-winner')?.addEventListener('click', confirmWinner);
 }
 
+function confirmWinner() {
+  const selected = [...document.querySelectorAll('.winner-btn.selected')]
+    .map(b => parseInt(b.dataset.seat));
+
+  if (selected.length === 0) {
+    showError('勝者を1人以上選択してください');
+    return;
+  }
+
+  const potToShare = AppState.pot.main;
+  splitPot(selected, AppState.pot.main);
+
+  AppState.pot.sides.forEach(side => {
+    const eligible = selected.filter(s => side.eligibleSeats.includes(s));
+    if (eligible.length > 0) splitPot(eligible, side.amount);
+  });
+
+  const winnerNames = selected.map(idx => AppState.seats[idx]?.name || `Seat ${idx + 1}`).join(', ');
+
+  AppState.pot.main = 0;
+  AppState.pot.sides = [];
+  AppState.currentSeatIndex = -1;
+
+  try {
+    saveHand({ history: AppState.history, seats: AppState.seats, board: AppState.board });
+  } catch (err) {
+    console.error('Hand save error:', err);
+  }
+
+  const modal = document.getElementById('winner-modal');
+  if (modal) modal.classList.add('hidden');
+
+  renderAll();
+  showError(`🏆 【配当完了】 ${winnerNames} に ${formatAmount(potToShare)} を配当しました！「▶ New Hand」で次のゲームを開始できます。`);
+}
+
+// グローバル関数バインド（ボタンイベント確実に発火）
+window.confirmWinner = confirmWinner;
+window.actionFold = actionFold;
+window.actionCheck = actionCheck;
+window.actionCall = actionCall;
+window.actionRaise = actionRaise;
+window.actionAllIn = actionAllIn;
+window.actionUndo = undoAction;
+window.startNewHand = startNewHand;
+window.openCardPicker = openCardPicker;
+window.closeCardPicker = closeCardPicker;
+window.applyManualCardInput = applyManualCardInput;
+window.clearCurrentCardSlot = clearCurrentCardSlot;
+window.copyHandText = copyHandText;
+window.exportHandsJSON = exportHandsJSON;
+window.importHandsJSON = importHandsJSON;
+window.loadHandFromData = loadHandFromData;
+window.deleteSavedHand = deleteSavedHand;
+
 window.addEventListener('DOMContentLoaded', init);
+
