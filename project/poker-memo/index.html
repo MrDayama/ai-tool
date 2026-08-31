@@ -297,9 +297,9 @@ function applyDefaultStack() {
   const bbVal = AppState.blind.bb;
   const input = document.getElementById('default-stack');
   const bbCount = parseFloat(input?.value) || 100;
+  // BB数入力の場合、内部 s.stack（絶対値）= BB数 * BB単価
   AppState.seats.forEach(s => { s.stack = bbCount * bbVal; });
   renderAll();
-  renderSeatConfigUI();
 }
 
 // カード入力
@@ -313,17 +313,21 @@ function promptCard(slotId) {
 
 // ===== 座席設定UIの動的描画 =====
 function renderSeatConfigUI() {
+  const isBBUnit = AppState.blind.displayUnit === 'bb';
+  const bbVal = AppState.blind.bb || 1;
+
   ['seat-config-list', 'seat-config-list-m'].forEach(listId => {
     const list = document.getElementById(listId);
     if (!list) return;
     list.innerHTML = '';
     AppState.seats.forEach((seat, i) => {
+      const displayStackVal = isBBUnit ? (seat.stack / bbVal).toFixed(1) : seat.stack;
       const row = document.createElement('div');
       row.className = 'seat-config-row';
       row.innerHTML = `
         <span style="font-size:.72rem;color:var(--text-sub);min-width:32px">${getPositionName(i)}</span>
         <input type="text" value="${seat.name}" data-seat="${i}" class="player-name-input" placeholder="プレイヤー名">
-        <input type="number" value="${seat.stack}" data-seat="${i}" class="stack-input" min="0" step="1" style="width:70px">
+        <input type="number" value="${displayStackVal}" data-seat="${i}" class="stack-input" min="0" step="1" style="width:70px" title="${isBBUnit ? 'スタック(BB数)' : 'スタック(金額)'}">
         <button class="away-toggle ${seat.isAway ? 'away-on' : ''}" data-seat="${i}">
           ${seat.isAway ? '離席中' : '在席'}
         </button>`;
@@ -340,7 +344,9 @@ function renderSeatConfigUI() {
     list.querySelectorAll('.stack-input').forEach(input => {
       input.addEventListener('change', e => {
         const idx = parseInt(input.dataset.seat);
-        AppState.seats[idx].stack = parseFloat(e.target.value) || 0;
+        const val = parseFloat(e.target.value) || 0;
+        // 表示単位が BB の場合は内部金額（val * bbVal）に変換して保持
+        AppState.seats[idx].stack = isBBUnit ? val * bbVal : val;
         renderSeats();
       });
     });

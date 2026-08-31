@@ -262,7 +262,6 @@ function applyDefaultStack() {
   const bbCount = parseFloat(input ? input.value : 100) || 100;
   AppState.seats.forEach(s => { s.stack = bbCount * bbVal; });
   renderAll();
-  renderSeatConfigUI();
 }
 
 function promptCard(slotId) {
@@ -274,17 +273,21 @@ function promptCard(slotId) {
 }
 
 function renderSeatConfigUI() {
+  const isBBUnit = AppState.blind.displayUnit === 'bb';
+  const bbVal = AppState.blind.bb || 1;
+
   ['seat-config-list', 'seat-config-list-m'].forEach(listId => {
     const list = document.getElementById(listId);
     if (!list) return;
     list.innerHTML = '';
     AppState.seats.forEach((seat, i) => {
+      const displayStackVal = isBBUnit ? (seat.stack / bbVal).toFixed(1) : seat.stack;
       const row = document.createElement('div');
       row.className = 'seat-config-row';
       row.innerHTML =
         '<span style="font-size:.72rem;color:var(--text-sub);min-width:32px">' + getPositionName(i) + '</span>' +
         '<input type="text" value="' + seat.name + '" data-seat="' + i + '" class="player-name-input" placeholder="プレイヤー名">' +
-        '<input type="number" value="' + seat.stack + '" data-seat="' + i + '" class="stack-input" min="0" step="1" style="width:70px">' +
+        '<input type="number" value="' + displayStackVal + '" data-seat="' + i + '" class="stack-input" min="0" step="1" style="width:70px" title="' + (isBBUnit ? 'スタック(BB数)' : 'スタック(金額)') + '">' +
         '<button class="away-toggle ' + (seat.isAway ? 'away-on' : '') + '" data-seat="' + i + '">' + (seat.isAway ? '離席中' : '在席') + '</button>';
       list.appendChild(row);
     });
@@ -296,7 +299,9 @@ function renderSeatConfigUI() {
     });
     list.querySelectorAll('.stack-input').forEach(function(input) {
       input.addEventListener('change', function(e) {
-        AppState.seats[parseInt(input.dataset.seat)].stack = parseFloat(e.target.value) || 0;
+        const idx = parseInt(input.dataset.seat);
+        const val = parseFloat(e.target.value) || 0;
+        AppState.seats[idx].stack = isBBUnit ? val * bbVal : val;
         renderSeats();
       });
     });
