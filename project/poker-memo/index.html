@@ -30,6 +30,11 @@
 
   <!-- 表示単位切替 -->
   <button id="unit-toggle">表示: BB</button>
+
+  <!-- 共有・保存ボタン群 -->
+  <button onclick="copyHandText()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">📋 ハンドコピー</button>
+  <button onclick="renderSavedHandsModal()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">💾 保存履歴</button>
+  <button onclick="exportHandsJSON()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">📥 エクスポート</button>
 </header>
 
 <!-- ===== PC: 3カラム メインレイアウト ===== -->
@@ -186,7 +191,7 @@
   <div class="sheet-tabs">
     <button class="sheet-tab active" onclick="switchTab('input')">入力</button>
     <button class="sheet-tab" onclick="switchTab('settings')">ブラインド/スタック</button>
-    <button class="sheet-tab" onclick="switchTab('history')">履歴</button>
+    <button class="sheet-tab" onclick="switchTab('history')">履歴/共有</button>
   </div>
 
   <!-- 入力タブ -->
@@ -238,8 +243,12 @@
     <div class="seat-config-list" id="seat-config-list-m"></div>
   </div>
 
-  <!-- 履歴タブ -->
+  <!-- 履歴・共有タブ (スマホ) -->
   <div class="sheet-content" id="tab-history">
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <button onclick="copyHandText()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">📋 ハンドコピー</button>
+      <button onclick="renderSavedHandsModal()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">💾 保存履歴</button>
+    </div>
     <div class="timeline" id="action-timeline-m"></div>
     <input type="range" id="replay-bar-m" min="0" value="0" step="1" style="width:100%;margin-top:8px;accent-color:var(--accent);">
     <div style="display:flex;gap:6px;margin-top:8px;justify-content:center;">
@@ -265,11 +274,27 @@
   </div>
 </div>
 
+<!-- ======= 保存済みハンド一覧 モーダル ======= -->
+<div class="modal-overlay hidden" id="saved-hands-modal">
+  <div class="modal-box" style="max-width:440px;">
+    <h2>💾 保存済みハンド履歴</h2>
+    <div id="saved-hands-list" style="max-height:300px;overflow-y:auto;"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button onclick="exportHandsJSON()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.8rem;color:var(--text);cursor:pointer;">📥 バックアップ保存(JSON)</button>
+      <button onclick="document.getElementById('file-import-input').click()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.8rem;color:var(--text);cursor:pointer;">📤 復元(JSON選択)</button>
+      <input type="file" id="file-import-input" class="hidden" accept=".json" onchange="importHandsJSON(this.files[0])">
+    </div>
+    <button onclick="document.getElementById('saved-hands-modal').classList.add('hidden')"
+      style="padding:8px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);cursor:pointer;font-size:.8rem;margin-top:6px;">
+      閉じる
+    </button>
+  </div>
+</div>
+
 <script src="app.js"></script>
 <script>
 /* ===== UI補助関数 ===== */
 
-// タブ切替（スマホボトムシート）
 function switchTab(tab) {
   document.querySelectorAll('.sheet-content').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.sheet-tab').forEach(el => el.classList.remove('active'));
@@ -279,16 +304,13 @@ function switchTab(tab) {
   });
 }
 
-// レイズパネル表示切替（PC）
 function toggleRaisePanel() {
   document.getElementById('raise-panel').classList.toggle('hidden');
 }
-// レイズパネル表示切替（スマホ）
 function toggleRaisePanelMobile() {
   document.getElementById('raise-panel-mobile').classList.toggle('hidden');
 }
 
-// ポットレイズ計算
 function setPotRaise() {
   const potSize = AppState.pot.main;
   const currentCall = getCallAmount(AppState.currentSeatIndex);
@@ -299,7 +321,6 @@ function setPotRaise() {
   if (mobileInput) mobileInput.value = potRaise.toFixed(1);
 }
 
-// デフォルトスタック全員に適用
 function applyDefaultStack() {
   const bbVal = AppState.blind.bb;
   const input = document.getElementById('default-stack');
@@ -308,7 +329,6 @@ function applyDefaultStack() {
   renderAll();
 }
 
-// カード入力
 function promptCard(slotId) {
   const val = prompt('カードを入力 (例: As, Kh, Td, 2c)');
   if (!val) return;
@@ -317,7 +337,6 @@ function promptCard(slotId) {
   renderBoard();
 }
 
-// ===== 座席設定UIの動的描画 =====
 function renderSeatConfigUI() {
   const isBBUnit = AppState.blind.displayUnit === 'bb';
   const bbVal = AppState.blind.bb || 1;
@@ -366,13 +385,12 @@ function renderSeatConfigUI() {
   });
 }
 
-// ===== 座席ノード (SVG上) の動的描画 =====
 function renderSeatsDOM() {
   const container = document.getElementById('seats-container');
   if (!container) return;
   const n = AppState.seatCount;
-  const cx = 50, cy = 50;  // % 中心
-  const rx = 40, ry = 30;  // % 半径
+  const cx = 50, cy = 50;
+  const rx = 40, ry = 30;
   AppState.seats.forEach((seat, i) => {
     let node = document.getElementById(`seat-${i}`);
     if (!node) {

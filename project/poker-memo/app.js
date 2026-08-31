@@ -5,6 +5,7 @@
  * Step 1: データ構造 & 状態管理
  * Step 2: NLHポーカーエンジン (HU判定, Min-Raise, Side Pot自動分割, Undo, All-in Runout)
  * Step 4: アクション録画 & IndexedDB
+ * 機能拡張: ハンド履歴の保存・テキスト共有・JSONエクスポート/インポート
  */
 
 // ===================================================
@@ -22,22 +23,13 @@ const POSITIONS_BY_COUNT = {
   9:  ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO'],
 };
 
-const PRESET_RATES = [
-  { label: '0.5/1', sb: 0.5, bb: 1 },
-  { label: '1/2',   sb: 1,   bb: 2 },
-  { label: '2/5',   sb: 2,   bb: 5 },
-  { label: '5/10',  sb: 5,   bb: 10 },
-  { label: '10/20', sb: 10,  bb: 20 },
-  { label: '25/50', sb: 25,  bb: 50 },
-];
-
 // ===================================================
 // Step 1: データ構造
 // ===================================================
 
 const AppState = {
   seatCount: 6,
-  dealerSeat: 0,   // BTN座席インデックス (0-based)
+  dealerSeat: 0,
 
   blind: {
     sb: 1, bb: 2, anteType: 'bb', anteAmount: 2,
@@ -45,21 +37,18 @@ const AppState = {
   },
 
   seats: [],
-  board: ['', '', '', '', ''],   // Flop1, Flop2, Flop3, Turn, River
+  board: ['', '', '', '', ''],
   pot: { main: 0, sides: [] },
   street: 'preflop',
-  currentSeatIndex: 0,           // アクション中の座席インデックス
-  minRaise: 0,                   // 最小レイズ額 (現在ストリート)
-  lastRaiseDelta: 0,             // 直前の上げ幅
+  currentSeatIndex: 0,
+  minRaise: 0,
+  lastRaiseDelta: 0,
 
   // リプレイ録画
-  history: [],     // { street, seatIndex, action, amount, potSnapshot, stackSnapshot, currentSeatIndex }[]
+  history: [],
   replayIndex: 0,
 };
 
-/**
- * 座席を初期化（seatCount に合わせて再生成）
- */
 function initSeats() {
   const defaultStack = AppState.blind.bb * 100;
   AppState.seats = Array.from({ length: AppState.seatCount }, (_, i) => ({
@@ -79,10 +68,6 @@ function initSeats() {
 // Step 2: NLHポーカーエンジン
 // ===================================================
 
-/**
- * アクティブ座席インデックス配列を取得
- * @param {boolean} includeAllIn - All-inも含める場合 true
- */
 function getActiveSeats(includeAllIn = false) {
   return AppState.seats
     .map((s, i) => ({ s, i }))
@@ -90,72 +75,47 @@ function getActiveSeats(includeAllIn = false) {
     .map(({ i }) => i);
 }
 
-/**
- * ヘッズアップ判定
- */
 function isHeadsUp() {
   return AppState.seatCount === 2;
 }
 
-/**
- * ポジション名を取得
- */
 function getPositionName(seatIndex) {
   const positions = POSITIONS_BY_COUNT[AppState.seatCount] || [];
   const relIndex = (seatIndex - AppState.dealerSeat + AppState.seatCount) % AppState.seatCount;
   return positions[relIndex] || `Seat ${seatIndex + 1}`;
 }
 
-/**
- * SB/BB座席インデックスを取得
- */
 function getSBIndex() {
-  if (isHeadsUp()) return AppState.dealerSeat; // HU: BTN = SB
+  if (isHeadsUp()) return AppState.dealerSeat;
   return (AppState.dealerSeat + 1) % AppState.seatCount;
 }
 function getBBIndex() {
   return (AppState.dealerSeat + 2) % AppState.seatCount;
 }
 
-/**
- * プリフロップ最初のアクション座席を取得
- */
 function getPreflopFirstSeat() {
   if (isHeadsUp()) return AppState.dealerSeat;
   return (AppState.dealerSeat + 3) % AppState.seatCount;
 }
 
-/**
- * ポストフロップ最初のアクション座席を取得
- */
 function getPostflopFirstSeat() {
   if (isHeadsUp()) return getBBIndex();
   return getSBIndex();
 }
 
-/**
- * 次のアクション座席インデックスを取得
- */
 function getNextActiveSeat(fromIndex) {
   for (let i = 1; i <= AppState.seatCount; i++) {
     const idx = (fromIndex + i) % AppState.seatCount;
     const s = AppState.seats[idx];
     if (!s.isAway && !s.isFolded && !s.isAllIn) return idx;
   }
-  return -1; // 全員フォルド or オールイン
+  return -1;
 }
 
-/**
- * Min-Raise額を計算して AppState に反映
- */
 function updateMinRaise(callAmount, raiseDelta) {
   AppState.lastRaiseDelta = Math.max(raiseDelta, AppState.blind.bb);
   AppState.minRaise = callAmount + AppState.lastRaiseDelta;
 }
-
-// ===================================================
-// Step 2: サイドポット自動分割
-// ===================================================
 
 function recalcPots(contributions) {
   const sorted = [...contributions].sort((a, b) => a.totalBet - b.totalBet);
@@ -197,10 +157,6 @@ function splitPot(winnerSeats, potAmount) {
   }
 }
 
-// ===================================================
-// Step 2: ハンド開始処理（ブラインド投入）
-// ===================================================
-
 function startNewHand() {
   AppState.seats.forEach(s => {
     s.betAmount = 0;
@@ -219,7 +175,6 @@ function startNewHand() {
   const sbIdx = getSBIndex();
   const bbIdx = getBBIndex();
 
-  // BBアンティ処理
   if (anteType === 'bb') {
     const totalAnte = anteAmount * AppState.seatCount;
     bet(bbIdx, totalAnte);
@@ -229,14 +184,9 @@ function startNewHand() {
     });
   }
 
-  // SB / BB 投入
   bet(sbIdx, sb);
   bet(bbIdx, bb);
-
-  // Min-Raiseの初期値
   updateMinRaise(bb, bb);
-
-  // 最初のアクション席
   AppState.currentSeatIndex = getPreflopFirstSeat();
   renderAll();
 }
@@ -250,10 +200,6 @@ function bet(seatIndex, amount) {
   AppState.pot.main += actual;
   if (seat.stack === 0) seat.isAllIn = true;
 }
-
-// ===================================================
-// Step 2: アクション処理
-// ===================================================
 
 function actionFold() {
   const idx = AppState.currentSeatIndex;
@@ -284,7 +230,6 @@ function actionRaise(totalAmount) {
   const currentBet = AppState.seats[idx].betAmount;
   const maxBetOnTable = Math.max(...AppState.seats.map(s => s.betAmount));
 
-  // スタック以上の入力はオールインに自動変換
   const maxStackAmount = currentBet + AppState.seats[idx].stack;
   if (totalAmount >= maxStackAmount) {
     actionAllIn();
@@ -311,7 +256,6 @@ function actionAllIn() {
   recordHistory(idx, 'allin', allInBet);
   AppState.seats[idx].action = 'all-in';
 
-  // サイドポット計算
   const contributions = AppState.seats
     .filter(s => !s.isAway && !s.isFolded)
     .map(s => ({ seatIndex: s.id, totalBet: s.betAmount }));
@@ -319,15 +263,12 @@ function actionAllIn() {
   advanceAction();
 }
 
-/**
- * 1手戻る (Undo)
- */
 function undoAction() {
   if (AppState.history.length === 0) {
     showError('戻るアクションがありません');
     return;
   }
-  const lastStep = AppState.history.pop();
+  AppState.history.pop();
   if (AppState.history.length > 0) {
     const prevStep = AppState.history[AppState.history.length - 1];
     AppState.pot = JSON.parse(JSON.stringify(prevStep.potSnapshot));
@@ -344,7 +285,6 @@ function undoAction() {
     AppState.street = prevStep.street;
     AppState.currentSeatIndex = prevStep.currentSeatIndex;
   } else {
-    // 最初の状態に戻す
     startNewHand();
   }
   renderAll();
@@ -355,29 +295,22 @@ function getCallAmount(seatIndex) {
   return Math.min(maxBet - AppState.seats[seatIndex].betAmount, AppState.seats[seatIndex].stack);
 }
 
-/**
- * 次のアクションへ進む
- */
 function advanceAction() {
-  const active = getActiveSeats();          // Folded/Away 除く (All-in含む)
-  const activeNoAllIn = getActiveSeats(false); // All-in 除く
+  const active = getActiveSeats();
+  const activeNoAllIn = getActiveSeats(false);
 
-  // 1人だけ残った → 即時ハンド終了
   if (active.length <= 1) {
     endHand(active);
     return;
   }
 
-  // アクション可能なプレイヤーが1人以下 (All-in Runout)
   if (activeNoAllIn.length <= 1) {
-    // ストリートをショウダウンまで一気に進める
     runoutAllIn();
     return;
   }
 
   const next = getNextActiveSeat(AppState.currentSeatIndex);
 
-  // ストリート完了チェック
   if (isStreetComplete()) {
     advanceStreet();
     return;
@@ -386,27 +319,18 @@ function advanceAction() {
   renderAll();
 }
 
-/**
- * 全員オールイン時の Runout（自動ショウダウン進行）
- */
 function runoutAllIn() {
   AppState.street = 'showdown';
   renderAll();
   endHand(getActiveSeats(true));
 }
 
-/**
- * ストリート完了チェック
- */
 function isStreetComplete() {
   const activeNoAllIn = getActiveSeats(false);
   const maxBet = Math.max(...AppState.seats.map(s => s.betAmount));
   return activeNoAllIn.every(i => AppState.seats[i].betAmount === maxBet && AppState.seats[i].action !== null);
 }
 
-/**
- * 次のストリートへ進む
- */
 function advanceStreet() {
   const streetOrder = ['preflop', 'flop', 'turn', 'river', 'showdown'];
   const nextIdx = streetOrder.indexOf(AppState.street) + 1;
@@ -414,16 +338,13 @@ function advanceStreet() {
     endHand(getActiveSeats(true));
     return;
   }
-  // ベット額リセット
   AppState.seats.forEach(s => { s.betAmount = 0; s.action = null; });
   AppState.street = streetOrder[nextIdx];
   updateMinRaise(0, AppState.blind.bb);
-  // ポストフロップ先頭座席
   AppState.currentSeatIndex = getPostflopFirstSeat();
 
-  // もしその座席が離席/オールイン中なら次へ
   const next = AppState.seats[AppState.currentSeatIndex];
-  if (next.isAway || next.isFolded || next.isAllIn) {
+  if (next && (next.isAway || next.isFolded || next.isAllIn)) {
     AppState.currentSeatIndex = getNextActiveSeat(AppState.currentSeatIndex);
   }
   renderAll();
@@ -475,7 +396,125 @@ function initDB() {
 function saveHand(handData) {
   if (!db) return;
   const tx = db.transaction('hands', 'readwrite');
-  tx.objectStore('hands').add({ ...handData, savedAt: new Date().toISOString() });
+  const store = tx.objectStore('hands');
+  const record = {
+    ...handData,
+    seatCount: AppState.seatCount,
+    blind: AppState.blind,
+    savedAt: new Date().toISOString()
+  };
+  store.add(record);
+}
+
+function fetchAllHandsFromDB() {
+  return new Promise((resolve, reject) => {
+    if (!db) return resolve([]);
+    const tx = db.transaction('hands', 'readonly');
+    const req = tx.objectStore('hands').getAll();
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+function deleteHandFromDB(id) {
+  return new Promise((resolve, reject) => {
+    if (!db) return resolve();
+    const tx = db.transaction('hands', 'readwrite');
+    const req = tx.objectStore('hands').delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
+// ===================================================
+// 共有・テキスト生成・JSON機能
+// ===================================================
+
+/**
+ * SNS/掲示板用 ハンドテキスト自動生成
+ */
+function generateHandText() {
+  const { sb, bb, anteType, anteAmount } = AppState.blind;
+  let txt = `🎴 [Poker Memo Hand History]\n`;
+  txt += `Rate: ${sb}/${bb} (${anteType === 'bb' ? `BB Ante: ${anteAmount}` : anteType === 'regular' ? `Ante: ${anteAmount}` : 'No Ante'}) | ${AppState.seatCount}-Max\n`;
+
+  const validBoard = AppState.board.filter(c => c !== '');
+  if (validBoard.length > 0) {
+    txt += `Board: [${validBoard.join(' ')}]\n`;
+  }
+  txt += `Total Pot: ${formatAmount(AppState.pot.main)}\n`;
+  txt += `-----------------------------------\n`;
+
+  let currentSt = '';
+  AppState.history.forEach(step => {
+    if (step.street !== currentSt) {
+      currentSt = step.street;
+      txt += `\n[${currentSt.toUpperCase()}]\n`;
+    }
+    const name = AppState.seats[step.seatIndex]?.name || `Seat ${step.seatIndex + 1}`;
+    const pos = getPositionName(step.seatIndex);
+    const amtStr = step.amount > 0 ? ` ${formatAmount(step.amount)}` : '';
+    txt += `• ${name} (${pos}): ${step.action.toUpperCase()}${amtStr}\n`;
+  });
+
+  return txt;
+}
+
+/**
+ * クリップボードへコピー
+ */
+async function copyHandText() {
+  const text = generateHandText();
+  try {
+    await navigator.clipboard.writeText(text);
+    showError('✅ ハンドテキストをクリップボードにコピーしました！');
+  } catch (err) {
+    // フォールバック
+    const area = document.createElement('textarea');
+    area.value = text;
+    document.body.appendChild(area);
+    area.select();
+    document.execCommand('copy');
+    document.body.removeChild(area);
+    showError('✅ ハンドテキストをコピーしました！');
+  }
+}
+
+/**
+ * JSONエクスポート（ファイルダウンロード）
+ */
+async function exportHandsJSON() {
+  const hands = await fetchAllHandsFromDB();
+  const jsonStr = JSON.stringify(hands, null, 2);
+  const blob = new Blob([jsonStr], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `poker-memo-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * JSONインポート（ファイル読み込み）
+ */
+function importHandsJSON(file) {
+  const reader = new FileReader();
+  reader.onload = async e => {
+    try {
+      const hands = JSON.parse(e.target.result);
+      if (Array.isArray(hands)) {
+        for (const h of hands) {
+          saveHand(h);
+        }
+        showError(`✅ ${hands.length} 件のハンド履歴を復元・追加しました`);
+        renderSavedHandsModal();
+      }
+    } catch (err) {
+      showError('❌ 不正なJSONファイルです');
+    }
+  };
+  reader.readAsText(file);
 }
 
 // ===================================================
@@ -548,7 +587,7 @@ function showError(msg) {
     if (!el) return;
     el.textContent = msg;
     el.classList.remove('hidden');
-    setTimeout(() => el.classList.add('hidden'), 3000);
+    setTimeout(() => el.classList.add('hidden'), 3500);
   });
 }
 
@@ -573,7 +612,6 @@ function renderSeats() {
     el.querySelector('.seat-bet').textContent = seat.betAmount > 0 ? formatAmount(seat.betAmount) : '';
     el.querySelector('.seat-action').textContent = seat.action ? seat.action.toUpperCase() : '';
     el.querySelector('.seat-pos').textContent = getPositionName(i);
-    // ハイライト
     el.classList.toggle('active-turn', i === AppState.currentSeatIndex && !seat.isFolded && !seat.isAway);
     el.classList.toggle('away', seat.isAway);
     el.classList.toggle('folded', seat.isFolded);
@@ -627,6 +665,60 @@ function showWinnerSelector(candidates) {
     list.appendChild(btn);
   });
   modal.classList.remove('hidden');
+}
+
+/**
+ * 保存済みハンド一覧モーダルの描画
+ */
+async function renderSavedHandsModal() {
+  const modal = document.getElementById('saved-hands-modal');
+  const list = document.getElementById('saved-hands-list');
+  if (!modal || !list) return;
+  list.innerHTML = '';
+  const hands = await fetchAllHandsFromDB();
+  if (hands.length === 0) {
+    list.innerHTML = '<div style="font-size:.85rem;color:var(--text-sub);text-align:center;padding:20px">保存されたハンド履歴はありません</div>';
+  } else {
+    hands.reverse().forEach(h => {
+      const item = document.createElement('div');
+      item.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;';
+      const dateStr = new Date(h.savedAt).toLocaleString();
+      const boardStr = h.board ? h.board.filter(c => c !== '').join(' ') : '';
+      item.innerHTML = `
+        <div>
+          <div style="font-weight:700;font-size:.85rem">Hand #${h.id} (${h.seatCount || 6}-Max)</div>
+          <div style="font-size:.75rem;color:var(--text-sub)">${dateStr} | Board: [${boardStr || 'N/A'}]</div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button onclick="loadHandFromData(${h.id})" style="padding:4px 10px;background:var(--accent);color:#fff;border:none;border-radius:5px;font-size:.78rem;cursor:pointer">復元</button>
+          <button onclick="deleteSavedHand(${h.id})" style="padding:4px 8px;background:var(--red);color:#fff;border:none;border-radius:5px;font-size:.78rem;cursor:pointer">削除</button>
+        </div>`;
+      list.appendChild(item);
+    });
+  }
+  modal.classList.remove('hidden');
+}
+
+async function loadHandFromData(id) {
+  const hands = await fetchAllHandsFromDB();
+  const target = hands.find(h => h.id === id);
+  if (!target) return;
+  AppState.history = target.history || [];
+  AppState.seats = target.seats || [];
+  AppState.board = target.board || ['', '', '', '', ''];
+  AppState.seatCount = target.seatCount || AppState.seatCount;
+  if (target.blind) AppState.blind = target.blind;
+  AppState.replayIndex = 0;
+  if (AppState.history.length > 0) {
+    Replay.stepTo(0);
+  }
+  document.getElementById('saved-hands-modal').classList.add('hidden');
+  showError(`✅ Hand #${id} を復元しました。リプレイ再生が可能です。`);
+}
+
+async function deleteSavedHand(id) {
+  await deleteHandFromDB(id);
+  renderSavedHandsModal();
 }
 
 // ===================================================

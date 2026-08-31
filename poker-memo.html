@@ -27,6 +27,11 @@
   </select>
 
   <button id="unit-toggle">表示: BB</button>
+
+  <!-- 共有・保存ボタン群 -->
+  <button onclick="copyHandText()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">📋 ハンドコピー</button>
+  <button onclick="renderSavedHandsModal()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">💾 保存履歴</button>
+  <button onclick="exportHandsJSON()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">📥 エクスポート</button>
 </header>
 
 <!-- ===== PC: 3カラム メインレイアウト ===== -->
@@ -160,7 +165,7 @@
   <div class="sheet-tabs">
     <button class="sheet-tab active" onclick="switchTab('input')">入力</button>
     <button class="sheet-tab" onclick="switchTab('settings')">ブラインド/スタック</button>
-    <button class="sheet-tab" onclick="switchTab('history')">履歴</button>
+    <button class="sheet-tab" onclick="switchTab('history')">履歴/共有</button>
   </div>
 
   <div class="sheet-content active" id="tab-input">
@@ -210,7 +215,12 @@
     <div class="seat-config-list" id="seat-config-list-m"></div>
   </div>
 
+  <!-- 履歴・共有タブ (スマホ) -->
   <div class="sheet-content" id="tab-history">
+    <div style="display:flex;gap:6px;margin-bottom:10px;">
+      <button onclick="copyHandText()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">📋 ハンドコピー</button>
+      <button onclick="renderSavedHandsModal()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">💾 保存履歴</button>
+    </div>
     <div class="timeline" id="action-timeline-m"></div>
     <input type="range" id="replay-bar-m" min="0" value="0" step="1" style="width:100%;margin-top:8px;accent-color:var(--accent);">
     <div style="display:flex;gap:6px;margin-top:8px;justify-content:center;">
@@ -231,6 +241,23 @@
     <button id="btn-confirm-winner">確定して配当</button>
     <button onclick="document.getElementById('winner-modal').classList.add('hidden')"
       style="padding:8px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);cursor:pointer;font-size:.8rem;">キャンセル</button>
+  </div>
+</div>
+
+<!-- 保存済みハンド一覧 モーダル -->
+<div class="modal-overlay hidden" id="saved-hands-modal">
+  <div class="modal-box" style="max-width:440px;">
+    <h2>💾 保存済みハンド履歴</h2>
+    <div id="saved-hands-list" style="max-height:300px;overflow-y:auto;"></div>
+    <div style="display:flex;gap:8px;margin-top:10px;">
+      <button onclick="exportHandsJSON()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.8rem;color:var(--text);cursor:pointer;">📥 バックアップ保存(JSON)</button>
+      <button onclick="document.getElementById('file-import-input').click()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.8rem;color:var(--text);cursor:pointer;">📤 復元(JSON選択)</button>
+      <input type="file" id="file-import-input" class="hidden" accept=".json" onchange="importHandsJSON(this.files[0])">
+    </div>
+    <button onclick="document.getElementById('saved-hands-modal').classList.add('hidden')"
+      style="padding:8px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);cursor:pointer;font-size:.8rem;margin-top:6px;">
+      閉じる
+    </button>
   </div>
 </div>
 
