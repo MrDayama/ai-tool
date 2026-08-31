@@ -5,7 +5,7 @@
  * Step 1: データ構造 & 状態管理
  * Step 2: NLHポーカーエンジン (HU判定, Min-Raise, Side Pot自動分割, Undo, All-in Runout)
  * Step 4: アクション録画 & IndexedDB
- * 機能拡張: ハンド履歴の保存・テキスト共有・JSONエクスポート/インポート
+ * 機能拡張: 4x13カードピッカー, ハンド履歴の保存・テキスト共有・JSONエクスポート/インポート
  */
 
 // ===================================================
@@ -22,6 +22,32 @@ const POSITIONS_BY_COUNT = {
   8:  ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP', 'HJ', 'CO'],
   9:  ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO'],
 };
+
+// 4x13 カード定義
+const SUITS = [
+  { symbol: '♠', code: 's', cssClass: 'suit-s', label: 'Spades' },
+  { symbol: '♥', code: 'h', cssClass: 'suit-h', label: 'Hearts' },
+  { symbol: '♦', code: 'd', cssClass: 'suit-d', label: 'Diamonds' },
+  { symbol: '♣', code: 'c', cssClass: 'suit-c', label: 'Clubs' }
+];
+
+const RANKS = [
+  { rank: 1,  code: 'A', label: 'A' },
+  { rank: 2,  code: '2', label: '2' },
+  { rank: 3,  code: '3', label: '3' },
+  { rank: 4,  code: '4', label: '4' },
+  { rank: 5,  code: '5', label: '5' },
+  { rank: 6,  code: '6', label: '6' },
+  { rank: 7,  code: '7', label: '7' },
+  { rank: 8,  code: '8', label: '8' },
+  { rank: 9,  code: '9', label: '9' },
+  { rank: 10, code: 'T', label: '10' },
+  { rank: 11, code: 'J', label: 'J' },
+  { rank: 12, code: 'Q', label: 'Q' },
+  { rank: 13, code: 'K', label: 'K' }
+];
+
+let activePickerSlot = null; // 'flop1', 'flop2', 'flop3', 'turn', 'river'
 
 // ===================================================
 // Step 1: データ構造
@@ -44,7 +70,6 @@ const AppState = {
   minRaise: 0,
   lastRaiseDelta: 0,
 
-  // リプレイ録画
   history: [],
   replayIndex: 0,
 };
@@ -357,6 +382,89 @@ function endHand(winnerCandidates) {
 }
 
 // ===================================================
+// 4x13 カードピッカー 制御関数
+// ===================================================
+
+function openCardPicker(slotId) {
+  activePickerSlot = slotId;
+  const labelEl = document.getElementById('picker-target-label');
+  if (labelEl) labelEl.textContent = slotId.toUpperCase();
+  renderCardPickerMatrix();
+  const modal = document.getElementById('card-picker-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeCardPicker() {
+  const modal = document.getElementById('card-picker-modal');
+  if (modal) modal.classList.add('hidden');
+  activePickerSlot = null;
+}
+
+function renderCardPickerMatrix() {
+  const container = document.getElementById('card-picker-matrix');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const usedCards = new Set(AppState.board.filter(c => c));
+
+  SUITS.forEach(suit => {
+    const row = document.createElement('div');
+    row.className = 'card-picker-row';
+
+    const iconLabel = document.createElement('div');
+    iconLabel.className = `suit-icon-label ${suit.cssClass}`;
+    iconLabel.textContent = suit.symbol;
+    row.appendChild(iconLabel);
+
+    RANKS.forEach(rankObj => {
+      const cardCode = `${rankObj.code}${suit.code}`;
+      const cardDisplay = `${rankObj.label}${suit.symbol}`;
+      const cell = document.createElement('div');
+      cell.className = `picker-card-cell ${suit.cssClass}`;
+      cell.textContent = cardDisplay;
+
+      if (usedCards.has(cardCode)) {
+        cell.classList.add('used');
+      } else {
+        cell.addEventListener('click', () => selectCardFromPicker(cardCode));
+      }
+      row.appendChild(cell);
+    });
+    container.appendChild(row);
+  });
+}
+
+function selectCardFromPicker(cardCode) {
+  if (!activePickerSlot) return;
+  const map = { flop1:0, flop2:1, flop3:2, turn:3, river:4 };
+  if (map[activePickerSlot] !== undefined) {
+    AppState.board[map[activePickerSlot]] = cardCode;
+  }
+  renderBoard();
+  closeCardPicker();
+}
+
+function applyManualCardInput() {
+  const input = document.getElementById('card-manual-input');
+  if (!input || !activePickerSlot) return;
+  const val = input.value.trim();
+  if (val) {
+    selectCardFromPicker(val);
+    input.value = '';
+  }
+}
+
+function clearCurrentCardSlot() {
+  if (!activePickerSlot) return;
+  const map = { flop1:0, flop2:1, flop3:2, turn:3, river:4 };
+  if (map[activePickerSlot] !== undefined) {
+    AppState.board[map[activePickerSlot]] = '';
+  }
+  renderBoard();
+  closeCardPicker();
+}
+
+// ===================================================
 // Step 4: 録画 & IndexedDB
 // ===================================================
 
@@ -430,9 +538,6 @@ function deleteHandFromDB(id) {
 // 共有・テキスト生成・JSON機能
 // ===================================================
 
-/**
- * SNS/掲示板用 ハンドテキスト自動生成
- */
 function generateHandText() {
   const { sb, bb, anteType, anteAmount } = AppState.blind;
   let txt = `🎴 [Poker Memo Hand History]\n`;
@@ -460,16 +565,12 @@ function generateHandText() {
   return txt;
 }
 
-/**
- * クリップボードへコピー
- */
 async function copyHandText() {
   const text = generateHandText();
   try {
     await navigator.clipboard.writeText(text);
     showError('✅ ハンドテキストをクリップボードにコピーしました！');
   } catch (err) {
-    // フォールバック
     const area = document.createElement('textarea');
     area.value = text;
     document.body.appendChild(area);
@@ -480,9 +581,6 @@ async function copyHandText() {
   }
 }
 
-/**
- * JSONエクスポート（ファイルダウンロード）
- */
 async function exportHandsJSON() {
   const hands = await fetchAllHandsFromDB();
   const jsonStr = JSON.stringify(hands, null, 2);
@@ -495,9 +593,6 @@ async function exportHandsJSON() {
   URL.revokeObjectURL(url);
 }
 
-/**
- * JSONインポート（ファイル読み込み）
- */
 function importHandsJSON(file) {
   const reader = new FileReader();
   reader.onload = async e => {
@@ -633,7 +728,21 @@ function renderPot() {
 function renderBoard() {
   ['flop1','flop2','flop3','turn','river'].forEach((id, i) => {
     const el = document.getElementById(`board-${id}`);
-    if (el) el.textContent = AppState.board[i] || '?';
+    if (el) {
+      const cardStr = AppState.board[i];
+      if (cardStr) {
+        // 例: 'As' -> 'A♠', 'Th' -> '10♥'
+        const rankStr = cardStr.slice(0, -1).replace('T', '10');
+        const suitChar = cardStr.slice(-1);
+        const suitMap = { s: '♠', h: '♥', d: '♦', c: '♣' };
+        const suitClassMap = { s: 'spades', h: 'hearts', d: 'diamonds', c: 'clubs' };
+        el.textContent = `${rankStr}${suitMap[suitChar] || ''}`;
+        el.className = `card-slot ${suitClassMap[suitChar] || ''}`;
+      } else {
+        el.textContent = '?';
+        el.className = 'card-slot';
+      }
+    }
   });
 }
 
@@ -667,9 +776,6 @@ function showWinnerSelector(candidates) {
   modal.classList.remove('hidden');
 }
 
-/**
- * 保存済みハンド一覧モーダルの描画
- */
 async function renderSavedHandsModal() {
   const modal = document.getElementById('saved-hands-modal');
   const list = document.getElementById('saved-hands-list');

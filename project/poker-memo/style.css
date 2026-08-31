@@ -31,7 +31,6 @@ body {
   color: var(--text);
   min-height: 100vh;
   overflow-x: hidden;
-  /* iOS Safari 安全領域 */
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
@@ -46,7 +45,6 @@ body {
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
-  /* スマホで高さが可変になるため固定しない */
   min-height: var(--header-h);
 }
 .header h1 { font-size: 1rem; font-weight: 700; letter-spacing: .5px; white-space: nowrap; }
@@ -127,7 +125,6 @@ body {
 /* ===== 円形SVGポーカー卓 ===== */
 #table-svg-wrap {
   position: relative;
-  /* min() の代わりに clamp 対応でフォールバック */
   width: 420px;
   width: min(420px, 90vw);
   height: 420px;
@@ -148,7 +145,6 @@ body {
   gap: 1px;
   cursor: pointer;
   transition: opacity .3s;
-  /* テキストが他の座席と重ならないよう最小幅を抑える */
   width: 72px;
   text-align: center;
 }
@@ -166,20 +162,16 @@ body {
   transition: border-color .3s, box-shadow .3s;
   flex-shrink: 0;
 }
-/* アクション中ハイライト */
 .seat-node.active-turn .seat-avatar {
   border-color: var(--yellow);
   box-shadow: 0 0 14px 4px var(--yellow);
 }
-/* 離席ディムアウト */
 .seat-node.away { opacity: .3; pointer-events: none; }
-/* フォルド */
 .seat-node.folded .seat-avatar {
   border-color: var(--border);
   background: #111;
   opacity: .45;
 }
-/* オールイン */
 .seat-node.all-in .seat-avatar {
   border-color: var(--red);
   box-shadow: 0 0 12px 3px var(--red);
@@ -196,7 +188,7 @@ body {
   display: flex;
   gap: 6px;
   justify-content: center;
-  flex-wrap: nowrap;    /* スマホで折り返さない */
+  flex-wrap: nowrap;
   max-width: 100%;
 }
 .card-slot {
@@ -210,10 +202,10 @@ body {
   font-size: .85rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background .2s;
+  transition: background .2s, border-color .2s;
   flex-shrink: 0;
 }
-.card-slot:hover  { background: var(--surface); }
+.card-slot:hover  { background: var(--surface); border-color: var(--yellow); }
 .card-slot.hearts, .card-slot.diamonds { color: #f85149; }
 .card-slot.spades, .card-slot.clubs    { color: var(--text); }
 
@@ -248,7 +240,6 @@ body {
   font-weight: 700;
   cursor: pointer;
   transition: filter .15s, transform .1s;
-  /* タッチ操作でのアクティブ感 */
   -webkit-tap-highlight-color: transparent;
 }
 .action-grid button:active { transform: scale(.96); }
@@ -292,8 +283,6 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   color: var(--text);
-  font-size: .85rem;
-  /* iOSでの zoom 防止 */
   font-size: max(.85rem, 16px);
 }
 .raise-custom button {
@@ -309,7 +298,6 @@ body {
 
 .min-raise-label { font-size: .74rem; color: var(--text-sub); margin-top: 4px; }
 
-/* ===== エラーメッセージ ===== */
 #error-msg, #error-msg-mobile {
   background: var(--red);
   color: #fff;
@@ -326,7 +314,6 @@ body {
   gap: 4px;
   max-height: 240px;
   overflow-y: auto;
-  /* スマホのスクロールを滑らかに */
   -webkit-overflow-scrolling: touch;
 }
 .timeline-item {
@@ -394,10 +381,8 @@ body {
   border: 1px solid var(--border);
   border-radius: 6px;
   padding: 4px 5px;
-  font-size: .76rem;
-  width: 100%;
-  /* iOSでの zoom 防止 */
   font-size: max(.76rem, 16px);
+  width: 100%;
 }
 .away-toggle {
   background: var(--surface2);
@@ -416,7 +401,6 @@ body {
   color: var(--yellow);
 }
 
-/* ===== レートプリセット ===== */
 .rate-presets { display: flex; flex-wrap: wrap; gap: 5px; }
 .rate-preset {
   padding: 5px 10px;
@@ -431,7 +415,6 @@ body {
 .rate-preset:hover,
 .rate-preset:active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-/* ===== New Hand ボタン ===== */
 #btn-new-hand {
   width: 100%;
   padding: 11px;
@@ -447,7 +430,7 @@ body {
 }
 #btn-new-hand:hover { filter: brightness(1.15); }
 
-/* ===== Winner選択モーダル ===== */
+/* ===== モーダル ===== */
 .modal-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,.75);
@@ -455,7 +438,7 @@ body {
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 16px;  /* スマホで左右余白を確保 */
+  padding: 16px;
 }
 .modal-box {
   background: var(--surface);
@@ -463,7 +446,7 @@ body {
   border-radius: var(--radius);
   padding: 20px;
   width: 100%;
-  max-width: 360px;  /* スマホ幅に収まる最大幅 */
+  max-width: 360px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -471,53 +454,87 @@ body {
   overflow-y: auto;
 }
 .modal-box h2 { font-size: 1rem; }
-#winner-list { display: flex; flex-direction: column; gap: 8px; }
-.winner-btn {
-  padding: 12px 14px;
-  background: var(--surface2);
-  border: 2px solid var(--border);
-  border-radius: 8px;
-  color: var(--text);
-  font-size: .88rem;
-  cursor: pointer;
-  text-align: left;
-  -webkit-tap-highlight-color: transparent;
+
+/* ===== 4x13 カードピッカーモーダル ===== */
+.card-picker-box {
+  max-width: 620px !important;
 }
-.winner-btn.selected { border-color: var(--yellow); background: #4a3500; }
-#btn-confirm-winner {
-  padding: 12px;
-  background: var(--green);
-  color: #fff;
-  border: none;
-  border-radius: 8px;
+.card-picker-matrix {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0;
+  -webkit-overflow-scrolling: touch;
+}
+.card-picker-row {
+  display: grid;
+  grid-template-columns: 24px repeat(13, 1fr);
+  gap: 4px;
+  align-items: center;
+  min-width: 520px;
+}
+.suit-icon-label {
+  font-size: 1.1rem;
+  font-weight: 700;
+  text-align: center;
+  line-height: 1;
+}
+.suit-s { color: #e6edf3; } /* Spades: 黒/白 */
+.suit-h { color: #f85149; } /* Hearts: 赤 */
+.suit-d { color: #58a6ff; } /* Diamonds: 青 */
+.suit-c { color: #3fb950; } /* Clubs: 緑 */
+
+.picker-card-cell {
+  aspect-ratio: 2/3;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: .78rem;
   font-weight: 700;
   cursor: pointer;
-  font-size: .9rem;
+  padding: 2px;
+  transition: border-color .15s, transform .1s;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+.picker-card-cell:hover, .picker-card-cell:active {
+  border-color: var(--yellow);
+  transform: scale(1.1);
+  z-index: 2;
+}
+.picker-card-cell.used {
+  opacity: .25;
+  cursor: not-allowed;
+  filter: grayscale(1);
+  pointer-events: none;
+}
+.picker-card-cell.selected {
+  border-color: var(--yellow);
+  box-shadow: 0 0 8px var(--yellow);
 }
 
-/* =========================================
-   スマホ: ボトムシートレイアウト (<= 900px)
-   ========================================= */
+/* ===== スマホ: ボトムシートレイアウト (<= 900px) ===== */
 @media (max-width: 900px) {
-  /* 3カラムを縦積みに変更 */
   .main-layout {
     display: flex;
     flex-direction: column;
     height: auto;
     min-height: 100vh;
   }
-  /* 左右パネルはスマホでは非表示（ボトムシートに統合） */
   .left-panel  { display: none; }
   .right-panel { display: none; }
 
   .center-panel {
     padding: 10px 10px 0;
     width: 100%;
-    /* ボトムシート分の余白 (固定ボトムシートに隠れないよう確保) */
     padding-bottom: calc(var(--sheet-h) + 16px);
   }
 
-  /* 座席サイズをスマホ向けに縮小 */
   :root { --seat-size: 52px; }
 
   #table-svg-wrap {
@@ -527,10 +544,8 @@ body {
     aspect-ratio: 1 / 1;
   }
 
-  /* ボードカードをスマホサイズに */
   .card-slot { width: 34px; height: 48px; font-size: .78rem; }
 
-  /* ボトムシート */
   .bottom-sheet {
     position: fixed;
     bottom: 0; left: 0; right: 0;
@@ -543,11 +558,9 @@ body {
     max-height: var(--sheet-h);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    /* 引き出しハンドル */
     box-shadow: 0 -4px 20px rgba(0,0,0,.5);
   }
 
-  /* 引き出しハンドル装飾 */
   .bottom-sheet::before {
     content: '';
     display: block;
@@ -557,7 +570,6 @@ body {
     margin: 0 auto 10px;
   }
 
-  /* タブ */
   .sheet-tabs {
     display: flex;
     gap: 3px;
@@ -586,20 +598,17 @@ body {
     color: var(--text);
     font-weight: 600;
   }
-  .sheet-content         { display: none; }
-  .sheet-content.active  { display: block; }
+  .sheet-content        { display: none; }
+  .sheet-content.active { display: block; }
 
-  /* スマホでのアクションボタン: 指が当てやすいよう大きく */
   .action-grid button { padding: 16px 6px; font-size: .9rem; }
   .raise-mult { padding: 10px 4px; }
 }
 
-/* ===== PC ではボトムシートを非表示 ===== */
 @media (min-width: 901px) {
   .bottom-sheet { display: none; }
 }
 
-/* ===== タブレット中間サイズ (600px〜900px) 対応 ===== */
 @media (min-width: 600px) and (max-width: 900px) {
   .center-panel { align-items: center; }
   #table-svg-wrap { max-width: 480px; }

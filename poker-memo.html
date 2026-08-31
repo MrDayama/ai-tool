@@ -119,14 +119,15 @@
       <div id="seats-container" style="position:absolute;inset:0;"></div>
     </div>
 
+    <!-- ボードカード (4x13カードピッカー起動) -->
     <div class="board-area">
-      <div class="card-slot" id="board-flop1" onclick="promptCard('flop1')">?</div>
-      <div class="card-slot" id="board-flop2" onclick="promptCard('flop2')">?</div>
-      <div class="card-slot" id="board-flop3" onclick="promptCard('flop3')">?</div>
+      <div class="card-slot" id="board-flop1" onclick="openCardPicker('flop1')">?</div>
+      <div class="card-slot" id="board-flop2" onclick="openCardPicker('flop2')">?</div>
+      <div class="card-slot" id="board-flop3" onclick="openCardPicker('flop3')">?</div>
       <div style="width:4px;"></div>
-      <div class="card-slot" id="board-turn"  onclick="promptCard('turn')">?</div>
+      <div class="card-slot" id="board-turn"  onclick="openCardPicker('turn')">?</div>
       <div style="width:4px;"></div>
-      <div class="card-slot" id="board-river" onclick="promptCard('river')">?</div>
+      <div class="card-slot" id="board-river" onclick="openCardPicker('river')">?</div>
     </div>
   </main>
 
@@ -261,6 +262,22 @@
   </div>
 </div>
 
+<!-- 4x13 カードピッカー モーダル -->
+<div class="modal-overlay hidden" id="card-picker-modal">
+  <div class="modal-box card-picker-box">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <h2>🎴 カードを選択 (<span id="picker-target-label">--</span>)</h2>
+      <button onclick="closeCardPicker()" style="background:transparent;border:none;color:var(--text-sub);font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+    <div class="card-picker-matrix" id="card-picker-matrix"></div>
+    <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
+      <input type="text" id="card-manual-input" placeholder="手入力 (例: As, Kh, Td, 2c)" style="flex:1;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem;">
+      <button onclick="applyManualCardInput()" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.85rem;font-weight:700;cursor:pointer;">決定</button>
+      <button onclick="clearCurrentCardSlot()" style="padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.85rem;color:var(--red);cursor:pointer;">クリア</button>
+    </div>
+  </div>
+</div>
+
 <script src="project/poker-memo/app.js"></script>
 <script>
 function switchTab(tab) {
@@ -296,14 +313,6 @@ function applyDefaultStack() {
   const bbCount = parseFloat(input ? input.value : 100) || 100;
   AppState.seats.forEach(s => { s.stack = bbCount * bbVal; });
   renderAll();
-}
-
-function promptCard(slotId) {
-  const val = prompt('カードを入力 (例: As, Kh, Td, 2c)');
-  if (!val) return;
-  const map = { flop1:0, flop2:1, flop3:2, turn:3, river:4 };
-  AppState.board[map[slotId]] = val.trim();
-  renderBoard();
 }
 
 function renderSeatConfigUI() {
