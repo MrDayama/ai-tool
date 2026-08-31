@@ -931,23 +931,4 @@ function bindEvents() {
   });
 }
 
-// グローバル関数バインド（ボタンイベント確実に発火）
-window.actionFold = actionFold;
-window.actionCheck = actionCheck;
-window.actionCall = actionCall;
-window.actionRaise = actionRaise;
-window.actionAllIn = actionAllIn;
-window.actionUndo = undoAction;
-window.startNewHand = startNewHand;
-window.openCardPicker = openCardPicker;
-window.closeCardPicker = closeCardPicker;
-window.applyManualCardInput = applyManualCardInput;
-window.clearCurrentCardSlot = clearCurrentCardSlot;
-window.copyHandText = copyHandText;
-window.exportHandsJSON = exportHandsJSON;
-window.importHandsJSON = importHandsJSON;
-window.loadHandFromData = loadHandFromData;
-window.deleteSavedHand = deleteSavedHand;
-
 window.addEventListener('DOMContentLoaded', init);
-
