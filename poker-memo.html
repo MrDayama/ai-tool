@@ -76,7 +76,10 @@
     <button id="btn-new-hand">▶ New Hand 開始</button>
 
     <div class="card" id="action-panel-pc">
-      <h3>アクション入力</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="margin-bottom:0">アクション入力</h3>
+        <button onclick="undoAction()" style="background:var(--surface);border:1px solid var(--border);color:var(--text-sub);border-radius:5px;padding:3px 8px;font-size:.72rem;cursor:pointer;">↩ Undo (1手戻る)</button>
+      </div>
       <div id="error-msg" class="hidden"></div>
       <div class="action-grid">
         <button id="btn-fold"  class="btn-fold">FOLD</button>
@@ -162,6 +165,10 @@
 
   <div class="sheet-content active" id="tab-input">
     <div id="error-msg-mobile" class="hidden" style="background:var(--red);color:#fff;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:600;margin-bottom:8px;"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:.78rem;color:var(--text-sub)">アクション</span>
+      <button onclick="undoAction()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-sub);border-radius:5px;padding:3px 10px;font-size:.75rem;cursor:pointer;">↩ Undo</button>
+    </div>
     <div class="action-grid">
       <button id="btn-fold-m"  class="btn-fold"  onclick="actionFold()">FOLD</button>
       <button id="btn-call-m"  class="btn-call">CHECK / CALL</button>
@@ -378,7 +385,6 @@ function updateTimeline() {
   });
 }
 
-// renderAll を拡張
 var _origRenderAll = renderAll;
 window.renderAll = function() {
   renderSeatsDOM();

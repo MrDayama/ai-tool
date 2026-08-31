@@ -91,7 +91,10 @@
 
     <!-- アクションキーパッド (PCのみ) -->
     <div class="card" id="action-panel-pc">
-      <h3>アクション入力</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="margin-bottom:0">アクション入力</h3>
+        <button onclick="undoAction()" style="background:var(--surface);border:1px solid var(--border);color:var(--text-sub);border-radius:5px;padding:3px 8px;font-size:.72rem;cursor:pointer;">↩ Undo (1手戻る)</button>
+      </div>
       <div id="error-msg" class="hidden"></div>
       <div class="action-grid">
         <button id="btn-fold"  class="btn-fold">FOLD</button>
@@ -189,6 +192,10 @@
   <!-- 入力タブ -->
   <div class="sheet-content active" id="tab-input">
     <div id="error-msg-mobile" class="hidden" style="background:var(--red);color:#fff;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:600;margin-bottom:8px;"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+      <span style="font-size:.78rem;color:var(--text-sub)">アクション</span>
+      <button onclick="undoAction()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-sub);border-radius:5px;padding:3px 10px;font-size:.75rem;cursor:pointer;">↩ Undo</button>
+    </div>
     <div class="action-grid">
       <button id="btn-fold-m"  class="btn-fold"  onclick="actionFold()">FOLD</button>
       <button id="btn-call-m"  class="btn-call">CHECK / CALL</button>
@@ -297,7 +304,6 @@ function applyDefaultStack() {
   const bbVal = AppState.blind.bb;
   const input = document.getElementById('default-stack');
   const bbCount = parseFloat(input?.value) || 100;
-  // BB数入力の場合、内部 s.stack（絶対値）= BB数 * BB単価
   AppState.seats.forEach(s => { s.stack = bbCount * bbVal; });
   renderAll();
 }
@@ -333,7 +339,6 @@ function renderSeatConfigUI() {
         </button>`;
       list.appendChild(row);
     });
-    // イベント再バインド
     list.querySelectorAll('.player-name-input').forEach(input => {
       input.addEventListener('change', e => {
         const idx = parseInt(input.dataset.seat);
@@ -345,7 +350,6 @@ function renderSeatConfigUI() {
       input.addEventListener('change', e => {
         const idx = parseInt(input.dataset.seat);
         const val = parseFloat(e.target.value) || 0;
-        // 表示単位が BB の場合は内部金額（val * bbVal）に変換して保持
         AppState.seats[idx].stack = isBBUnit ? val * bbVal : val;
         renderSeats();
       });
@@ -369,7 +373,6 @@ function renderSeatsDOM() {
   const n = AppState.seatCount;
   const cx = 50, cy = 50;  // % 中心
   const rx = 40, ry = 30;  // % 半径
-  // 既存ノードを更新 or 生成
   AppState.seats.forEach((seat, i) => {
     let node = document.getElementById(`seat-${i}`);
     if (!node) {
@@ -386,21 +389,18 @@ function renderSeatsDOM() {
         <div class="seat-bet"></div>`;
       container.appendChild(node);
     }
-    // 座席位置を円形に配置
     const angle = (2 * Math.PI * i / n) - Math.PI / 2;
     const x = cx + rx * Math.cos(angle);
     const y = cy + ry * Math.sin(angle);
     node.style.left = `${x}%`;
     node.style.top  = `${y}%`;
   });
-  // 余分なノードを削除
   document.querySelectorAll('.seat-node').forEach(node => {
     const idx = parseInt(node.id.replace('seat-',''));
     if (idx >= n) node.remove();
   });
 }
 
-// アクションタイムラインを更新
 function updateTimeline() {
   ['action-timeline', 'action-timeline-m'].forEach(id => {
     const el = document.getElementById(id);
@@ -424,7 +424,6 @@ function updateTimeline() {
     });
     el.scrollTop = el.scrollHeight;
   });
-  // リプレイバー最大値更新
   const bars = ['replay-bar', 'replay-bar-m'];
   bars.forEach(id => {
     const bar = document.getElementById(id);
@@ -432,7 +431,6 @@ function updateTimeline() {
   });
 }
 
-// renderAll をオーバーライドして座席DOM描画・タイムライン更新も含める
 const _origRenderAll = renderAll;
 window.renderAll = function() {
   renderSeatsDOM();
@@ -441,7 +439,6 @@ window.renderAll = function() {
   updateTimeline();
 };
 
-// スピードボタンのトグル
 document.querySelectorAll('.speed-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
@@ -449,7 +446,6 @@ document.querySelectorAll('.speed-btn').forEach(btn => {
   });
 });
 
-// コールボタン（スマホ側）
 document.getElementById('btn-call-m')?.addEventListener('click', actionCall);
 document.getElementById('btn-fold-m')?.addEventListener('click', actionFold);
 document.getElementById('btn-allin-m')?.addEventListener('click', actionAllIn);
@@ -465,7 +461,6 @@ document.querySelectorAll('.raise-mult-m').forEach(btn => {
   });
 });
 
-// 入力同期（SB/BB モバイル版）
 document.getElementById('input-sb-m')?.addEventListener('input', e => {
   AppState.blind.sb = parseFloat(e.target.value) || 1;
   const pc = document.getElementById('input-sb');
