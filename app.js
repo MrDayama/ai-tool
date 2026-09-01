@@ -1488,6 +1488,9 @@ function animateSingleSeatGather(seatIndex) {
 function ensureSeatNodes() {
   const container = document.getElementById('seats-container');
   if (!container) return;
+  if (!AppState.seats || AppState.seats.length === 0) {
+    if (typeof initSeatsList === 'function') initSeatsList();
+  }
 
   const count = AppState.seatCount || (AppState.seats ? AppState.seats.length : 6);
   const currentNodes = container.querySelectorAll('.seat-node');
