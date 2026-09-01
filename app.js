@@ -1162,8 +1162,17 @@ const Replay = {
         }
       });
     }
+    const prevStreet = AppState.street;
     if (step.street) AppState.street = step.street;
     if (step.currentSeatIndex !== undefined) AppState.currentSeatIndex = step.currentSeatIndex;
+
+    // 全員のアクション完了・ストリート切替時のPot吸い込み集金演出
+    if (prevStreet && step.street && prevStreet !== step.street) {
+      document.querySelectorAll('.seat-bet').forEach(el => {
+        el.classList.add('gather-anim');
+        setTimeout(() => el.classList.remove('gather-anim'), 450);
+      });
+    }
 
     renderAll();
 

@@ -336,65 +336,76 @@ body {
   letter-spacing: .5px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
-/* ===== 🎴 ポーカーチェイス風 大型高視認性トランプカード ===== */
+/* ===== 🎴 KKPoker / Poker Chase 風 超視認性大型トランプカード ===== */
 .seat-cards-badge {
   display: flex;
-  gap: 3px;
+  gap: 4px;
   position: absolute;
-  top: -26px;
+  top: -32px;
   left: 50%;
   transform: translateX(-50%);
-  z-index: 20;
+  z-index: 25;
   pointer-events: none;
 }
 
 .mini-card {
-  width: 26px;
-  height: 34px;
-  font-size: .88rem;
+  width: 32px;
+  height: 44px;
+  font-size: 1.15rem;
   font-weight: 900;
   background: #ffffff !important;
-  border: 1.5px solid #d0d7de;
-  border-radius: 5px;
+  border: 2px solid #0d1117;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.95);
   line-height: 1;
 }
 
-.mini-card.hearts, .mini-card.diamonds { color: #d9383a !important; }
-.mini-card.spades, .mini-card.clubs    { color: #0f1419 !important; }
+.mini-card.hearts, .mini-card.diamonds { color: #e60000 !important; }
+.mini-card.spades, .mini-card.clubs    { color: #000000 !important; }
 
 .mini-card.card-back {
-  background: linear-gradient(135deg, #1f6feb 0%, #082d6c 100%) !important;
-  color: #ffffff !important;
-  border: 1.5px solid #58a6ff;
-  font-size: .75rem;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+  background: linear-gradient(135deg, #1e40af 0%, #0f172a 100%) !important;
+  color: #fbbf24 !important;
+  border: 2px solid #3b82f6;
+  font-size: 1.05rem;
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.95);
 }
 
-/* 🪙 アクション連動 物理スライドチップ移動アニメーション */
+/* 🪙 チップ前出し ＆ ストリート移行時ポット集金 (Gather to Pot) アニメーション */
 .seat-bet {
-  font-size: .75rem;
-  font-weight: 800;
-  color: #f0b72f;
+  font-size: .8rem;
+  font-weight: 900;
+  color: #fbbf24;
   white-space: nowrap;
-  background: #0d1117;
-  padding: 3px 10px;
-  border-radius: 14px;
-  border: 1.5px solid #f0b72f;
+  background: #090d16;
+  padding: 3px 12px;
+  border-radius: 16px;
+  border: 2px solid #fbbf24;
   display: inline-block;
   margin-top: 4px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.9);
   position: relative;
-  z-index: 12;
-  animation: chipSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 15;
+  transition: all 0.3s ease;
+  animation: chipSlideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 @keyframes chipSlideIn {
-  0% { transform: scale(0.3) translateY(-18px); opacity: 0; }
+  0% { transform: scale(0.3) translateY(-20px); opacity: 0; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* 全員のアクション完了時・ポット吸い込み集金アニメーション */
+.seat-bet.gather-anim {
+  animation: gatherToPot 0.45s forwards ease-in-out !important;
+}
+
+@keyframes gatherToPot {
+  0% { transform: scale(1) translateY(0); opacity: 1; }
+  100% { transform: scale(0.1) translateY(-50px); opacity: 0; }
 }
 
 /* ===== ボードカード ===== */
