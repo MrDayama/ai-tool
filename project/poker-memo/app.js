@@ -1060,6 +1060,16 @@ function showWinnerSelector(candidates) {
   modal.classList.remove('hidden');
 }
 
+function selectHeroSeat(idx) {
+  AppState.heroSeatIndex = idx;
+  AppState.seats.forEach((s, seatIdx) => {
+    s.isHero = (seatIdx === idx);
+  });
+  renderAll();
+  showError(`★ Hero(自分)の位置を ${getPositionName(idx)} に指定しました`);
+}
+window.selectHeroSeat = selectHeroSeat;
+
 function renderSeatConfigUI() {
   const isBBUnit = AppState.blind.displayUnit === 'bb';
   const bbVal = AppState.blind.bb || 1;
@@ -1075,8 +1085,10 @@ function renderSeatConfigUI() {
     heroBox.className = 'hero-setup-box';
     heroBox.style.cssText = 'background:linear-gradient(135deg, #2b2512 0%, #161b22 100%);border:2px solid var(--yellow);border-radius:8px;padding:10px 12px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.4);';
     
-    const card1Val = heroSeat?.holeCards?.[0] ? formatCardDisplay(heroSeat.holeCards[0]) : '?';
-    const card2Val = heroSeat?.holeCards?.[1] ? formatCardDisplay(heroSeat.holeCards[1]) : '?';
+    const c1 = heroSeat?.holeCards?.[0];
+    const c2 = heroSeat?.holeCards?.[1];
+    const card1Val = (c1 && c1 !== '') ? formatCardDisplay(c1) : '?';
+    const card2Val = (c2 && c2 !== '') ? formatCardDisplay(c2) : '?';
 
     heroBox.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
@@ -1087,10 +1099,10 @@ function renderSeatConfigUI() {
       </div>
       <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
         <span style="font-size:.8rem;color:var(--text);font-weight:600;">自分手札:</span>
-        <div class="card-slot ${heroSeat?.holeCards?.[0] ? 'filled' : ''}" onclick="openCardPicker('hero1')" style="width:44px;height:56px;font-size:.9rem;cursor:pointer;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--surface);">
+        <div class="card-slot ${(c1 && c1 !== '') ? 'filled' : ''}" onclick="openCardPicker('hero1')" style="width:44px;height:56px;font-size:.9rem;cursor:pointer;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--surface);">
           ${card1Val}
         </div>
-        <div class="card-slot ${heroSeat?.holeCards?.[1] ? 'filled' : ''}" onclick="openCardPicker('hero2')" style="width:44px;height:56px;font-size:.9rem;cursor:pointer;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--surface);">
+        <div class="card-slot ${(c2 && c2 !== '') ? 'filled' : ''}" onclick="openCardPicker('hero2')" style="width:44px;height:56px;font-size:.9rem;cursor:pointer;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--surface);">
           ${card2Val}
         </div>
         <button onclick="clearHeroCards()" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.75rem;color:var(--red);cursor:pointer;font-weight:600;">クリア</button>
@@ -1122,7 +1134,7 @@ function renderSeatConfigUI() {
             ${isHero ? '<span style="background:var(--yellow);color:#000;font-size:.68rem;font-weight:800;padding:2px 6px;border-radius:4px;">★ HERO (自分)</span>' : ''}
           </div>
           <div style="display:flex;gap:6px;">
-            ${!isHero ? `<button class="select-hero-btn" data-seat="${i}" style="background:var(--surface2);color:var(--yellow);border:1px solid var(--yellow);border-radius:4px;padding:4px 8px;font-size:.72rem;font-weight:700;cursor:pointer;">★ 自分に指定</button>` : ''}
+            ${!isHero ? `<button onclick="selectHeroSeat(${i})" style="background:var(--surface2);color:var(--yellow);border:1.5px solid var(--yellow);border-radius:4px;padding:4px 10px;font-size:.75rem;font-weight:800;cursor:pointer;">★ 自分(Hero)に指定</button>` : ''}
             <button class="away-toggle ${seat.isAway ? 'away-on' : ''}" data-seat="${i}" style="padding:4px 8px;font-size:.72rem;border-radius:4px;cursor:pointer;">
               ${seat.isAway ? '離席中' : '在席'}
             </button>
@@ -1136,15 +1148,6 @@ function renderSeatConfigUI() {
           </div>
         </div>`;
       list.appendChild(item);
-    });
-
-    list.querySelectorAll('.select-hero-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.seat);
-        AppState.heroSeatIndex = idx;
-        AppState.seats.forEach((s, seatIdx) => { s.isHero = (seatIdx === idx); });
-        renderAll();
-      });
     });
 
     list.querySelectorAll('.player-name-input').forEach(input => {
