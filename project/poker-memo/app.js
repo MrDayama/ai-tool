@@ -1702,8 +1702,21 @@ function renderSeats() {
     }
 
     const posName = getPositionName(i);
-    el.querySelector('.seat-name').textContent = `${posName} P${i + 1}`;
-    el.querySelector('.seat-stack').textContent = formatAmount(seat.stack);
+    const displayName = isHero ? `${posName} (Hero)` : `${posName}`;
+    const nameEl = el.querySelector('.seat-name');
+    if (nameEl) {
+      nameEl.textContent = displayName;
+      nameEl.style.whiteSpace = 'nowrap';
+      nameEl.style.overflow = 'visible';
+      nameEl.style.fontSize = '0.72rem';
+    }
+    const stackEl = el.querySelector('.seat-stack');
+    if (stackEl) {
+      stackEl.textContent = `${formatAmount(seat.stack)} BB`;
+      stackEl.style.color = '#f59e0b';
+      stackEl.style.fontSize = '0.62rem';
+      stackEl.style.marginTop = '1px';
+    }
     
     // 🪙 投入チップ(seat-bet)の物理スライド投下バッジ描画
     const betEl = el.querySelector('.seat-bet');

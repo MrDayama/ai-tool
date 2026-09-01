@@ -1,9 +1,9 @@
 /**
  * Map Canvas Engine
- * 高精度・実物全景見取り図マップ画像 (The Skeld / MIRA HQ / Polus / Airship / Fungle) レンダリングエンジン
+ * 公式日本語・英語併記の精密見取り図マップ (The Skeld / MIRA HQ / Polus / Airship / Fungle) レンダリングエンジン
  */
 
-// ローカルに完全に配置された実物高画質マップ画像
+// ローカルに完全に配置された公式日本語表記入り実物高画質マップ画像
 const MAP_IMAGE_PATHS = {
   skeld: 'assets/maps/skeld.png',
   mira: 'assets/maps/mira.png',
@@ -12,13 +12,22 @@ const MAP_IMAGE_PATHS = {
   fungle: 'assets/maps/fungle.png',
 };
 
+// マップの公式表示名（英語名＋日本語名）
+const MAP_DISPLAY_NAMES = {
+  skeld: 'The Skeld (スケルド)',
+  mira: 'MIRA HQ (ミラHQ)',
+  polus: 'Polus (ポーラス)',
+  airship: 'The Airship (エアシップ / 飛行船)',
+  fungle: 'The Fungle (ファングル)',
+};
+
 // 各マップにおける停電サボタージュ配電盤の正確な相対座標 (%: xPct, yPct)
 const SABOTAGE_COORDINATES = {
-  skeld: { lights: { xPct: 35, yPct: 58, name: 'Electrical (電気室)' } },
-  mira: { lights: { xPct: 62, yPct: 22, name: 'Office (オフィス)' } },
-  polus: { lights: { xPct: 22, yPct: 52, name: 'Electrical (電気室)' } },
-  airship: { lights: { xPct: 60, yPct: 78, name: 'Electrical (電気室)' } },
-  fungle: { lights: { xPct: 31, yPct: 18, name: 'Lookout (展望台)' } },
+  skeld: { lights: { xPct: 35, yPct: 58, name: '電気室 (Electrical)' } },
+  mira: { lights: { xPct: 62, yPct: 50, name: 'オフィス (Office)' } },
+  polus: { lights: { xPct: 40, yPct: 20, name: '電気室 (Electrical)' } },
+  airship: { lights: { xPct: 50, yPct: 78, name: '電気室 (Electrical)' } },
+  fungle: { lights: { xPct: 62, yPct: 78, name: '発電機 (Generator)' } },
 };
 
 class MapEngine {
@@ -51,7 +60,7 @@ class MapEngine {
 
   initCanvasSize() {
     this.canvas.width = 960;
-    this.canvas.height = 540; // 16:9 アスペクト比に完全適合
+    this.canvas.height = 540; // 16:9 アスペクト比に適合
     this.render();
   }
 
@@ -230,7 +239,7 @@ class MapEngine {
   render() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // 1. 実物高精度全景見取り図マップの背景描画
+    // 1. 公式日本語表記入り実物見取り図マップの背景描画
     this.drawRealBlueprintMapImage();
 
     // 2. ユーザー描画線
@@ -283,17 +292,18 @@ class MapEngine {
       ctx.fillText(`MAP: [${this.currentMapId.toUpperCase()}] 高解像度見取り図マップ読み込み中...`, w / 2, h / 2);
     }
 
-    // マップ名ラベル
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.fillRect(w - 220, 10, 210, 32);
+    // マップ名ラベルヘッダー（公式日本語表示）
+    const mapNameText = MAP_DISPLAY_NAMES[this.currentMapId] || this.currentMapId.toUpperCase();
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
+    ctx.fillRect(w - 290, 10, 280, 34);
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(w - 220, 10, 210, 32);
+    ctx.strokeRect(w - 290, 10, 280, 34);
 
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 14px system-ui';
+    ctx.font = 'bold 13px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText(`MAP: ${this.currentMapId.toUpperCase()}`, w - 115, 31);
+    ctx.fillText(`MAP: ${mapNameText}`, w - 150, 32);
   }
 
   drawPlayerPin(pin) {
