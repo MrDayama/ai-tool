@@ -1510,7 +1510,6 @@ function ensureSeatNodes() {
   }
 
   const count = AppState.seatCount || (AppState.seats ? AppState.seats.length : 6);
-  if (container.querySelectorAll('.seat-node').length === count) return;
   container.innerHTML = '';
 
   const cx = 50;
