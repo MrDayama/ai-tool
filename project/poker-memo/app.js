@@ -858,18 +858,126 @@ async function seedSampleHands(force = false) {
         { id: 6, name: 'Seat 5 (CO)', stack: 100, betAmount: 0, isFolded: true, isAllIn: false, holeCards: ['', ''] },
       ],
       history: [
-        { street: 'preflop', seatIndex: 3, action: 'start', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 5, sides: [] } },
-        { street: 'preflop', seatIndex: 3, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 5, sides: [] } },
-        { street: 'preflop', seatIndex: 4, action: 'raise', amount: 6, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 11, sides: [] } },
-        { street: 'preflop', seatIndex: 5, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 11, sides: [] } },
-        { street: 'preflop', seatIndex: 0, action: 'raise', amount: 18, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 29, sides: [] } },
-        { street: 'preflop', seatIndex: 1, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 29, sides: [] } },
-        { street: 'preflop', seatIndex: 2, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 29, sides: [] } },
-        { street: 'preflop', seatIndex: 4, action: 'allin', amount: 100, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 123, sides: [] } },
-        { street: 'preflop', seatIndex: 0, action: 'call', amount: 82, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 205, sides: [] } },
-        { street: 'flop', seatIndex: 0, action: 'check', amount: 0, boardSnapshot: ['J♠', '7♦', '2♣', '', ''], potSnapshot: { main: 205, sides: [] } },
-        { street: 'turn', seatIndex: 0, action: 'check', amount: 0, boardSnapshot: ['J♠', '7♦', '2♣', '5♥', ''], potSnapshot: { main: 205, sides: [] } },
-        { street: 'river', seatIndex: 0, action: 'check', amount: 0, boardSnapshot: ['J♠', '7♦', '2♣', '5♥', '3♠'], potSnapshot: { main: 205, sides: [] } },
+        { street: 'preflop', seatIndex: 3, action: 'start', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 5, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 100, betAmount: 0, isFolded: false, isAllIn: false },
+            { id: 2, stack: 99, betAmount: 1, isFolded: false, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 2, isFolded: false, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: false, isAllIn: false },
+            { id: 5, stack: 100, betAmount: 0, isFolded: false, isAllIn: false },
+            { id: 6, stack: 100, betAmount: 0, isFolded: false, isAllIn: false }
+          ]
+        },
+        { street: 'preflop', seatIndex: 3, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 5, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 100, betAmount: 0, isFolded: false, isAllIn: false },
+            { id: 2, stack: 99, betAmount: 1, isFolded: false, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 2, isFolded: false, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 5, stack: 100, betAmount: 0, isFolded: false, isAllIn: false },
+            { id: 6, stack: 100, betAmount: 0, isFolded: false, isAllIn: false }
+          ]
+        },
+        { street: 'preflop', seatIndex: 4, action: 'raise', amount: 6, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 11, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 100, betAmount: 0, isFolded: false, isAllIn: false },
+            { id: 2, stack: 99, betAmount: 1, isFolded: false, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 2, isFolded: false, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 5, stack: 94, betAmount: 6, isFolded: false, isAllIn: false },
+            { id: 6, stack: 100, betAmount: 0, isFolded: false, isAllIn: false }
+          ]
+        },
+        { street: 'preflop', seatIndex: 5, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 11, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 100, betAmount: 0, isFolded: false, isAllIn: false },
+            { id: 2, stack: 99, betAmount: 1, isFolded: false, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 2, isFolded: false, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 5, stack: 94, betAmount: 6, isFolded: false, isAllIn: false },
+            { id: 6, stack: 100, betAmount: 0, isFolded: true, isAllIn: false }
+          ]
+        },
+        { street: 'preflop', seatIndex: 0, action: 'raise', amount: 18, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 29, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 82, betAmount: 18, isFolded: false, isAllIn: false },
+            { id: 2, stack: 99, betAmount: 1, isFolded: false, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 2, isFolded: false, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 5, stack: 94, betAmount: 6, isFolded: false, isAllIn: false },
+            { id: 6, stack: 100, betAmount: 0, isFolded: true, isAllIn: false }
+          ]
+        },
+        { street: 'preflop', seatIndex: 1, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 29, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 82, betAmount: 18, isFolded: false, isAllIn: false },
+            { id: 2, stack: 99, betAmount: 1, isFolded: true, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 2, isFolded: false, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 5, stack: 94, betAmount: 6, isFolded: false, isAllIn: false },
+            { id: 6, stack: 100, betAmount: 0, isFolded: true, isAllIn: false }
+          ]
+        },
+        { street: 'preflop', seatIndex: 2, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 29, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 82, betAmount: 18, isFolded: false, isAllIn: false },
+            { id: 2, stack: 99, betAmount: 1, isFolded: true, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 2, isFolded: true, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 5, stack: 94, betAmount: 6, isFolded: false, isAllIn: false },
+            { id: 6, stack: 100, betAmount: 0, isFolded: true, isAllIn: false }
+          ]
+        },
+        { street: 'preflop', seatIndex: 4, action: 'allin', amount: 100, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 123, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 82, betAmount: 18, isFolded: false, isAllIn: false },
+            { id: 2, stack: 99, betAmount: 1, isFolded: true, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 2, isFolded: true, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 5, stack: 0, betAmount: 100, isFolded: false, isAllIn: true },
+            { id: 6, stack: 100, betAmount: 0, isFolded: true, isAllIn: false }
+          ]
+        },
+        { street: 'preflop', seatIndex: 0, action: 'call', amount: 82, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 205, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 0, betAmount: 100, isFolded: false, isAllIn: true },
+            { id: 2, stack: 99, betAmount: 1, isFolded: true, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 2, isFolded: true, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 5, stack: 0, betAmount: 100, isFolded: false, isAllIn: true },
+            { id: 6, stack: 100, betAmount: 0, isFolded: true, isAllIn: false }
+          ]
+        },
+        { street: 'flop', seatIndex: 0, action: 'check', amount: 0, boardSnapshot: ['J♠', '7♦', '2♣', '', ''], potSnapshot: { main: 205, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 0, betAmount: 0, isFolded: false, isAllIn: true },
+            { id: 2, stack: 99, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 5, stack: 0, betAmount: 0, isFolded: false, isAllIn: true },
+            { id: 6, stack: 100, betAmount: 0, isFolded: true, isAllIn: false }
+          ]
+        },
+        { street: 'turn', seatIndex: 0, action: 'check', amount: 0, boardSnapshot: ['J♠', '7♦', '2♣', '5♥', ''], potSnapshot: { main: 205, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 0, betAmount: 0, isFolded: false, isAllIn: true },
+            { id: 2, stack: 99, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 5, stack: 0, betAmount: 0, isFolded: false, isAllIn: true },
+            { id: 6, stack: 100, betAmount: 0, isFolded: true, isAllIn: false }
+          ]
+        },
+        { street: 'river', seatIndex: 0, action: 'check', amount: 0, boardSnapshot: ['J♠', '7♦', '2♣', '5♥', '3♠'], potSnapshot: { main: 205, sides: [] },
+          stackSnapshot: [
+            { id: 1, stack: 205, betAmount: 0, isFolded: false, isAllIn: false },
+            { id: 2, stack: 99, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 3, stack: 98, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 4, stack: 100, betAmount: 0, isFolded: true, isAllIn: false },
+            { id: 5, stack: 0, betAmount: 0, isFolded: false, isAllIn: true },
+            { id: 6, stack: 100, betAmount: 0, isFolded: true, isAllIn: false }
+          ]
+        },
       ]
     };
 
