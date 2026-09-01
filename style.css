@@ -324,6 +324,12 @@ body {
 }
 .mini-card.hearts, .mini-card.diamonds { color: #f85149; }
 .mini-card.spades, .mini-card.clubs    { color: #e6edf3; }
+.mini-card.card-back {
+  background: linear-gradient(135deg, #1f6feb 0%, #0d1117 100%);
+  color: #8b949e;
+  border-color: #388bfd;
+  font-size: .55rem;
+}
 
 /* ===== ボードカード ===== */
 .board-area {
