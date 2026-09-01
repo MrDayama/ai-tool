@@ -187,8 +187,7 @@ function splitPot(winnerSeats, potAmount) {
 function startNewHand() {
   const heroSeat = AppState.seats[AppState.heroSeatIndex];
   if (!heroSeat || !heroSeat.holeCards || heroSeat.holeCards.filter(c => c !== '').length < 2) {
-    showError('★ Hero(自分)のポジション ＆ 手札2枚の設定が必須です');
-    openHeroSetupModal();
+    showError('⚠️ 【手札未選択】 左サイドバーの「★ Hero(自分)の設定」で自分手札2枚をタップ選択してください');
     return;
   }
 

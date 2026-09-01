@@ -6,9 +6,9 @@
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="style.css?v=20260901_999">
+  <link rel="stylesheet" href="style.css?v=20260901_2000">
   <script>
-    // 強制キャッシュクリア
+    // 強制キャッシュクリア (v20260901_2000)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
     }
@@ -20,12 +20,10 @@
 <body>
 
 <!-- ===== スマホ専用 最上部クイックナビ ===== -->
-<div style="background:var(--surface2);border-bottom:1px solid var(--yellow);padding:8px 12px;display:flex;gap:8px;align-items:center;justify-content:space-between;">
-  <button onclick="openHeroSetupModal()" style="flex:1;background:var(--yellow);color:#000;border:none;border-radius:6px;padding:8px 10px;font-size:.85rem;font-weight:800;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.4);">
-    ★ Hero/参加者設定 (手札決定)
-  </button>
-  <button onclick="openManualModal()" style="background:var(--surface);color:var(--yellow);border:1px solid var(--yellow);border-radius:6px;padding:8px 12px;font-size:.85rem;font-weight:700;cursor:pointer;">
-    📖 マニュアル
+<div style="background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;gap:8px;align-items:center;justify-content:space-between;">
+  <span style="font-size:.85rem;font-weight:700;color:var(--text);">🎴 Poker Memo</span>
+  <button onclick="openManualModal()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">
+    📖 使い方マニュアル
   </button>
 </div>
 
@@ -57,7 +55,7 @@
 <!-- ===== PC: 3カラム メインレイアウト ===== -->
 <div class="main-layout">
 
-  <!-- 左パネル -->
+  <!-- 左パネル (集約サイドバー) -->
   <aside class="left-panel">
     <div class="card">
       <h3>ブラインド設定</h3>
@@ -89,24 +87,9 @@
       </label>
     </div>
 
-    <!-- プレイヤー / スタック設定 -->
+    <!-- 🔥 統合・集約された プレイヤー & スタック設定 -->
     <div class="card">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <h3 style="margin-bottom:0">プレイヤー & スタック</h3>
-        <button onclick="openHeroSetupModal()" style="background:var(--yellow);color:#000;border:none;border-radius:5px;padding:4px 8px;font-size:.75rem;font-weight:700;cursor:pointer;">★ Hero/参加者設定</button>
-      </div>
-
-      <!-- 💡 ツールの画面内に常時表示される Hero選択ガイド -->
-      <div style="background:linear-gradient(135deg, #2b2512 0%, #161b22 100%);border:1px solid var(--yellow);border-radius:8px;padding:8px 10px;margin-bottom:10px;">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
-          <span style="color:var(--yellow);font-weight:800;font-size:.78rem;">💡 Hero(自分)の設定手順</span>
-          <span style="font-size:.65rem;background:var(--yellow);color:#000;padding:1px 5px;border-radius:4px;font-weight:700;">必須</span>
-        </div>
-        <div style="font-size:.74rem;color:var(--text);line-height:1.4;">
-          1. 右上の「<b style="color:var(--yellow)">★ Hero/参加者設定</b>」で自分の位置と手札2枚を選択<br>
-          2. 下の「<b style="color:var(--accent)">▶ New Hand 開始</b>」でゲームスタート！
-        </div>
-      </div>
+      <h3 style="margin-bottom:8px">👥 プレイヤー & Hero(自分)設定</h3>
 
       <div class="seat-config-list" id="seat-config-list"></div>
       <div style="display:flex;gap:8px;margin-top:10px;">
@@ -217,18 +200,12 @@
 <div class="bottom-sheet">
   <div class="sheet-tabs">
     <button class="sheet-tab active" onclick="switchTab('input')">入力</button>
-    <button class="sheet-tab" onclick="switchTab('settings')">ブラインド/スタック</button>
+    <button class="sheet-tab" onclick="switchTab('settings')">プレイヤー/スタック</button>
     <button class="sheet-tab" onclick="switchTab('history')">履歴/共有</button>
   </div>
 
   <div class="sheet-content active" id="tab-input">
     <div id="error-msg-mobile" class="hidden" style="background:var(--red);color:#fff;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:600;margin-bottom:8px;"></div>
-
-    <!-- 🔥 スマホ最優先ボタン: Hero設定 & マニュアル -->
-    <div style="display:flex;gap:6px;margin-bottom:8px;">
-      <button onclick="openHeroSetupModal()" style="flex:1;background:var(--yellow);color:#000;border:none;border-radius:6px;padding:8px 6px;font-size:.8rem;font-weight:800;cursor:pointer;">★ Hero/手札設定</button>
-      <button onclick="openManualModal()" style="background:var(--surface2);color:var(--yellow);border:1px solid var(--yellow);border-radius:6px;padding:8px 10px;font-size:.8rem;font-weight:700;cursor:pointer;">📖 マニュアル</button>
-    </div>
 
     <!-- 🔥 手番・状況ガイダンスバナー (スマホ) -->
     <div class="current-turn-banner" id="current-turn-banner-m" style="padding:8px 12px;margin-bottom:8px;">
@@ -350,16 +327,15 @@
 
     <div style="overflow-y:auto;padding-right:4px;display:flex;flex-direction:column;gap:14px;font-size:.85rem;line-height:1.5;margin-top:10px;">
 
-      <!-- ★ Hero選択の単独・詳細ステップ案内 -->
+      <!-- ★ Hero選択のサイドバー案内 -->
       <div style="background:#2b2512;border:2px solid var(--yellow);border-radius:8px;padding:12px;">
         <h3 style="color:var(--yellow);font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-          ★ Hero (自分) のポジション ＆ 手札選択手順 <span style="font-size:.7rem;background:var(--red);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700;">必須</span>
+          ★ Hero (自分) の選択 ＆ 手札決定手順
         </h3>
         <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:6px;font-size:.84rem;">
-          <li><b>設定画面を開く</b>: 左パネルの「<code>★ Hero/参加者設定</code>」ボタンをタップ。（<code>▶ New Hand</code> 開始時にも自動起動します）</li>
-          <li><b>自分のポジションを選択</b>: 「Heroの座席 (ポジション)」から自分の位置（例: <code>Seat 1 (BTN)</code> や <code>Seat 3 (BB)</code>）を選びます。</li>
-          <li><b>手札 2枚を決定【必須】</b>: 手札枠 <code>[ ? ]</code> <code>[ ? ]</code> をタップし、<b>4×13絵柄一覧（♠♥♦♣ A〜K）</b>から自分のカード（例: <code>A♠</code> <code>K♥</code>）をタップ選択します。</li>
-          <li><b>適用してゲーム開始</b>: 「<b>設定を決定して適用</b>」を押すと、ポーカー卓上に <b>★ HERO</b> バッジと自分手札が美しく表示されます！</li>
+          <li><b>自分の席を選ぶ</b>: 左サイドバーの「<code>👥 プレイヤー & Hero(自分)設定</code>」リストから、自分が座っているポジションの <b><code>[★ Hero]</code> ラジオボタン</b> をタップ。</li>
+          <li><b>自分の手札2枚を選択【必須】</b>: サイドバー上部の「★ Heroの手札」枠 <code>[ ? ]</code> <code>[ ? ]</code> をタップし、絵柄一覧から手札を選択。</li>
+          <li><b>ゲーム開始</b>: 「<b>▶ New Hand 開始</b>」を押すと勝負がスタートします！</li>
         </ol>
       </div>
 
@@ -367,7 +343,7 @@
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;">
         <h3 style="color:var(--accent);font-size:.9rem;margin-bottom:8px;">🎮 1. 基本的な操作フロー (1ハンドの流れ)</h3>
         <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:8px;">
-          <li><b>Hero設定（必須）</b>: 上記の手順で Hero のポジションと手札2枚を決定します。</li>
+          <li><b>Hero設定</b>: 左サイドバーで自分の席と手札2枚を選択。</li>
           <li><b>▶ New Hand 開始</b>: SB / BB / BBアンティが自動投入され、プリフロップから勝負が始まります。</li>
           <li><b>⚡ アクション入力</b>: <code>FOLD</code>, <code>CHECK / CALL</code>, <code>RAISE ▾</code>, <code>ALL IN</code> ボタンで順番に進行。<i>(※押し間違えたら <code>↩ Undo</code> で即復元)</i></li>
           <li><b>🎴 コミュニティカード選択</b>: テーブル中央下の <code>[ ? ]</code> 枠をタップして、Flop / Turn / River を 4×13 絵柄一覧からセット。</li>
@@ -375,81 +351,10 @@
         </ol>
       </div>
 
-      <!-- 2. アクションボタン解説 -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;">
-        <h3 style="color:var(--accent);font-size:.9rem;margin-bottom:8px;">⚡ 2. アクションボタンの機能</h3>
-        <ul style="padding-left:18px;margin:0;display:flex;flex-direction:column;gap:6px;">
-          <li><b>FOLD</b>: 降りる。プレイヤーが暗転し次回以降のストリートから除外されます。</li>
-          <li><b>CHECK / CALL</b>: チェック、または相手の賭け金に合わせたコール。</li>
-          <li><b>RAISE ▾</b>: 2.5x, 3x, POT プリセットまたはカスタム額でレイズ (Min-Raise自動判定)。</li>
-          <li><b>ALL IN</b>: 手持ち全額を賭ける。サイドポットが自動計算されます。</li>
-          <li><b>↩ Undo (1手戻る)</b>: 直前のアクション・スタック・ポット状態を完全巻き戻し。</li>
-        </ul>
-      </div>
-
-      <!-- 3. 便利機能 -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;">
-        <h3 style="color:var(--green);font-size:.9rem;margin-bottom:8px;">🛠️ 3. 便利機能</h3>
-        <ul style="padding-left:18px;margin:0;display:flex;flex-direction:column;gap:6px;">
-          <li><b>📋 ハンドコピー</b>: SNS/LINE/掲示板用フォーマットテキストをコピー。</li>
-          <li><b>🎬 アニメーションリプレイ</b>: 記録した勝負をポーカー卓でアニメ再生 (0.5x〜4x速度)。</li>
-          <li><b>💾 保存履歴 / 📥 エクスポート</b>: 過去の勝負が自動保存。JSONファイルでのバックアップも可能。</li>
-        </ul>
-      </div>
-
     </div>
 
     <button onclick="closeManualModal()" style="margin-top:12px;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;width:100%;">
       閉じる
-    </button>
-  </div>
-</div>
-
-<!-- ======= Hero (自分) ＆ 参加者設定 モーダル ======= -->
-<div class="modal-overlay hidden" id="hero-setup-modal">
-  <div class="modal-box" style="max-width:520px;">
-    <div style="display:flex;justify-content:space-between;align-items:center;">
-      <h2>🎴 Hero (自分) ＆ 参加者設定</h2>
-      <button onclick="closeHeroSetupModal()" style="background:transparent;border:none;color:var(--text-sub);font-size:1.2rem;cursor:pointer;">✕</button>
-    </div>
-
-    <!-- 必須 1: Heroのポジション ＆ ホールカード決定 -->
-    <div style="background:var(--surface2);border:1px solid var(--yellow);border-radius:8px;padding:12px;margin-top:6px;">
-      <h3 style="font-size:.85rem;color:var(--yellow);margin-bottom:6px;display:flex;align-items:center;gap:6px;">
-        ★ 1. Hero (自分) のポジション ＆ 手札設定 <span style="font-size:.7rem;background:var(--red);color:#fff;padding:1px 6px;border-radius:4px;font-weight:700;">必須</span>
-      </h3>
-      <p style="font-size:.74rem;color:var(--text-sub);margin-bottom:10px;">
-        👇 「Heroの手札」の <code>[ ? ]</code> 枠をタップし、4×13カード一覧から自分手札2枚を選択してください。
-      </p>
-
-      <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:12px;align-items:center;">
-        <div>
-          <label style="font-size:.78rem;color:var(--text-sub);display:block;margin-bottom:4px">Heroの座席 (ポジション)</label>
-          <select id="hero-seat-select" style="width:100%;padding:6px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:.85rem;">
-          </select>
-        </div>
-
-        <div>
-          <label style="font-size:.78rem;color:var(--text-sub);display:block;margin-bottom:4px">Heroの手札 (2枚必須)</label>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <div class="card-slot" id="hero-card1" onclick="openCardPicker('hero1')" style="width:44px;height:56px;font-size:.88rem;">?</div>
-            <div class="card-slot" id="hero-card2" onclick="openCardPicker('hero2')" style="width:44px;height:56px;font-size:.88rem;">?</div>
-            <button onclick="clearHeroCards()" style="padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:5px;font-size:.75rem;color:var(--red);cursor:pointer;">クリア</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 任意 2: 参加者 (Villains) の設定 -->
-    <div style="margin-top:12px;">
-      <h3 style="font-size:.85rem;color:var(--text-sub);margin-bottom:8px;">
-        👥 2. 他の参加者の設定 <span style="font-size:.7rem;background:var(--surface2);border:1px solid var(--border);color:var(--text-sub);padding:1px 6px;border-radius:4px;">手札は任意設定</span>
-      </h3>
-      <div id="villains-setup-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px;"></div>
-    </div>
-
-    <button onclick="confirmHeroSetup()" style="margin-top:12px;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.95rem;cursor:pointer;">
-      設定を決定して適用
     </button>
   </div>
 </div>
@@ -474,7 +379,7 @@
   </div>
 </div>
 
-<script src="app.js?v=20260901_999"></script>
+<script src="app.js?v=20260901_2000"></script>
 <script>
 /* ===== UI補助関数 ===== */
 
@@ -520,19 +425,57 @@ function renderSeatConfigUI() {
     const list = document.getElementById(listId);
     if (!list) return;
     list.innerHTML = '';
+
+    // Hero手札設定ブロック（最上部集約）
+    const heroSeat = AppState.seats[AppState.heroSeatIndex];
+    const heroHeader = document.createElement('div');
+    heroHeader.style.cssText = 'background:linear-gradient(135deg, #2b2512 0%, #161b22 100%);border:1.5px solid var(--yellow);border-radius:8px;padding:8px 10px;margin-bottom:10px;';
+    heroHeader.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+        <span style="color:var(--yellow);font-weight:800;font-size:.82rem;">★ Hero (自分) の設定 【手札必須】</span>
+        <span style="font-size:.7rem;color:var(--text-sub);">位置: <b style="color:var(--yellow);">${getPositionName(AppState.heroSeatIndex)}</b> (${heroSeat?.name || ''})</span>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <span style="font-size:.76rem;color:var(--text-sub);">Heroの手札:</span>
+        <div class="card-slot ${heroSeat?.holeCards[0] ? 'filled' : ''}" onclick="openCardPicker('hero1')" style="width:38px;height:48px;font-size:.82rem;">${formatCardDisplay(heroSeat?.holeCards[0])}</div>
+        <div class="card-slot ${heroSeat?.holeCards[1] ? 'filled' : ''}" onclick="openCardPicker('hero2')" style="width:38px;height:48px;font-size:.82rem;">${formatCardDisplay(heroSeat?.holeCards[1])}</div>
+        <button onclick="clearHeroCards()" style="padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:5px;font-size:.72rem;color:var(--red);cursor:pointer;">クリア</button>
+      </div>`;
+    list.appendChild(heroHeader);
+
     AppState.seats.forEach((seat, i) => {
+      const isHero = (i === AppState.heroSeatIndex);
       const displayStackVal = isBBUnit ? (seat.stack / bbVal).toFixed(1) : seat.stack;
       const row = document.createElement('div');
-      row.className = 'seat-config-row';
+      row.className = `seat-config-row ${isHero ? 'hero-row' : ''}`;
+      row.style.cssText = isHero ? 'background:#252010;border:1px solid var(--yellow);border-radius:6px;padding:6px;margin-bottom:6px;' : 'background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px;margin-bottom:6px;';
+      
       row.innerHTML = `
-        <span style="font-size:.72rem;color:var(--text-sub);min-width:32px">${getPositionName(i)}</span>
-        <input type="text" value="${seat.name}" data-seat="${i}" class="player-name-input" placeholder="プレイヤー名">
-        <input type="number" value="${displayStackVal}" data-seat="${i}" class="stack-input" min="0" step="1" style="width:70px" title="${isBBUnit ? 'スタック(BB数)' : 'スタック(金額)'}">
-        <button class="away-toggle ${seat.isAway ? 'away-on' : ''}" data-seat="${i}">
-          ${seat.isAway ? '離席中' : '在席'}
-        </button>`;
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:${isHero ? 'var(--yellow)' : 'var(--text)'};cursor:pointer;">
+            <input type="radio" name="hero-radio-${listId}" value="${i}" ${isHero ? 'checked' : ''} class="hero-radio-input" data-seat="${i}">
+            ${isHero ? '★ HERO (' + getPositionName(i) + ')' : getPositionName(i)}
+          </label>
+          <button class="away-toggle ${seat.isAway ? 'away-on' : ''}" data-seat="${i}" style="padding:2px 6px;font-size:.7rem;">
+            ${seat.isAway ? '離席中' : '在席'}
+          </button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:center;">
+          <input type="text" value="${seat.name}" data-seat="${i}" class="player-name-input" placeholder="名前" style="padding:4px 6px;font-size:.78rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);">
+          <input type="number" value="${displayStackVal}" data-seat="${i}" class="stack-input" min="0" step="1" title="${isBBUnit ? 'スタック(BB数)' : 'スタック(金額)'}" style="padding:4px 6px;font-size:.78rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);">
+        </div>`;
       list.appendChild(row);
     });
+
+    list.querySelectorAll('.hero-radio-input').forEach(radio => {
+      radio.addEventListener('change', e => {
+        const idx = parseInt(e.target.dataset.seat);
+        AppState.heroSeatIndex = idx;
+        AppState.seats.forEach((s, seatIdx) => { s.isHero = (seatIdx === idx); });
+        renderAll();
+      });
+    });
+
     list.querySelectorAll('.player-name-input').forEach(input => {
       input.addEventListener('change', e => {
         const idx = parseInt(input.dataset.seat);
@@ -540,6 +483,7 @@ function renderSeatConfigUI() {
         renderSeats();
       });
     });
+
     list.querySelectorAll('.stack-input').forEach(input => {
       input.addEventListener('change', e => {
         const idx = parseInt(input.dataset.seat);
@@ -548,12 +492,12 @@ function renderSeatConfigUI() {
         renderSeats();
       });
     });
+
     list.querySelectorAll('.away-toggle').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.seat);
         AppState.seats[idx].isAway = !AppState.seats[idx].isAway;
-        btn.textContent = AppState.seats[idx].isAway ? '離席中' : '在席';
-        btn.classList.toggle('away-on', AppState.seats[idx].isAway);
+        renderSeatConfigUI();
         renderSeats();
       });
     });
