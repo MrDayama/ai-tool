@@ -1534,6 +1534,9 @@ function ensureSeatNodes() {
 }
 
 function renderSeats() {
+  if (!AppState.seats || AppState.seats.length === 0) {
+    if (typeof initSeatsList === 'function') initSeatsList();
+  }
   ensureSeatNodes();
   AppState.seats.forEach((seat, i) => {
     const el = document.getElementById(`seat-${i}`);
