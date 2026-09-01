@@ -1489,7 +1489,7 @@ function ensureSeatNodes() {
   const container = document.getElementById('seats-container');
   if (!container) return;
   if (!AppState.seats || AppState.seats.length === 0) {
-    if (typeof initSeatsList === 'function') initSeatsList();
+    if (typeof initSeats === 'function') initSeats();
   }
 
   const count = AppState.seatCount || (AppState.seats ? AppState.seats.length : 6);
@@ -1535,7 +1535,7 @@ function ensureSeatNodes() {
 
 function renderSeats() {
   if (!AppState.seats || AppState.seats.length === 0) {
-    if (typeof initSeatsList === 'function') initSeatsList();
+    if (typeof initSeats === 'function') initSeats();
   }
   ensureSeatNodes();
   AppState.seats.forEach((seat, i) => {
