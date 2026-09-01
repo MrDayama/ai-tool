@@ -6,9 +6,9 @@
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="style.css?v=20260901_17000">
+  <link rel="stylesheet" href="style.css?v=20260901_18000">
   <script>
-    // 強制キャッシュクリア (v20260901_17000)
+    // 強制キャッシュクリア (v20260901_18000)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
     }
@@ -218,10 +218,11 @@
     </div>
 
     <!-- エクスポート/インポート 一括操作エリア -->
-    <div style="display:flex;gap:8px;align-items:center;background:var(--surface2);padding:10px;border-radius:8px;border:1px solid var(--border);">
-      <span style="font-size:.78rem;color:var(--text-sub);flex:1;">データ一括操作:</span>
-      <button onclick="exportHandsJSON()" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:.78rem;font-weight:700;cursor:pointer;">📥 エクスポート (JSON)</button>
-      <button onclick="importHandsJSON()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:.78rem;font-weight:700;cursor:pointer;">📤 復元 (JSON選択)</button>
+    <div style="display:flex;gap:6px;align-items:center;background:var(--surface2);padding:10px;border-radius:8px;border:1px solid var(--border);flex-wrap:wrap;">
+      <span style="font-size:.78rem;color:var(--text-sub);flex:1;min-width:100px;">データ操作:</span>
+      <button onclick="loadSampleHandsForced()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:6px 10px;font-size:.78rem;font-weight:700;cursor:pointer;">🎁 サンプル追加</button>
+      <button onclick="exportHandsJSON()" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:.78rem;font-weight:700;cursor:pointer;">📥 エクスポート</button>
+      <button onclick="importHandsJSON()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 10px;font-size:.78rem;font-weight:700;cursor:pointer;">📤 復元 (JSON)</button>
     </div>
 
     <!-- 履歴一覧表示領域 -->
@@ -296,7 +297,7 @@
   </div>
 </div>
 
-<script src="app.js?v=20260901_17000"></script>
+<script src="app.js?v=20260901_18000"></script>
 <script>
 function switchToTableView() {
   const heroSeat = AppState.seats[AppState.heroSeatIndex];

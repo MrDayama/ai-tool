@@ -836,10 +836,10 @@ function deleteHandFromDB(id) {
   });
 }
 
-async function seedSampleHands() {
+async function seedSampleHands(force = false) {
   try {
     const existing = await fetchAllHandsFromDB();
-    if (existing && existing.length > 0) return;
+    if (!force && existing && existing.length > 0) return;
 
     const sample1 = {
       seatCount: 6,
@@ -910,6 +910,13 @@ async function seedSampleHands() {
   }
 }
 
+async function loadSampleHandsForced() {
+  await seedSampleHands(true);
+  await renderSavedHandsList();
+  showError('🎁 サンプルハンド2件を履歴に読み込みました！');
+}
+window.loadSampleHandsForced = loadSampleHandsForced;
+
 // ===================================================
 // 📚 ハンド履歴ライブラリ (一覧・閲覧・共有・エクスポート・削除)
 // ===================================================
@@ -932,9 +939,14 @@ async function renderSavedHandsList() {
   container.innerHTML = '<div style="color:var(--text-sub);font-size:.8rem;padding:8px;">読み込み中...</div>';
 
   try {
-    const hands = await fetchAllHandsFromDB();
-    if (hands.length === 0) {
-      container.innerHTML = '<div style="color:var(--text-sub);font-size:.82rem;padding:16px;text-align:center;background:var(--surface);border-radius:8px;">保存されているハンド履歴はありません</div>';
+    let hands = await fetchAllHandsFromDB();
+    if (!hands || hands.length === 0) {
+      await seedSampleHands(true);
+      hands = await fetchAllHandsFromDB();
+    }
+
+    if (!hands || hands.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-sub);font-size:.82rem;padding:16px;text-align:center;background:var(--surface);border-radius:8px;">保存されているハンド履歴はありません<br><button onclick="loadSampleHandsForced()" style="margin-top:8px;padding:6px 12px;background:var(--yellow);color:#000;border:none;border-radius:6px;font-weight:700;cursor:pointer;">🎁 サンプルハンドを生成</button></div>';
       return;
     }
 
