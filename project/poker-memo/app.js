@@ -257,6 +257,7 @@ function actionFold() {
   if (isProcessingAction) return;
   lockActionProcessing();
   const idx = AppState.currentSeatIndex;
+  animateSingleSeatGather(idx);
   recordHistory(idx, 'fold', 0);
   AppState.seats[idx].isFolded = true;
   AppState.seats[idx].action = 'fold';
@@ -1282,7 +1283,11 @@ const Replay = {
     else if (prevStreet && step.street && prevStreet !== step.street) {
       animateGatherChips();
     } 
-    // 3. アクションごとのチップ投下アニメーション
+    // 3. Fold時・該当プレイヤーの投入チップがPotへ吸い込まれて消える集金アニメーション
+    else if (step.action === 'fold' && step.seatIndex !== undefined) {
+      animateSingleSeatGather(step.seatIndex);
+    }
+    // 4. アクションごとのチップ投下アニメーション
     else if (step.seatIndex !== undefined && step.action && step.amount > 0) {
       animateBetChip(step.seatIndex, formatAmount(step.amount));
     }
@@ -1444,6 +1449,37 @@ function animateGatherChips() {
       setTimeout(() => clone.remove(), 650);
     }
   });
+// 🪙 4. Fold(降りる)時・該当座席のチップ個別ポット吸い込み集金アニメーション (座席 ➔ 中央ポットへ吸い込まれて消える)
+function animateSingleSeatGather(seatIndex) {
+  const container = document.getElementById('seats-container');
+  if (!container) return;
+  const seatEl = document.getElementById(`seat-${seatIndex}`);
+  if (!seatEl) return;
+
+  const betEl = seatEl.querySelector('.seat-bet');
+  const amountStr = betEl ? betEl.textContent.trim() : '';
+
+  const clone = document.createElement('div');
+  clone.className = 'flying-chip-gather';
+  clone.innerHTML = `${amountStr || '🪙 Bet'} ➔ 🪙 Pot`;
+  const rect = (betEl || seatEl).getBoundingClientRect();
+  const cRect = container.getBoundingClientRect();
+
+  clone.style.position = 'absolute';
+  clone.style.left = `${rect.left - cRect.left}px`;
+  clone.style.top = `${rect.top - cRect.top}px`;
+  clone.style.transition = 'all 0.55s cubic-bezier(0.4, 0, 0.2, 1)';
+  clone.style.zIndex = '35';
+  container.appendChild(clone);
+
+  requestAnimationFrame(() => {
+    clone.style.left = '50%';
+    clone.style.top = '50%';
+    clone.style.transform = 'translate(-50%, -50%) scale(0.2)';
+    clone.style.opacity = '0.2';
+  });
+
+  setTimeout(() => clone.remove(), 600);
 }
 
 function ensureSeatNodes() {
