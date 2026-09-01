@@ -6,9 +6,9 @@
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="style.css?v=20260901_14000">
+  <link rel="stylesheet" href="style.css?v=20260901_15000">
   <script>
-    // 強制キャッシュクリア (v20260901_14000)
+    // 強制キャッシュクリア (v20260901_15000)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
     }
@@ -31,7 +31,10 @@
         <h1 style="font-size:1.15rem;font-weight:800;color:var(--text);">🎴 Poker Memo Web</h1>
         <span style="font-size:.72rem;color:var(--text-sub);">【Step 1】 ハンド入力 ＆ 初期設定</span>
       </div>
-      <button onclick="openManualModal()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">📖 マニュアル</button>
+      <div style="display:flex;gap:8px;">
+        <button onclick="openHistoryModal()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">📚 履歴一覧</button>
+        <button onclick="openManualModal()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">📖 マニュアル</button>
+      </div>
     </div>
 
     <!-- 1. ゲーム基本設定 -->
@@ -162,7 +165,9 @@
     <button onclick="switchToInputView()" style="background:var(--surface2);color:var(--yellow);border:1.5px solid var(--yellow);border-radius:6px;padding:6px 14px;font-size:.85rem;font-weight:800;cursor:pointer;">
       ✏️ 入力・編集画面に戻る
     </button>
-      <button onclick="exportTableVideo()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">🎥 動画書き出し</button>
+    <div style="display:flex;gap:8px;">
+      <button onclick="openHistoryModal()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">📚 履歴一覧</button>
+      <button onclick="exportTableVideo()" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">🎥 動画書き出し</button>
       <button onclick="openManualModal()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">📖 マニュアル</button>
       <button onclick="copyHandText()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.82rem;cursor:pointer;">📋 コピー</button>
     </div>
@@ -201,6 +206,32 @@
         <button class="speed-btn" data-speed="4">4x</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ======= 📚 ハンド履歴ライブラリ モーダル ======= -->
+<div class="modal-overlay hidden" id="history-modal">
+  <div class="modal-box" style="max-width:680px;max-height:88vh;display:flex;flex-direction:column;gap:12px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <h2>📚 ハンド履歴一覧・ライブラリ</h2>
+      <button onclick="closeHistoryModal()" style="background:transparent;border:none;color:var(--text-sub);font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+
+    <!-- エクスポート/インポート 一括操作エリア -->
+    <div style="display:flex;gap:8px;align-items:center;background:var(--surface2);padding:10px;border-radius:8px;border:1px solid var(--border);">
+      <span style="font-size:.78rem;color:var(--text-sub);flex:1;">データ一括操作:</span>
+      <button onclick="exportHandsJSON()" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:.78rem;font-weight:700;cursor:pointer;">📥 エクスポート (JSON)</button>
+      <button onclick="importHandsJSON()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:.78rem;font-weight:700;cursor:pointer;">📤 復元 (JSON選択)</button>
+    </div>
+
+    <!-- 履歴一覧表示領域 -->
+    <div id="saved-hands-container" style="overflow-y:auto;max-height:55vh;display:flex;flex-direction:column;gap:10px;padding-right:4px;">
+      <!-- JSで動的レンダリング -->
+    </div>
+
+    <button onclick="closeHistoryModal()" style="padding:10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem;cursor:pointer;width:100%;">
+      閉じる
+    </button>
   </div>
 </div>
 
@@ -265,7 +296,7 @@
   </div>
 </div>
 
-<script src="app.js?v=20260901_14000"></script>
+<script src="app.js?v=20260901_15000"></script>
 <script>
 function switchToTableView() {
   const heroSeat = AppState.seats[AppState.heroSeatIndex];

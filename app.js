@@ -834,6 +834,111 @@ function deleteHandFromDB(id) {
 }
 
 // ===================================================
+// 📚 ハンド履歴ライブラリ (一覧・閲覧・共有・エクスポート・削除)
+// ===================================================
+
+async function openHistoryModal() {
+  const modal = document.getElementById('history-modal');
+  if (modal) modal.classList.remove('hidden');
+  await renderSavedHandsList();
+}
+
+function closeHistoryModal() {
+  const modal = document.getElementById('history-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function renderSavedHandsList() {
+  const container = document.getElementById('saved-hands-container');
+  if (!container) return;
+
+  container.innerHTML = '<div style="color:var(--text-sub);font-size:.8rem;padding:8px;">読み込み中...</div>';
+
+  try {
+    const hands = await fetchAllHandsFromDB();
+    if (hands.length === 0) {
+      container.innerHTML = '<div style="color:var(--text-sub);font-size:.82rem;padding:16px;text-align:center;background:var(--surface);border-radius:8px;">保存されているハンド履歴はありません</div>';
+      return;
+    }
+
+    container.innerHTML = '';
+    // 最新順（降順）
+    [...hands].reverse().forEach((hand) => {
+      const card = document.createElement('div');
+      card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;';
+
+      const dateStr = hand.savedAt ? new Date(hand.savedAt).toLocaleString('ja-JP') : `Hand #${hand.id}`;
+      const heroSeat = hand.seats ? hand.seats[hand.heroSeatIndex] : null;
+      const heroCardsStr = (heroSeat && heroSeat.holeCards) 
+        ? heroSeat.holeCards.map(formatCardDisplay).join(' ') 
+        : '[ ? ? ]';
+
+      const potVal = hand.pot ? formatAmount(hand.pot.main) : '--';
+      const winnerName = (hand.winnerIndex !== undefined && hand.seats && hand.seats[hand.winnerIndex])
+        ? hand.seats[hand.winnerIndex].name
+        : '完了ハンド';
+
+      card.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:700;font-size:.85rem;color:var(--accent);">📅 ${dateStr} (${hand.seatCount || 6}-Max)</span>
+          <span style="font-size:.78rem;color:var(--yellow);font-weight:700;">Pot: ${potVal}</span>
+        </div>
+        <div style="font-size:.8rem;color:var(--text-sub);display:flex;gap:12px;">
+          <span>Hero: <b style="color:var(--yellow);">${heroCardsStr}</b></span>
+          <span>勝者: <b style="color:var(--green);">${winnerName}</b></span>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:4px;">
+          <button onclick="loadHandAndPlay(${hand.id})" style="flex:1;background:var(--green);color:#fff;border:none;border-radius:6px;padding:6px;font-size:.78rem;font-weight:700;cursor:pointer;">
+            🎬 再生・読み込み
+          </button>
+          <button onclick="copySingleHandText(${hand.id})" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.78rem;cursor:pointer;">
+            📋 JSONコピー
+          </button>
+          <button onclick="deleteHandAndRefresh(${hand.id})" style="background:transparent;color:var(--red);border:1px solid var(--red);border-radius:6px;padding:6px 10px;font-size:.78rem;cursor:pointer;">
+            🗑️ 削除
+          </button>
+        </div>
+      `;
+      container.appendChild(card);
+    });
+  } catch (e) {
+    container.innerHTML = `<div style="color:var(--red);font-size:.8rem;">読み込みエラー: ${e.message}</div>`;
+  }
+}
+
+async function loadHandAndPlay(handId) {
+  const hands = await fetchAllHandsFromDB();
+  const target = hands.find(h => h.id === handId);
+  if (!target) return;
+  loadHandFromData(target);
+  closeHistoryModal();
+  switchToTableView();
+}
+
+async function copySingleHandText(handId) {
+  const hands = await fetchAllHandsFromDB();
+  const target = hands.find(h => h.id === handId);
+  if (!target) return;
+  const jsonStr = JSON.stringify(target, null, 2);
+  navigator.clipboard.writeText(jsonStr).then(() => {
+    showError('📋 ハンドのJSONデータをクリップボードにコピーしました！');
+  });
+}
+
+async function deleteHandAndRefresh(handId) {
+  if (!confirm('このハンド履歴を削除しますか？')) return;
+  await deleteHandFromDB(handId);
+  await renderSavedHandsList();
+  showError('🗑️ ハンド履歴を削除しました');
+}
+
+window.openHistoryModal = openHistoryModal;
+window.closeHistoryModal = closeHistoryModal;
+window.loadHandAndPlay = loadHandAndPlay;
+window.copySingleHandText = copySingleHandText;
+window.deleteHandAndRefresh = deleteHandAndRefresh;
+
+// ===================================================
 // 共有・テキスト生成・JSON機能
 // ===================================================
 
