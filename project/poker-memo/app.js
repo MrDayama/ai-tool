@@ -1115,6 +1115,15 @@ const Replay = {
 
   play() {
     if (this.timer) return;
+    if (!AppState.history || AppState.history.length <= 1) {
+      showError('⚠️ 再生可能なアクション履歴がありません');
+      return;
+    }
+    // 末尾に達していれば、自動的に最初(#0)から巻き戻してループ再生
+    if (this.index >= AppState.history.length - 1) {
+      this.stepTo(0);
+    }
+    
     this.timer = setInterval(() => {
       if (this.index >= AppState.history.length - 1) {
         this.pause();
@@ -1126,15 +1135,19 @@ const Replay = {
   },
 
   pause() {
-    clearInterval(this.timer);
-    this.timer = null;
+    if (this.timer) {
+      clearInterval(this.timer);
+      this.timer = null;
+    }
   },
 
   stepTo(index) {
-    if (index < 0 || index >= AppState.history.length) return;
-    const step = AppState.history[index];
+    if (!AppState.history || AppState.history.length === 0) return;
+    const targetIdx = Math.max(0, Math.min(index, AppState.history.length - 1));
+    const step = AppState.history[targetIdx];
     if (!step) return;
-    this.index = index;
+
+    this.index = targetIdx;
     if (step.potSnapshot) AppState.pot = JSON.parse(JSON.stringify(step.potSnapshot));
     if (step.boardSnapshot) AppState.board = [...step.boardSnapshot];
     if (step.stackSnapshot) {
@@ -1151,14 +1164,25 @@ const Replay = {
     }
     if (step.street) AppState.street = step.street;
     if (step.currentSeatIndex !== undefined) AppState.currentSeatIndex = step.currentSeatIndex;
+
     renderAll();
+
     ['replay-bar', 'replay-bar-m'].forEach(id => {
       const bar = document.getElementById(id);
-      if (bar) bar.value = index;
+      if (bar) {
+        bar.max = Math.max(0, AppState.history.length - 1);
+        bar.value = targetIdx;
+      }
     });
   },
 
-  setSpeed(s) { this.speed = s; },
+  setSpeed(s) {
+    this.speed = s;
+    if (this.timer) {
+      this.pause();
+      this.play();
+    }
+  },
 };
 window.Replay = Replay;
 
