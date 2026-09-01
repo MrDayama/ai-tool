@@ -1760,10 +1760,11 @@ async function loadHandFromData(targetOrId) {
     renderAll();
   }
 
-  // 4. モーダルを閉じてテーブル再生画面を更新
+  // 4. モーダルを閉じてテーブル再生画面へ確実に切り替え
   document.getElementById('history-modal')?.classList.add('hidden');
   document.getElementById('saved-hands-modal')?.classList.add('hidden');
-  showError(`✅ Hand #${target.id || ''} を読み込みました。そのまま再生が可能です！`);
+  switchToTableView();
+  showError(`✅ Hand #${target.id || ''} を読み込みました！再生ボタン▶で観賞できます。`);
 }
 
 async function deleteSavedHand(id) {
