@@ -336,30 +336,65 @@ body {
   letter-spacing: .5px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.5);
 }
+/* ===== 🎴 ポーカーチェイス風 大型高視認性トランプカード ===== */
 .seat-cards-badge {
   display: flex;
   gap: 3px;
-  margin-top: 3px;
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
 }
+
 .mini-card {
-  font-size: .82rem;
-  font-weight: 800;
+  width: 26px;
+  height: 34px;
+  font-size: .88rem;
+  font-weight: 900;
   background: #ffffff !important;
-  border: 1px solid #d0d7de;
-  border-radius: 4px;
-  padding: 1px 5px;
-  line-height: 1.25;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.6);
-  min-width: 20px;
-  text-align: center;
+  border: 1.5px solid #d0d7de;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
+  line-height: 1;
 }
+
 .mini-card.hearts, .mini-card.diamonds { color: #d9383a !important; }
 .mini-card.spades, .mini-card.clubs    { color: #0f1419 !important; }
+
 .mini-card.card-back {
-  background: linear-gradient(135deg, #1f6feb 0%, #09347a 100%) !important;
+  background: linear-gradient(135deg, #1f6feb 0%, #082d6c 100%) !important;
   color: #ffffff !important;
   border: 1.5px solid #58a6ff;
   font-size: .75rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+}
+
+/* 🪙 アクション連動 物理スライドチップ移動アニメーション */
+.seat-bet {
+  font-size: .75rem;
+  font-weight: 800;
+  color: #f0b72f;
+  white-space: nowrap;
+  background: #0d1117;
+  padding: 3px 10px;
+  border-radius: 14px;
+  border: 1.5px solid #f0b72f;
+  display: inline-block;
+  margin-top: 4px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+  position: relative;
+  z-index: 12;
+  animation: chipSlideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes chipSlideIn {
+  0% { transform: scale(0.3) translateY(-18px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 /* ===== ボードカード ===== */

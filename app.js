@@ -1247,13 +1247,16 @@ function ensureSeatNodes() {
     node.style.left = `${x.toFixed(2)}%`;
     node.style.top = `${y.toFixed(2)}%`;
     node.style.transform = 'translate(-50%, -50%)';
+    node.style.display = 'flex';
+    node.style.flexDirection = 'column';
+    node.style.alignItems = 'center';
 
     node.innerHTML = `
+      <div class="seat-cards-badge"></div>
       <div class="seat-avatar">
         <span class="seat-name">P${i + 1}</span>
         <span class="seat-stack">100</span>
       </div>
-      <div class="seat-cards-badge"></div>
       <div class="seat-bet"></div>
       <div class="seat-action"></div>
       <div class="seat-pos"></div>
@@ -1272,6 +1275,9 @@ function renderSeats() {
 
     el.classList.toggle('is-hero', isHero);
     el.classList.toggle('active-turn', isActiveTurn);
+    el.classList.toggle('folded', seat.isFolded);
+    el.classList.toggle('all-in', seat.isAllIn);
+    el.classList.toggle('away', seat.isAway);
 
     let pointerTag = el.querySelector('.turn-pointer-tag');
     if (isActiveTurn) {
@@ -1288,12 +1294,13 @@ function renderSeats() {
     }
 
     let heroTag = el.querySelector('.hero-badge-tag');
-    if (isHero) {
+    const avatarEl = el.querySelector('.seat-avatar');
+    if (isHero && avatarEl) {
       if (!heroTag) {
         heroTag = document.createElement('div');
         heroTag.className = 'hero-badge-tag';
         heroTag.textContent = 'HERO';
-        el.appendChild(heroTag);
+        avatarEl.appendChild(heroTag);
       }
     } else if (heroTag) {
       heroTag.remove();
@@ -1303,7 +1310,7 @@ function renderSeats() {
     if (!cardsBadge) {
       cardsBadge = document.createElement('div');
       cardsBadge.className = 'seat-cards-badge';
-      el.appendChild(cardsBadge);
+      el.insertBefore(cardsBadge, avatarEl);
     }
 
     if (seat.holeCards && seat.holeCards.filter(c => c).length > 0) {
@@ -1316,16 +1323,17 @@ function renderSeats() {
         return `<span class="mini-card ${suitClassMap[suitChar] || ''}">${rankStr}${suitMap[suitChar] || ''}</span>`;
       }).join('');
     } else if (!seat.isFolded && !seat.isAway) {
-      // 生存中プレイヤーの裏面カード配札表示
+      // 生存中プレイヤーのポーカーチェイス風 裏面トランプカード
       cardsBadge.innerHTML = '<span class="mini-card card-back">🎴</span><span class="mini-card card-back">🎴</span>';
     } else {
       cardsBadge.innerHTML = '';
     }
 
-    el.querySelector('.seat-name').textContent = seat.name;
+    const posName = getPositionName(i);
+    el.querySelector('.seat-name').textContent = `${posName} P${i + 1}`;
     el.querySelector('.seat-stack').textContent = formatAmount(seat.stack);
     
-    // 投入チップ(seat-bet)のチップアイコン付き動的バッジ描画
+    // 🪙 投入チップ(seat-bet)の物理スライド投下バッジ描画
     const betEl = el.querySelector('.seat-bet');
     if (betEl) {
       if (seat.betAmount > 0) {
