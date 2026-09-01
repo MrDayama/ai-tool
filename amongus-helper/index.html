@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Among Us Tactical Helper (プレイ補助＆盤面推理ツール)</title>
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+  <div id="app" class="app-container">
+    <!-- ヘッダーバー -->
+    <header class="app-header">
+      <div class="logo">
+        <span class="icon">🛸</span>
+        <h1>Among Us Tactical Helper</h1>
+        <span class="badge">v1.0</span>
+      </div>
+      
+      <!-- ラウンドタイマー＆コントロール -->
+      <div class="timer-section">
+        <div class="timer-display" id="timerDisplay">00:00</div>
+        <div class="timer-controls">
+          <button id="btnTimerStart" class="btn btn-success" title="タイマースタート/ストップ">
+            <i data-lucide="play" id="iconTimerPlay"></i>
+            <span id="labelTimerStart">開始</span>
+          </button>
+          <button id="btnTimerReset" class="btn btn-secondary" title="リセット">
+            <i data-lucide="rotate-ccw"></i>
+          </button>
+        </div>
+        <div class="speed-setting">
+          <label for="speedSelect">移動速度:</label>
+          <select id="speedSelect" class="form-select">
+            <option value="1.0">1.0x (標準)</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5" selected>1.5x (推奨)</option>
+            <option value="1.75">1.75x</option>
+            <option value="2.0">2.0x</option>
+            <option value="3.0">3.0x</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btnSaveData" class="btn btn-outline" title="データをローカル保存">
+          <i data-lucide="save"></i> 保存
+        </button>
+        <button id="btnClearAll" class="btn btn-danger-outline" title="全データ初期化">
+          <i data-lucide="trash-2"></i> リセット
+        </button>
+      </div>
+    </header>
+
+    <!-- メインコンテンツ (3カラム構成) -->
+    <main class="main-content">
+      
+      <!-- 左カラム: プレイヤー管理パネル -->
+      <aside class="sidebar sidebar-left">
+        <div class="panel-header">
+          <h2><i data-lucide="users"></i> プレイヤー一覧</h2>
+          <button id="btnAddPlayer" class="btn btn-sm btn-primary" title="プレイヤー追加">+ 追加</button>
+        </div>
+        
+        <div id="playerList" class="player-list">
+          <!-- JSでプレイヤーカードが動的生成されます -->
+        </div>
+      </aside>
+
+      <!-- 中央カラム: マップ＆キャンバス＆ツールバー -->
+      <section class="map-container">
+        <!-- マップ選択＆サボタージュクイックバー -->
+        <div class="map-top-bar">
+          <div class="map-selector">
+            <label for="mapSelect"><i data-lucide="map"></i> マップ:</label>
+            <select id="mapSelect" class="form-select font-bold">
+              <option value="skeld">The Skeld (ポーラス/宇宙船)</option>
+              <option value="mira">MIRA HQ (本部)</option>
+              <option value="polus">Polus (惑星基地)</option>
+              <option value="airship">The Airship (飛行船)</option>
+              <option value="fungle">The Fungle (ジャングル)</option>
+            </select>
+          </div>
+
+          <!-- サボタージュ・クイックボタン群 -->
+          <div class="sabotage-bar">
+            <span class="bar-label">🚨 サボタージュ:</span>
+            <button class="btn-sabotage btn-lights" data-sabotage="lights" title="停電 (視界低下)">
+              💡 停電
+            </button>
+            <button class="btn-sabotage btn-reactor" data-sabotage="reactor" title="リアクター (手形ボタン)">
+              ⚛️ リアクター
+            </button>
+            <button class="btn-sabotage btn-o2" data-sabotage="o2" title="O2 (酸素枯渇)">
+              💨 O2
+            </button>
+            <button class="btn-sabotage btn-comms" data-sabotage="comms" title="通信障害 (カメラ停止)">
+              📡 通信
+            </button>
+            <button class="btn-sabotage btn-doors" data-sabotage="doors" title="ドア閉鎖">
+              🚪 ドア閉鎖
+            </button>
+          </div>
+        </div>
+
+        <!-- マップ描画キャンバスエリア -->
+        <div class="canvas-wrapper" id="canvasWrapper">
+          <canvas id="mapCanvas"></canvas>
+          <div id="mapOverlayText" class="map-overlay-info">
+            選択プレイヤー: <span id="activePlayerName">なし</span> (色ペン描画中)
+          </div>
+        </div>
+
+        <!-- キャンバスツールバー -->
+        <div class="map-toolbar">
+          <div class="tool-group">
+            <button class="tool-btn active" data-tool="pen" title="フリーハンド線描画">
+              <i data-lucide="pencil"></i> ペン
+            </button>
+            <button class="tool-btn" data-tool="line" title="直線描画">
+              <i data-lucide="minus"></i> 直線
+            </button>
+            <button class="tool-btn" data-tool="arrow" title="矢印描画">
+              <i data-lucide="arrow-right"></i> 矢印
+            </button>
+          </div>
+
+          <div class="tool-group">
+            <span class="tool-label">ピン配置:</span>
+            <button class="tool-btn" data-tool="pin-corpse" title="死体場所 (💀)">💀</button>
+            <button class="tool-btn" data-tool="pin-task" title="タスク視認場所 (📋)">📋</button>
+            <button class="tool-btn" data-tool="pin-vent" title="ベント出入場所 (🌀)">🌀</button>
+            <button class="tool-btn" data-tool="pin-sight" title="すれ違い・目撃場所 (👀)">👀</button>
+          </div>
+
+          <div class="tool-group">
+            <button class="tool-btn" data-tool="radius" title="現在時間での最高移動可能半径を表示">
+              <i data-lucide="disc"></i> 移動半径
+            </button>
+            <button class="tool-btn" data-tool="eraser" title="消しゴム">
+              <i data-lucide="eraser"></i> 消しゴム
+            </button>
+            <button id="btnClearCanvas" class="tool-btn btn-danger-text" title="マップ上の描画をクリア">
+              <i data-lucide="trash"></i> 描画クリア
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 右カラム: タイムライン・サボタージュ履歴・推理メモ -->
+      <aside class="sidebar sidebar-right">
+        <div class="panel-section">
+          <div class="panel-header">
+            <h2><i data-lucide="activity"></i> 行動・サボタージュログ</h2>
+            <button id="btnClearLog" class="btn btn-sm btn-outline">クリア</button>
+          </div>
+          <div id="eventLogList" class="event-log-list">
+            <div class="log-empty">ログはありません。ラウンドを開始してください。</div>
+          </div>
+        </div>
+
+        <div class="panel-section flex-1">
+          <div class="panel-header">
+            <h2><i data-lucide="file-text"></i> 会議推理・ラインメモ</h2>
+          </div>
+          <div class="deduction-memo">
+            <textarea id="deductionText" placeholder="例:&#10;・赤と青が00:20頃にリアクター通過&#10;・00:40 停電発動中に緑の死体が電気室で発見&#10;・黄はカメラ監視のため完全アリバイあり&#10;・ライン: Red-Orange ?"></textarea>
+          </div>
+        </div>
+      </aside>
+
+    </main>
+  </div>
+
+  <script src="js/players.js"></script>
+  <script src="js/sabotage.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    lucide.createIcons();
+  </script>
+</body>
+</html>

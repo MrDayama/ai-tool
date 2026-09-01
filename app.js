@@ -1032,13 +1032,20 @@ window.loadSampleHandsForced = loadSampleHandsForced;
 
 async function openHistoryModal() {
   const modal = document.getElementById('history-modal');
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.display = 'flex';
+    modal.style.zIndex = '9999';
+  }
   await renderSavedHandsList();
 }
 
 function closeHistoryModal() {
   const modal = document.getElementById('history-modal');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 }
 
 async function renderSavedHandsList() {
