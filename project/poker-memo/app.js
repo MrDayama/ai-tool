@@ -1964,10 +1964,9 @@ async function loadHandFromData(targetOrId) {
   document.getElementById('view-table-mode')?.classList.remove('hidden');
 
   // 4. 可視化後に初期状態 (Frame #0) への完全復元とレンダリング
+  renderAll();
   if (AppState.history.length > 0) {
     Replay.stepTo(0);
-  } else {
-    renderAll();
   }
   switchToTableView();
   showError(`✅ Hand #${target.id || ''} を読み込みました！再生ボタン▶で観賞できます。`);
