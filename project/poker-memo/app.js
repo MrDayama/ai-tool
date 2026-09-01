@@ -943,14 +943,37 @@ function showWinnerSelector(candidates) {
   const list = document.getElementById('winner-list');
   if (!modal || !list) return;
   list.innerHTML = '';
-  candidates.forEach(idx => {
+
+  if (!candidates || candidates.length === 0) {
+    candidates = AppState.seats.filter(s => !s.isFolded && !s.isAway).map(s => s.id);
+  }
+
+  candidates.forEach((idx, i) => {
+    const seat = AppState.seats[idx];
+    if (!seat) return;
+
     const btn = document.createElement('button');
-    btn.textContent = `${AppState.seats[idx].name} (${getPositionName(idx)})`;
+    btn.type = 'button';
+    btn.className = 'winner-btn';
     btn.dataset.seat = idx;
-    btn.classList.add('winner-btn');
-    btn.addEventListener('click', () => btn.classList.toggle('selected'));
+
+    btn.innerHTML = `
+      <span>${seat.name} (${getPositionName(idx)})</span>
+      <span class="winner-btn-check">✓</span>`;
+
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      btn.classList.toggle('selected');
+    });
+
+    // 1人だけ残っている場合は自動的に選択状態
+    if (candidates.length === 1) {
+      btn.classList.add('selected');
+    }
+
     list.appendChild(btn);
   });
+
   modal.classList.remove('hidden');
 }
 

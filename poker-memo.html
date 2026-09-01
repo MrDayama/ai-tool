@@ -239,15 +239,22 @@
   </div>
 </div>
 
-<!-- Winner 選択モーダル -->
+<!-- ======= Winner 選択モーダル ======= -->
 <div class="modal-overlay hidden" id="winner-modal">
   <div class="modal-box">
-    <h2>🏆 Winner を選択</h2>
-    <p style="font-size:.8rem;color:var(--text-sub)">複数選択するとスプリットポット（チョップ）になります</p>
+    <h2>🏆 Winner (勝者) を選択</h2>
+    <p style="font-size:.8rem;color:var(--yellow);margin-bottom:2px;font-weight:600;">
+      👇 ポットを獲得するプレイヤーをタップして選択してください
+    </p>
+    <p style="font-size:.74rem;color:var(--text-sub);margin-bottom:8px;">
+      ※ 1人選択: 単独勝利 / 複数選択: スプリットポット (チョップ/等分割)
+    </p>
     <div id="winner-list"></div>
-    <button id="btn-confirm-winner" onclick="confirmWinner()">確定して配当</button>
+    <button id="btn-confirm-winner" onclick="confirmWinner()" style="padding:12px;background:var(--green);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.95rem;cursor:pointer;">
+      確定して配当
+    </button>
     <button onclick="document.getElementById('winner-modal').classList.add('hidden')"
-      style="padding:8px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);cursor:pointer;font-size:.8rem;">
+      style="padding:8px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);cursor:pointer;font-size:.8rem;margin-top:4px;">
       キャンセル
     </button>
   </div>
