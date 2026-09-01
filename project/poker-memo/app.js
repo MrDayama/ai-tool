@@ -1535,9 +1535,9 @@ function ensureSeatNodes() {
 
     node.innerHTML = `
       <div class="seat-cards-badge"></div>
-      <div class="seat-avatar">
-        <span class="seat-name">P${i + 1}</span>
-        <span class="seat-stack">100</span>
+      <div class="seat-avatar" style="width:48px;height:48px;border-radius:50%;background:#1e293b;border:2px solid #3b82f6;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;">
+        <span class="seat-name" style="font-size:0.75rem;font-weight:bold;color:#f8fafc;">P${i + 1}</span>
+        <span class="seat-stack" style="font-size:0.7rem;color:#f59e0b;">100</span>
       </div>
       <div class="seat-bet"></div>
       <div class="seat-action"></div>
