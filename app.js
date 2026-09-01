@@ -1494,6 +1494,19 @@ function renderSeats() {
   const container = document.getElementById('seats-container');
   if (!container) return;
 
+  if (!window.AppState) window.AppState = {};
+  if (!AppState.seats || AppState.seats.length === 0) {
+    AppState.seatCount = AppState.seatCount || 6;
+    AppState.seats = Array.from({ length: AppState.seatCount }, (_, i) => ({
+      id: i,
+      name: `Seat ${i + 1}`,
+      stack: 100,
+      betAmount: 0,
+      isFolded: false,
+      holeCards: []
+    }));
+  }
+
   const count = AppState.seatCount || (AppState.seats ? AppState.seats.length : 6);
   const cx = 50, cy = 50, rx = 38, ry = 32;
 
