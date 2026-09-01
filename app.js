@@ -1489,7 +1489,6 @@ function animateSingleSeatGather(seatIndex) {
   setTimeout(() => clone.remove(), 600);
 }
 
-function ensureSeatNodes() {
 function renderSeats() {
   const container = document.getElementById('seats-container');
   if (!container) return;
