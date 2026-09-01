@@ -1375,32 +1375,46 @@ function animateBlindBets() {
   }, 200);
 }
 
-// 🏆 3. 勝者決着・メインポット獲得配当物理アニメーション (中央ポット ➔ 勝者座席へシュッと飛び移る)
+// 🏆 3. 勝者決着・メインポット獲得配当物理アニメーション (画面中央Pot ➔ 勝者座席へ連続ゴールドコインシャワーが飛散)
 function animateAwardWinner(winnerIndex, amountStr) {
   const container = document.getElementById('seats-container');
   if (!container) return;
   const seatEl = document.getElementById(`seat-${winnerIndex}`);
   if (!seatEl) return;
 
-  const clone = document.createElement('div');
-  clone.className = 'flying-chip-award';
-  clone.innerHTML = `🏆 ${amountStr} ➔ WINNER`;
-  clone.style.position = 'absolute';
-  clone.style.left = '50%';
-  clone.style.top = '50%';
-  clone.style.transform = 'translate(-50%, -50%) scale(0.3)';
-  clone.style.transition = 'all 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-  clone.style.zIndex = '40';
-  container.appendChild(clone);
+  for (let k = 0; k < 3; k++) {
+    setTimeout(() => {
+      const clone = document.createElement('div');
+      clone.className = 'flying-chip-award';
+      clone.innerHTML = `<span class="poker-gold-coin">🪙</span> <span style="font-weight:bold;color:#f59e0b;text-shadow:0 2px 4px #000;">🏆 ${amountStr} WINNER</span>`;
+      clone.style.position = 'absolute';
+      clone.style.left = '50%';
+      clone.style.top = '50%';
+      clone.style.transform = 'translate(-50%, -50%) scale(0.3)';
+      clone.style.transition = 'all 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+      clone.style.zIndex = '200';
+      clone.style.display = 'flex';
+      clone.style.alignItems = 'center';
+      clone.style.gap = '6px';
+      clone.style.background = 'rgba(15,23,42,0.9)';
+      clone.style.border = '2px solid #f59e0b';
+      clone.style.padding = '4px 10px';
+      clone.style.borderRadius = '20px';
+      clone.style.boxShadow = '0 0 15px rgba(245,158,11,0.8)';
+      container.appendChild(clone);
 
-  requestAnimationFrame(() => {
-    clone.style.left = seatEl.style.left;
-    clone.style.top = seatEl.style.top;
-    clone.style.transform = 'translate(-50%, -50%) scale(1.2)';
-  });
+      requestAnimationFrame(() => {
+        clone.style.left = seatEl.style.left;
+        clone.style.top = seatEl.style.top;
+        clone.style.transform = 'translate(-50%, -50%) scale(1.2)';
+      });
 
-  setTimeout(() => clone.remove(), 750);
+      setTimeout(() => clone.remove(), 750);
+    }, k * 120);
+  }
 }
+
+// 🪙 1. 投入チップの前出しバウンド物理アニメーション (座席 ➔ 手前へポップアップしてパタッと着地)
 function animateBetChip(seatIndex, amountStr) {
   const container = document.getElementById('seats-container');
   if (!container) return;
@@ -1409,23 +1423,25 @@ function animateBetChip(seatIndex, amountStr) {
 
   const chip = document.createElement('div');
   chip.className = 'flying-chip-bet';
-  chip.innerHTML = `🪙 ${amountStr} ➔`;
+  chip.innerHTML = `<span class="poker-gold-coin">🪙</span> <span style="font-weight:bold;color:#fff;font-size:0.75rem;">${amountStr}</span>`;
   chip.style.position = 'absolute';
   chip.style.left = seatEl.style.left;
   chip.style.top = seatEl.style.top;
   chip.style.transform = 'translate(-50%, -50%) scale(0.3)';
-  chip.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
-  chip.style.zIndex = '30';
+  chip.style.zIndex = '140';
+  chip.style.display = 'flex';
+  chip.style.alignItems = 'center';
+  chip.style.gap = '4px';
+  chip.style.background = '#f59e0b';
+  chip.style.padding = '3px 8px';
+  chip.style.borderRadius = '14px';
+  chip.style.boxShadow = '0 4px 10px rgba(0,0,0,0.6)';
   container.appendChild(chip);
-
-  requestAnimationFrame(() => {
-    chip.style.transform = 'translate(-50%, 25px) scale(1.15)';
-  });
 
   setTimeout(() => chip.remove(), 600);
 }
 
-// 🪙 2. 全員のアクション完了・ストリート移行時 ポット吸い込み集金アニメーション (全チップが画面中央Potへ吸い込まれて集まる)
+// 🪙 2. 全員のアクション完了・ストリート移行時 ポット吸い込み集金アニメーション (全コインが回転しながら画面中央Potへ吸い込まれる)
 function animateGatherChips() {
   const container = document.getElementById('seats-container');
   if (!container) return;
@@ -1435,7 +1451,7 @@ function animateGatherChips() {
     if (bet.style.display !== 'none' && bet.textContent.trim() !== '') {
       const clone = document.createElement('div');
       clone.className = 'flying-chip-gather';
-      clone.innerHTML = `${bet.textContent.trim()} ➔ 🪙 Center Pot`;
+      clone.innerHTML = `<span class="poker-gold-coin" style="transform:rotate(180deg);">🪙</span> <span style="font-weight:bold;color:#000;font-size:0.75rem;">${bet.textContent.trim()}</span>`;
       const rect = bet.getBoundingClientRect();
       const cRect = container.getBoundingClientRect();
 
@@ -1443,19 +1459,21 @@ function animateGatherChips() {
       clone.style.left = `${rect.left - cRect.left}px`;
       clone.style.top = `${rect.top - cRect.top}px`;
       clone.style.transition = 'all 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
-      clone.style.zIndex = '150';
+      clone.style.zIndex = '160';
+      clone.style.display = 'flex';
+      clone.style.alignItems = 'center';
+      clone.style.gap = '4px';
       clone.style.background = '#f59e0b';
       clone.style.color = '#000';
-      clone.style.fontWeight = 'bold';
-      clone.style.padding = '4px 10px';
-      clone.style.borderRadius = '16px';
-      clone.style.boxShadow = '0 0 12px rgba(245,158,11,0.8)';
+      clone.style.padding = '3px 8px';
+      clone.style.borderRadius = '14px';
+      clone.style.boxShadow = '0 0 14px rgba(245,158,11,0.9)';
       container.appendChild(clone);
 
       requestAnimationFrame(() => {
         clone.style.left = '50%';
         clone.style.top = '50%';
-        clone.style.transform = 'translate(-50%, -50%) scale(1.3)';
+        clone.style.transform = 'translate(-50%, -50%) scale(1.4) rotate(360deg)';
         clone.style.opacity = '1';
       });
 
@@ -1464,7 +1482,7 @@ function animateGatherChips() {
   });
 }
 
-// 🪙 4. Fold(降りる)時・該当座席のチップ個別ポット吸い込み集金アニメーション (画面中央Potへシュッと吸い込まれる)
+// 🪙 4. Fold(降りる)時・該当座席のチップ個別ポット吸い込み集金アニメーション (画面中央Potへくるくると吸い込まれる)
 function animateSingleSeatGather(seatIndex) {
   const container = document.getElementById('seats-container');
   if (!container) return;
@@ -1476,7 +1494,7 @@ function animateSingleSeatGather(seatIndex) {
 
   const clone = document.createElement('div');
   clone.className = 'flying-chip-gather';
-  clone.innerHTML = `${amountStr || '🪙 Bet'} ➔ 🪙 Center Pot`;
+  clone.innerHTML = `<span class="poker-gold-coin">🪙</span> <span style="font-weight:bold;color:#fff;font-size:0.75rem;">${amountStr || 'Fold'}</span>`;
   const rect = (betEl || seatEl).getBoundingClientRect();
   const cRect = container.getBoundingClientRect();
 
@@ -1484,19 +1502,21 @@ function animateSingleSeatGather(seatIndex) {
   clone.style.left = `${rect.left - cRect.left}px`;
   clone.style.top = `${rect.top - cRect.top}px`;
   clone.style.transition = 'all 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
-  clone.style.zIndex = '150';
+  clone.style.zIndex = '160';
+  clone.style.display = 'flex';
+  clone.style.alignItems = 'center';
+  clone.style.gap = '4px';
   clone.style.background = '#ef4444';
   clone.style.color = '#fff';
-  clone.style.fontWeight = 'bold';
-  clone.style.padding = '4px 10px';
-  clone.style.borderRadius = '16px';
-  clone.style.boxShadow = '0 0 12px rgba(239,68,68,0.8)';
+  clone.style.padding = '3px 8px';
+  clone.style.borderRadius = '14px';
+  clone.style.boxShadow = '0 0 14px rgba(239,68,68,0.9)';
   container.appendChild(clone);
 
   requestAnimationFrame(() => {
     clone.style.left = '50%';
     clone.style.top = '50%';
-    clone.style.transform = 'translate(-50%, -50%) scale(1.3)';
+    clone.style.transform = 'translate(-50%, -50%) scale(1.4) rotate(360deg)';
     clone.style.opacity = '1';
   });
 
