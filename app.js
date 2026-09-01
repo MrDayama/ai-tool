@@ -1964,7 +1964,7 @@ async function loadHandFromData(targetOrId) {
   if (AppState.history.length > 0) {
     Replay.stepTo(0);
   }
-  switchToTableView();
+  switchToTableView(true);
   showError(`✅ Hand #${target.id || ''} を読み込みました！再生ボタン▶で観賞できます。`);
 }
 

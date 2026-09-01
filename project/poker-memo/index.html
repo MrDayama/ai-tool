@@ -299,16 +299,16 @@
 
 <script src="app.js?v=20260901_30000"></script>
 <script>
-function switchToTableView() {
-  if (window.AppState && AppState.seats && AppState.heroSeatIndex !== undefined) {
+function switchToTableView(skipCheck = false) {
+  if (!skipCheck && window.AppState && AppState.seats && AppState.heroSeatIndex !== undefined) {
     const heroSeat = AppState.seats[AppState.heroSeatIndex];
     if (!heroSeat || !heroSeat.holeCards || heroSeat.holeCards.filter(c => c !== '').length < 2) {
       if (typeof showError === 'function') showError('⚠️ 【手札未選択】 自分(Hero)の手札2枚をタップして選択してください');
       return;
     }
   }
-  document.getElementById('view-table-mode')?.classList.remove('hidden');
   document.getElementById('view-input-mode')?.classList.add('hidden');
+  document.getElementById('view-table-mode')?.classList.remove('hidden');
   if (typeof renderAll === 'function') renderAll();
   if (window.Replay) {
     Replay.index = 0;
