@@ -1957,19 +1957,18 @@ async function loadHandFromData(targetOrId) {
   if (target.board) AppState.board = JSON.parse(JSON.stringify(target.board));
   if (target.history) AppState.history = JSON.parse(JSON.stringify(target.history));
 
-  AppState.replayIndex = 0;
-  Replay.index = 0;
+  // 3. モーダルを閉じてテーブル再生画面へ可視表示切替
+  document.getElementById('history-modal')?.classList.add('hidden');
+  document.getElementById('saved-hands-modal')?.classList.add('hidden');
+  document.getElementById('view-input-mode')?.classList.add('hidden');
+  document.getElementById('view-table-mode')?.classList.remove('hidden');
 
-  // 3. 初期状態 (Frame #0) への完全復元とレンダリング
+  // 4. 可視化後に初期状態 (Frame #0) への完全復元とレンダリング
   if (AppState.history.length > 0) {
     Replay.stepTo(0);
   } else {
     renderAll();
   }
-
-  // 4. モーダルを閉じてテーブル再生画面へ確実に切り替え
-  document.getElementById('history-modal')?.classList.add('hidden');
-  document.getElementById('saved-hands-modal')?.classList.add('hidden');
   switchToTableView();
   showError(`✅ Hand #${target.id || ''} を読み込みました！再生ボタン▶で観賞できます。`);
 }
