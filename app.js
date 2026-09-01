@@ -206,6 +206,7 @@ function startNewHand() {
     s.action = null;
     s.isFolded = false;
     s.isAllIn = false;
+    s.actedInStreet = false;
   });
   AppState.board = ['', '', '', '', ''];
   AppState.pot = { main: 0, sides: [] };
@@ -251,6 +252,7 @@ function actionFold() {
   recordHistory(idx, 'fold', 0);
   AppState.seats[idx].isFolded = true;
   AppState.seats[idx].action = 'fold';
+  AppState.seats[idx].actedInStreet = true;
   advanceAction();
 }
 
@@ -258,6 +260,7 @@ function actionCheck() {
   const idx = AppState.currentSeatIndex;
   recordHistory(idx, 'check', 0);
   AppState.seats[idx].action = 'check';
+  AppState.seats[idx].actedInStreet = true;
   advanceAction();
 }
 
@@ -267,6 +270,7 @@ function actionCall() {
   bet(idx, callAmount);
   recordHistory(idx, 'call', callAmount);
   AppState.seats[idx].action = 'call';
+  AppState.seats[idx].actedInStreet = true;
   advanceAction();
 }
 
@@ -288,15 +292,17 @@ function actionRaise(totalAmount) {
   const raiseDelta = totalAmount - maxBetOnTable;
   const additional = totalAmount - currentBet;
 
-  // レイズ発生時、他アクティブプレイヤーのactionをクリアして再コール/フォールドを要求
+  // レイズ発生時、他アクティブプレイヤーのactionとactedInStreetをクリアして再行動を要求
   AppState.seats.forEach((s, sIdx) => {
     if (sIdx !== idx && !s.isFolded && !s.isAllIn && !s.isAway) {
       s.action = null;
+      s.actedInStreet = false;
     }
   });
 
   bet(idx, additional);
   AppState.seats[idx].action = 'raise';
+  AppState.seats[idx].actedInStreet = true;
   recordHistory(idx, 'raise', totalAmount);
   updateMinRaise(totalAmount, raiseDelta);
   advanceAction();
@@ -307,17 +313,19 @@ function actionAllIn() {
   const allInBet = AppState.seats[idx].betAmount + AppState.seats[idx].stack;
   const maxBetOnTable = Math.max(...AppState.seats.map(s => s.betAmount));
 
-  // オールインがレイズ（最高額更新）になった場合、他プレイヤーのactionをクリア
+  // オールインがレイズ（最高額更新）になった場合、他プレイヤーの再行動を要求
   if (allInBet > maxBetOnTable) {
     AppState.seats.forEach((s, sIdx) => {
       if (sIdx !== idx && !s.isFolded && !s.isAllIn && !s.isAway) {
         s.action = null;
+        s.actedInStreet = false;
       }
     });
   }
 
   bet(idx, AppState.seats[idx].stack);
   AppState.seats[idx].action = 'all-in';
+  AppState.seats[idx].actedInStreet = true;
   recordHistory(idx, 'allin', allInBet);
 
   const contributions = AppState.seats
@@ -368,18 +376,19 @@ function advanceAction() {
     return;
   }
 
-  if (activeNoAllIn.length <= 1) {
-    runoutAllIn();
+  if (isStreetComplete()) {
+    if (activeNoAllIn.length <= 1) {
+      runoutAllIn();
+    } else {
+      advanceStreet();
+    }
     return;
   }
 
   const next = getNextActiveSeat(AppState.currentSeatIndex);
-
-  if (isStreetComplete()) {
-    advanceStreet();
-    return;
+  if (next !== -1) {
+    AppState.currentSeatIndex = next;
   }
-  AppState.currentSeatIndex = next;
   renderAll();
 }
 
@@ -391,8 +400,14 @@ function runoutAllIn() {
 
 function isStreetComplete() {
   const activeNoAllIn = getActiveSeats(false);
+  if (activeNoAllIn.length <= 1) return true;
   const maxBet = Math.max(...AppState.seats.map(s => s.betAmount));
-  return activeNoAllIn.every(i => AppState.seats[i].betAmount === maxBet && AppState.seats[i].action !== null);
+
+  // 脱落・オールイン以外の全員が「今ストリートで行動済み」かつ「ベット額一致」か
+  return activeNoAllIn.every(i => {
+    const s = AppState.seats[i];
+    return s.actedInStreet && s.betAmount === maxBet;
+  });
 }
 
 function advanceStreet() {
@@ -402,7 +417,11 @@ function advanceStreet() {
     endHand(getActiveSeats(true));
     return;
   }
-  AppState.seats.forEach(s => { s.betAmount = 0; s.action = null; });
+  AppState.seats.forEach(s => {
+    s.betAmount = 0;
+    s.action = null;
+    s.actedInStreet = false;
+  });
   AppState.street = streetOrder[nextIdx];
   updateMinRaise(0, AppState.blind.bb);
   AppState.currentSeatIndex = getPostflopFirstSeat();
