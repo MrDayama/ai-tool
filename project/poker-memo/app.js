@@ -1492,6 +1492,13 @@ function animateSingleSeatGather(seatIndex) {
 function ensureSeatNodes() {
   const container = document.getElementById('seats-container');
   if (!container) return;
+  container.style.position = 'absolute';
+  container.style.inset = '0';
+  container.style.width = '100%';
+  container.style.height = '100%';
+  container.style.zIndex = '50';
+  container.style.pointerEvents = 'none';
+
   if (!AppState.seats || AppState.seats.length === 0) {
     if (typeof initSeats === 'function') initSeats();
   }
