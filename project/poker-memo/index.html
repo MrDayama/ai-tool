@@ -31,7 +31,8 @@
   <!-- 表示単位切替 -->
   <button id="unit-toggle">表示: BB</button>
 
-  <!-- 共有・保存ボタン群 -->
+  <!-- 共有・保存・マニュアルボタン群 -->
+  <button onclick="openManualModal()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:4px 10px;font-size:.82rem;font-weight:700;cursor:pointer;">📖 使い方マニュアル</button>
   <button onclick="copyHandText()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">📋 ハンドコピー</button>
   <button onclick="renderSavedHandsModal()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">💾 保存履歴</button>
   <button onclick="exportHandsJSON()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">📥 エクスポート</button>
@@ -292,6 +293,70 @@
     </div>
     <button onclick="document.getElementById('saved-hands-modal').classList.add('hidden')"
       style="padding:8px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);cursor:pointer;font-size:.8rem;margin-top:6px;">
+      閉じる
+    </button>
+  </div>
+</div>
+
+<!-- ======= 📖 ユーザーマニュアル モーダル ======= -->
+<div class="modal-overlay hidden" id="manual-modal">
+  <div class="modal-box" style="max-width:640px;max-height:88vh;">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--border);padding-bottom:10px;">
+      <h2>📖 Poker Memo Web 使い方マニュアル</h2>
+      <button onclick="closeManualModal()" style="background:transparent;border:none;color:var(--text-sub);font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+
+    <div style="overflow-y:auto;padding-right:4px;display:flex;flex-direction:column;gap:14px;font-size:.85rem;line-height:1.5;margin-top:10px;">
+
+      <!-- 1. 基本操作フロー -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <h3 style="color:var(--yellow);font-size:.9rem;margin-bottom:8px;">🎮 1. 基本的な操作フロー (1ハンドの流れ)</h3>
+        <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:8px;">
+          <li><b>★ Hero (自分) ＆ 参加者の設定 【必須】</b><br>
+            ボタン「<code>★ Hero/参加者設定</code>」を押して、Hero（自分）の<b>ポジション (座席)</b> と <b>手札 2枚 (例: A♠ K♥)</b> を指定します。<br>
+            <span style="color:var(--red);font-size:.78rem;">※ Heroの手札2枚が未決定の状態では「▶ New Hand 開始」は行えない安全設計です。</span>
+          </li>
+          <li><b>▶ New Hand 開始</b><br>
+            SB / BB / BBアンティが自動投入され、プリフロップから勝負が始まります。
+          </li>
+          <li><b>⚡ アクション入力</b><br>
+            <code>FOLD</code>, <code>CHECK / CALL</code>, <code>RAISE ▾</code>, <code>ALL IN</code> ボタンで進行します。<br>
+            <i>※ 押し間違えた場合は <code>↩ Undo (1手戻る)</code> で即座に取り消せます。</i>
+          </li>
+          <li><b>🎴 コミュニティカード選択 (ボード)</b><br>
+            テーブル中央下の <code>[ ? ]</code> 枠をタップすると、<b>4×13ビジュアル絵柄マトリクス</b>が開きます。カード柄（♠♥♦♣ A〜K）をタップしてFlop/Turn/Riverをセットします。<i>(※カード未選択でも進行可)</i>
+          </li>
+          <li><b>🏆 勝者確定 ＆ ポット配当</b><br>
+            勝者を選択して「<b>確定して配当</b>」を押すと、ポットが自動清算されて勝者に配分されます。あとは「▶ New Hand 開始」で次のハンドへ！
+          </li>
+        </ol>
+      </div>
+
+      <!-- 2. アクションボタン解説 -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <h3 style="color:var(--accent);font-size:.9rem;margin-bottom:8px;">⚡ 2. アクションボタンの機能</h3>
+        <ul style="padding-left:18px;margin:0;display:flex;flex-direction:column;gap:6px;">
+          <li><b>FOLD</b>: 降りる。プレイヤーが暗転し次回以降のストリートから除外されます。</li>
+          <li><b>CHECK / CALL</b>: チェック、または相手の賭け金に合わせたコール。</li>
+          <li><b>RAISE ▾</b>: 2.5x, 3x, POT プリセットまたはカスタム額でレイズ (Min-Raise自動判定)。</li>
+          <li><b>ALL IN</b>: 手持ち全額を賭ける。サイドポットが自動計算されます。</li>
+          <li><b>↩ Undo (1手戻る)</b>: 直前のアクション・スタック・ポット状態を完全巻き戻し。</li>
+        </ul>
+      </div>
+
+      <!-- 3. 便利機能 -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;">
+        <h3 style="color:var(--green);font-size:.9rem;margin-bottom:8px;">🛠️ 3. 便利機能</h3>
+        <ul style="padding-left:18px;margin:0;display:flex;flex-direction:column;gap:6px;">
+          <li><b>📋 ハンドコピー</b>: SNS/LINE/掲示板用フォーマットテキストをコピー。</li>
+          <li><b>🎬 アニメーションリプレイ</b>: 記録した勝負をポーカー卓でアニメ再生 (0.5x〜4x速度)。</li>
+          <li><b>💾 保存履歴 / 📥 エクスポート</b>: 過去の勝負が自動保存。JSONファイルでのバックアップも可能。</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <button onclick="closeManualModal()" style="margin-top:12px;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;width:100%;">
       閉じる
     </button>
   </div>

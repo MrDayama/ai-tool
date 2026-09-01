@@ -1133,7 +1133,19 @@ function confirmWinner() {
   showError(`🏆 【配当完了】 ${winnerNames} に ${formatAmount(potToShare)} を配当しました！「▶ New Hand」で次のゲームを開始できます。`);
 }
 
+function openManualModal() {
+  const modal = document.getElementById('manual-modal');
+  if (modal) modal.classList.remove('hidden');
+}
+
+function closeManualModal() {
+  const modal = document.getElementById('manual-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
 // グローバル関数バインド（ボタンイベント確実に発火）
+window.openManualModal = openManualModal;
+window.closeManualModal = closeManualModal;
 window.confirmWinner = confirmWinner;
 window.actionFold = actionFold;
 window.actionCheck = actionCheck;
