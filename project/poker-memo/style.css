@@ -799,7 +799,22 @@ body {
   100% { transform: translate(-50%, 25px) scale(1.2) rotate(0deg); opacity: 1; }
 }
 
-.flying-chip-bet {
-  animation: coinBounce 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+/* 📚 モーダルダイアログ オーバーレイ表示 CSS */
+.modal-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(13, 17, 23, 0.85) !important;
+  backdrop-filter: blur(6px) !important;
+  z-index: 9999 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 16px !important;
+}
+.modal-overlay.hidden {
+  display: none !important;
 }
 
