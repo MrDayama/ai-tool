@@ -6,7 +6,7 @@
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="project/poker-memo/style.css?v=20260901_4">
+  <link rel="stylesheet" href="project/poker-memo/style.css?v=20260901_5">
 </head>
 <body>
 
@@ -76,6 +76,19 @@
         <h3 style="margin-bottom:0">プレイヤー & スタック</h3>
         <button onclick="openHeroSetupModal()" style="background:var(--yellow);color:#000;border:none;border-radius:5px;padding:4px 8px;font-size:.75rem;font-weight:700;cursor:pointer;">★ Hero/参加者設定</button>
       </div>
+
+      <!-- 💡 ツールの画面内に常時表示される Hero選択ガイド -->
+      <div style="background:linear-gradient(135deg, #2b2512 0%, #161b22 100%);border:1px solid var(--yellow);border-radius:8px;padding:8px 10px;margin-bottom:10px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px;">
+          <span style="color:var(--yellow);font-weight:800;font-size:.78rem;">💡 Hero(自分)の設定手順</span>
+          <span style="font-size:.65rem;background:var(--yellow);color:#000;padding:1px 5px;border-radius:4px;font-weight:700;">必須</span>
+        </div>
+        <div style="font-size:.74rem;color:var(--text);line-height:1.4;">
+          1. 右上の「<b style="color:var(--yellow)">★ Hero/参加者設定</b>」で自分の位置と手札2枚を選択<br>
+          2. 下の「<b style="color:var(--accent)">▶ New Hand 開始</b>」でゲームスタート！
+        </div>
+      </div>
+
       <div class="seat-config-list" id="seat-config-list"></div>
       <div style="display:flex;gap:8px;margin-top:10px;">
         <input type="number" id="default-stack" placeholder="全員のスタック (BB数)" style="flex:1;padding:6px 8px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:.8rem;">
@@ -377,9 +390,12 @@
 
     <!-- 必須 1: Heroのポジション ＆ ホールカード決定 -->
     <div style="background:var(--surface2);border:1px solid var(--yellow);border-radius:8px;padding:12px;margin-top:6px;">
-      <h3 style="font-size:.85rem;color:var(--yellow);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+      <h3 style="font-size:.85rem;color:var(--yellow);margin-bottom:6px;display:flex;align-items:center;gap:6px;">
         ★ 1. Hero (自分) のポジション ＆ 手札設定 <span style="font-size:.7rem;background:var(--red);color:#fff;padding:1px 6px;border-radius:4px;font-weight:700;">必須</span>
       </h3>
+      <p style="font-size:.74rem;color:var(--text-sub);margin-bottom:10px;">
+        👇 「Heroの手札」の <code>[ ? ]</code> 枠をタップし、4×13カード一覧から自分手札2枚を選択してください。
+      </p>
 
       <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:12px;align-items:center;">
         <div>
@@ -433,7 +449,7 @@
   </div>
 </div>
 
-<script src="project/poker-memo/app.js?v=20260901_4"></script>
+<script src="project/poker-memo/app.js?v=20260901_5"></script>
 <script>
 /* ===== UI補助関数 ===== */
 
