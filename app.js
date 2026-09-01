@@ -319,7 +319,37 @@ function actionRaise(totalAmount) {
   AppState.seats[idx].actedInStreet = true;
   recordHistory(idx, 'raise', totalAmount);
   updateMinRaise(totalAmount, raiseDelta);
+  document.getElementById('raise-panel')?.classList.add('hidden');
   advanceAction();
+}
+
+function toggleRaisePanel() {
+  const panel = document.getElementById('raise-panel');
+  if (!panel) return;
+  panel.classList.toggle('hidden');
+  
+  if (!panel.classList.contains('hidden')) {
+    const input = document.getElementById('raise-input');
+    if (input) {
+      input.placeholder = `最小: ${formatAmount(AppState.minRaise)}`;
+      input.value = AppState.minRaise;
+      input.focus();
+    }
+  }
+}
+
+function setPotRaise() {
+  const maxBet = Math.max(...AppState.seats.map(s => s.betAmount));
+  const currentSeat = AppState.seats[AppState.currentSeatIndex];
+  const currentBet = currentSeat ? currentSeat.betAmount : 0;
+  const callAmount = maxBet - currentBet;
+  
+  const potTotal = AppState.pot.main + AppState.seats.reduce((sum, s) => sum + s.betAmount, 0);
+  const potRaiseAmount = maxBet + potTotal + callAmount;
+  
+  const finalAmount = Math.max(potRaiseAmount, AppState.minRaise);
+  actionRaise(finalAmount);
+  document.getElementById('raise-panel')?.classList.add('hidden');
 }
 
 function actionAllIn() {
@@ -1412,18 +1442,23 @@ function bindEvents() {
 
   document.getElementById('btn-raise-confirm')?.addEventListener('click', () => {
     const val = parseFloat(document.getElementById('raise-input').value);
-    if (val) actionRaise(val);
+    if (val && !isNaN(val)) actionRaise(val);
+  });
+
+  document.getElementById('raise-input')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const val = parseFloat(e.target.value);
+      if (val && !isNaN(val)) actionRaise(val);
+    }
   });
 
   document.querySelectorAll('.raise-mult').forEach(btn => {
     btn.addEventListener('click', () => {
       const mult = parseFloat(btn.dataset.mult);
+      if (isNaN(mult)) return;
       const maxBet = Math.max(...AppState.seats.map(s => s.betAmount));
       const raiseAmount = maxBet + Math.max(AppState.lastRaiseDelta, AppState.blind.bb) * mult;
-      ['raise-input','raise-input-m'].forEach(id => {
-        const input = document.getElementById(id);
-        if (input) input.value = raiseAmount.toFixed(1);
-      });
+      actionRaise(parseFloat(raiseAmount.toFixed(1)));
     });
   });
 
@@ -1706,6 +1741,8 @@ async function exportTableVideo() {
 }
 
 window.exportTableVideo = exportTableVideo;
+window.toggleRaisePanel = toggleRaisePanel;
+window.setPotRaise = setPotRaise;
 
 window.addEventListener('DOMContentLoaded', init);
 
