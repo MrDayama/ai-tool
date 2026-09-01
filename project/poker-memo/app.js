@@ -89,6 +89,16 @@ function initSeats() {
     isHero: i === AppState.heroSeatIndex,
     holeCards: ['', ''],
   }));
+
+  const sbIdx = getSBIndex();
+  const bbIdx = getBBIndex();
+  const { sb, bb } = AppState.blind;
+  if (AppState.seats[sbIdx] && AppState.seats[bbIdx]) {
+    bet(sbIdx, sb);
+    bet(bbIdx, bb);
+    updateMinRaise(bb, bb);
+  }
+  AppState.currentSeatIndex = getPreflopFirstSeat();
 }
 
 // ===================================================
@@ -1088,6 +1098,9 @@ function selectHeroSeat(idx) {
   AppState.seats.forEach((s, seatIdx) => {
     s.isHero = (seatIdx === idx);
   });
+  if (AppState.history.length === 0) {
+    AppState.currentSeatIndex = getPreflopFirstSeat();
+  }
   renderAll();
   showError(`★ Hero(自分)の位置を ${getPositionName(idx)} に指定しました`);
 }
