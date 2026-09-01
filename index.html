@@ -6,9 +6,9 @@
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="style.css?v=20260901_27000">
+  <link rel="stylesheet" href="style.css?v=20260901_28000">
   <script>
-    // 強制キャッシュクリア (v20260901_27000)
+    // 強制キャッシュクリア (v20260901_28000)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
     }
@@ -297,7 +297,7 @@
   </div>
 </div>
 
-<script src="app.js?v=20260901_27000"></script>
+<script src="app.js?v=20260901_28000"></script>
 <script>
 function switchToTableView() {
   const heroSeat = AppState.seats[AppState.heroSeatIndex];
@@ -305,8 +305,8 @@ function switchToTableView() {
     showError('⚠️ 【手札未選択】 自分(Hero)の手札2枚をタップして選択してください');
     return;
   }
-  document.getElementById('view-input-mode')?.classList.add('hidden');
   document.getElementById('view-table-mode')?.classList.remove('hidden');
+  document.getElementById('view-input-mode')?.classList.add('hidden');
   renderAll();
   Replay.index = 0;
   Replay.stepTo(0);

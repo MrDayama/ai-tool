@@ -1236,21 +1236,21 @@ function animateBetChip(seatIndex, amountStr) {
   if (!seatEl) return;
 
   const chip = document.createElement('div');
-  chip.className = 'seat-bet flying-chip-bet';
-  chip.innerHTML = `🪙 ${amountStr}`;
+  chip.className = 'flying-chip-bet';
+  chip.innerHTML = `🪙 ${amountStr} ➔`;
   chip.style.position = 'absolute';
   chip.style.left = seatEl.style.left;
   chip.style.top = seatEl.style.top;
-  chip.style.transform = 'translate(-50%, -50%) scale(0.2)';
-  chip.style.transition = 'all 0.38s cubic-bezier(0.25, 1, 0.5, 1)';
+  chip.style.transform = 'translate(-50%, -50%) scale(0.3)';
+  chip.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
   chip.style.zIndex = '30';
   container.appendChild(chip);
 
   requestAnimationFrame(() => {
-    chip.style.transform = 'translate(-50%, 18px) scale(1.1)';
+    chip.style.transform = 'translate(-50%, 25px) scale(1.15)';
   });
 
-  setTimeout(() => chip.remove(), 420);
+  setTimeout(() => chip.remove(), 600);
 }
 
 // 🪙 2. 全員のアクション完了・ストリート移行時 ポット吸い込み集金アニメーション (卓上 ➔ 中央ポットへ吸い込まれて消える)
@@ -1261,25 +1261,27 @@ function animateGatherChips() {
   const bets = container.querySelectorAll('.seat-bet');
   bets.forEach(bet => {
     if (bet.style.display !== 'none' && bet.textContent.trim() !== '') {
-      const clone = bet.cloneNode(true);
+      const clone = document.createElement('div');
+      clone.className = 'flying-chip-gather';
+      clone.innerHTML = `${bet.textContent.trim()} ➔ 🪙 Pot`;
       const rect = bet.getBoundingClientRect();
       const cRect = container.getBoundingClientRect();
 
       clone.style.position = 'absolute';
       clone.style.left = `${rect.left - cRect.left}px`;
       clone.style.top = `${rect.top - cRect.top}px`;
-      clone.style.transition = 'all 0.45s ease-in-out';
+      clone.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
       clone.style.zIndex = '35';
       container.appendChild(clone);
 
       requestAnimationFrame(() => {
         clone.style.left = '50%';
         clone.style.top = '50%';
-        clone.style.transform = 'translate(-50%, -50%) scale(0.1)';
-        clone.style.opacity = '0';
+        clone.style.transform = 'translate(-50%, -50%) scale(0.2)';
+        clone.style.opacity = '0.2';
       });
 
-      setTimeout(() => clone.remove(), 500);
+      setTimeout(() => clone.remove(), 650);
     }
   });
 }

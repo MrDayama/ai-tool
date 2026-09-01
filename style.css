@@ -393,19 +393,30 @@ body {
   animation: chipSlideIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-@keyframes chipSlideIn {
-  0% { transform: scale(0.3) translateY(-20px); opacity: 0; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
+/* 🪙 飛翔移動中物理チップ (ベット前出し中) */
+.flying-chip-bet {
+  font-size: .88rem !important;
+  font-weight: 900 !important;
+  color: #000000 !important;
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 20px 6px rgba(245, 158, 11, 0.9), 0 6px 16px rgba(0,0,0,0.8) !important;
+  padding: 4px 14px !important;
+  border-radius: 20px !important;
+  pointer-events: none;
 }
 
-/* 全員のアクション完了時・ポット吸い込み集金アニメーション */
-.seat-bet.gather-anim {
-  animation: gatherToPot 0.45s forwards ease-in-out !important;
-}
-
-@keyframes gatherToPot {
-  0% { transform: scale(1) translateY(0); opacity: 1; }
-  100% { transform: scale(0.1) translateY(-50px); opacity: 0; }
+/* 🪙 飛翔移動中物理チップ (中央ポット吸い込み集金中) */
+.flying-chip-gather {
+  font-size: .85rem !important;
+  font-weight: 900 !important;
+  color: #ffffff !important;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%) !important;
+  border: 2px solid #60a5fa !important;
+  box-shadow: 0 0 24px 8px rgba(59, 130, 246, 1), 0 6px 16px rgba(0,0,0,0.9) !important;
+  padding: 4px 14px !important;
+  border-radius: 20px !important;
+  pointer-events: none;
 }
 
 /* ===== ボードカード ===== */
