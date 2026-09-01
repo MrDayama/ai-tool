@@ -1472,21 +1472,43 @@ async function renderSavedHandsModal() {
   modal.classList.remove('hidden');
 }
 
-async function loadHandFromData(id) {
-  const hands = await fetchAllHandsFromDB();
-  const target = hands.find(h => h.id === id);
+async function loadHandFromData(targetOrId) {
+  let target = targetOrId;
+  if (typeof targetOrId === 'number' || typeof targetOrId === 'string') {
+    const hands = await fetchAllHandsFromDB();
+    target = hands.find(h => h.id == targetOrId);
+  }
   if (!target) return;
-  AppState.history = target.history || [];
-  AppState.seats = target.seats || [];
-  AppState.board = target.board || ['', '', '', '', ''];
-  AppState.seatCount = target.seatCount || AppState.seatCount;
-  if (target.blind) AppState.blind = target.blind;
+
+  // 1. 前のデータの残留を100%防止する完全クリーン初期化
+  AppState.history = [];
+  AppState.seats = [];
+  AppState.board = ['', '', '', '', ''];
+  AppState.pot = { main: 0, sides: [] };
+
+  // 2. 読み込みハンドデータのディープクローン適用
+  if (target.seatCount) AppState.seatCount = target.seatCount;
+  if (target.blind) AppState.blind = JSON.parse(JSON.stringify(target.blind));
+  if (target.heroSeatIndex !== undefined) AppState.heroSeatIndex = target.heroSeatIndex;
+  
+  if (target.seats) AppState.seats = JSON.parse(JSON.stringify(target.seats));
+  if (target.board) AppState.board = JSON.parse(JSON.stringify(target.board));
+  if (target.history) AppState.history = JSON.parse(JSON.stringify(target.history));
+
   AppState.replayIndex = 0;
+  Replay.index = 0;
+
+  // 3. 初期状態 (Frame #0) への完全復元とレンダリング
   if (AppState.history.length > 0) {
     Replay.stepTo(0);
+  } else {
+    renderAll();
   }
-  document.getElementById('saved-hands-modal').classList.add('hidden');
-  showError(`✅ Hand #${id} を復元しました。リプレイ再生が可能です。`);
+
+  // 4. モーダルを閉じてテーブル再生画面を更新
+  document.getElementById('history-modal')?.classList.add('hidden');
+  document.getElementById('saved-hands-modal')?.classList.add('hidden');
+  showError(`✅ Hand #${target.id || ''} を読み込みました。そのまま再生が可能です！`);
 }
 
 async function deleteSavedHand(id) {
