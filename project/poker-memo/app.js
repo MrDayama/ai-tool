@@ -1491,6 +1491,23 @@ function ensureSeatNodes() {
   if (!AppState.seats || AppState.seats.length === 0) {
     if (typeof initSeats === 'function') initSeats();
   }
+  if (!AppState.seats || AppState.seats.length === 0) {
+    AppState.seatCount = AppState.seatCount || 6;
+    AppState.heroSeatIndex = AppState.heroSeatIndex ?? 0;
+    const defaultStack = (AppState.blind ? AppState.blind.bb : 2) * 100;
+    AppState.seats = Array.from({ length: AppState.seatCount }, (_, i) => ({
+      id: i,
+      name: `Seat ${i + 1}`,
+      stack: defaultStack,
+      betAmount: 0,
+      action: null,
+      isAway: false,
+      isFolded: false,
+      isAllIn: false,
+      isHero: i === AppState.heroSeatIndex,
+      holeCards: ['', ''],
+    }));
+  }
 
   container.innerHTML = '';
   const count = AppState.seatCount || (AppState.seats ? AppState.seats.length : 6);
