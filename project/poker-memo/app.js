@@ -247,7 +247,15 @@ function bet(seatIndex, amount) {
   if (seat.stack === 0) seat.isAllIn = true;
 }
 
+let isProcessingAction = false;
+function lockActionProcessing() {
+  isProcessingAction = true;
+  setTimeout(() => { isProcessingAction = false; }, 150);
+}
+
 function actionFold() {
+  if (isProcessingAction) return;
+  lockActionProcessing();
   const idx = AppState.currentSeatIndex;
   recordHistory(idx, 'fold', 0);
   AppState.seats[idx].isFolded = true;
@@ -257,6 +265,8 @@ function actionFold() {
 }
 
 function actionCheck() {
+  if (isProcessingAction) return;
+  lockActionProcessing();
   const idx = AppState.currentSeatIndex;
   recordHistory(idx, 'check', 0);
   AppState.seats[idx].action = 'check';
@@ -265,6 +275,8 @@ function actionCheck() {
 }
 
 function actionCall() {
+  if (isProcessingAction) return;
+  lockActionProcessing();
   const idx = AppState.currentSeatIndex;
   const callAmount = getCallAmount(idx);
   bet(idx, callAmount);
@@ -275,6 +287,8 @@ function actionCall() {
 }
 
 function actionRaise(totalAmount) {
+  if (isProcessingAction) return;
+  lockActionProcessing();
   const idx = AppState.currentSeatIndex;
   const currentBet = AppState.seats[idx].betAmount;
   const maxBetOnTable = Math.max(...AppState.seats.map(s => s.betAmount));
@@ -309,6 +323,8 @@ function actionRaise(totalAmount) {
 }
 
 function actionAllIn() {
+  if (isProcessingAction) return;
+  lockActionProcessing();
   const idx = AppState.currentSeatIndex;
   const allInBet = AppState.seats[idx].betAmount + AppState.seats[idx].stack;
   const maxBetOnTable = Math.max(...AppState.seats.map(s => s.betAmount));
@@ -1392,9 +1408,8 @@ function bindEvents() {
 
   document.getElementById('btn-new-hand')?.addEventListener('click', startNewHand);
 
-  document.getElementById('btn-fold')?.addEventListener('click', actionFold);
-  document.getElementById('btn-call')?.addEventListener('click', actionCall);
-  document.getElementById('btn-allin')?.addEventListener('click', actionAllIn);
+  // Note: btn-fold, btn-call, btn-allin は HTML 側の onclick で呼び出されているため重複イベント登録を回避
+
   document.getElementById('btn-raise-confirm')?.addEventListener('click', () => {
     const val = parseFloat(document.getElementById('raise-input').value);
     if (val) actionRaise(val);
