@@ -1272,13 +1272,27 @@ function renderSeats() {
         const suitClassMap = { s: 'spades', h: 'hearts', d: 'diamonds', c: 'clubs' };
         return `<span class="mini-card ${suitClassMap[suitChar] || ''}">${rankStr}${suitMap[suitChar] || ''}</span>`;
       }).join('');
+    } else if (!seat.isFolded && !seat.isAway) {
+      // 生存中プレイヤーの裏面カード配札表示
+      cardsBadge.innerHTML = '<span class="mini-card card-back">🎴</span><span class="mini-card card-back">🎴</span>';
     } else {
       cardsBadge.innerHTML = '';
     }
 
     el.querySelector('.seat-name').textContent = seat.name;
     el.querySelector('.seat-stack').textContent = formatAmount(seat.stack);
-    el.querySelector('.seat-bet').textContent = seat.betAmount > 0 ? formatAmount(seat.betAmount) : '';
+    
+    // 投入チップ(seat-bet)のチップアイコン付き動的バッジ描画
+    const betEl = el.querySelector('.seat-bet');
+    if (betEl) {
+      if (seat.betAmount > 0) {
+        betEl.textContent = `🪙 ${formatAmount(seat.betAmount)}`;
+        betEl.style.display = 'inline-block';
+      } else {
+        betEl.textContent = '';
+        betEl.style.display = 'none';
+      }
+    }
     
     const actEl = el.querySelector('.seat-action');
     if (actEl) {

@@ -227,7 +227,47 @@ body {
 
 .seat-name   { font-size: .6rem;  font-weight: 600; color: var(--text);     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 .seat-stack  { font-size: .6rem;  color: var(--green);   white-space: nowrap; }
-.seat-bet    { font-size: .58rem; color: var(--yellow);  white-space: nowrap; }
+
+/* 投入チップ(.seat-bet)アニメーション */
+.seat-bet {
+  font-size: .62rem;
+  font-weight: 800;
+  color: var(--yellow);
+  white-space: nowrap;
+  background: rgba(0,0,0,0.65);
+  padding: 1px 6px;
+  border-radius: 10px;
+  border: 1px solid var(--yellow);
+  display: inline-block;
+  margin-top: 2px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.5);
+  animation: chipDeposit 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes chipDeposit {
+  0% { transform: scale(0.4) translateY(-10px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+/* アクティブ手番プレイヤーの発光リング */
+.seat-node.active-turn .seat-avatar {
+  border-color: var(--yellow) !important;
+  box-shadow: 0 0 16px 4px rgba(210, 153, 34, 0.9);
+  animation: turnPulse 1.2s infinite alternate;
+}
+@keyframes turnPulse {
+  0% { box-shadow: 0 0 8px 2px rgba(210, 153, 34, 0.6); }
+  100% { box-shadow: 0 0 20px 6px rgba(210, 153, 34, 1); }
+}
+
+/* FOLD 時の手札投げ捨て（マック）アニメーション */
+.seat-node.folded .seat-cards-badge {
+  animation: foldDiscard 0.5s forwards ease-in-out;
+}
+@keyframes foldDiscard {
+  0% { transform: scale(1) translateY(0); opacity: 1; }
+  100% { transform: scale(0.2) translateY(-25px); opacity: 0; }
+}
+
 .seat-action { font-size: .6rem; font-weight: 800; color: var(--accent); letter-spacing: .2px; white-space: nowrap; }
 .seat-action.action-badge {
   display: inline-block;
