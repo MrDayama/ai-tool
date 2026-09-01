@@ -1490,59 +1490,46 @@ function animateSingleSeatGather(seatIndex) {
 }
 
 function ensureSeatNodes() {
+function renderSeats() {
   const container = document.getElementById('seats-container');
   if (!container) return;
-  container.style.position = 'absolute';
-  container.style.inset = '0';
-  container.style.width = '100%';
-  container.style.height = '100%';
-  container.style.zIndex = '50';
-  container.style.pointerEvents = 'none';
-
-  if (!AppState.seats || AppState.seats.length === 0) {
-    if (typeof initSeats === 'function') initSeats();
-  }
-  if (!AppState.seats || AppState.seats.length === 0) {
-    AppState.seatCount = AppState.seatCount || 6;
-    AppState.heroSeatIndex = AppState.heroSeatIndex ?? 0;
-    const defaultStack = (AppState.blind ? AppState.blind.bb : 2) * 100;
-    AppState.seats = Array.from({ length: AppState.seatCount }, (_, i) => ({
-      id: i,
-      name: `Seat ${i + 1}`,
-      stack: defaultStack,
-      betAmount: 0,
-      action: null,
-      isAway: false,
-      isFolded: false,
-      isAllIn: false,
-      isHero: i === AppState.heroSeatIndex,
-      holeCards: ['', ''],
-    }));
-  }
 
   const count = AppState.seatCount || (AppState.seats ? AppState.seats.length : 6);
+  const cx = 50, cy = 50, rx = 38, ry = 32;
+
   container.innerHTML = '';
-
-  const cx = 50;
-  const cy = 50;
-  const rx = 38;
-  const ry = 32;
-
   for (let i = 0; i < count; i++) {
     const angle = (2 * Math.PI / count) * i + Math.PI / 2;
     const x = cx + rx * Math.cos(angle);
     const y = cy + ry * Math.sin(angle);
 
+    const seat = (AppState.seats && AppState.seats[i]) ? AppState.seats[i] : { stack: 100, betAmount: 0 };
+    const isHero = (i === AppState.heroSeatIndex);
+    const isActiveTurn = (i === AppState.currentSeatIndex && !seat.isFolded);
+
     const node = document.createElement('div');
     node.id = `seat-${i}`;
-    node.className = 'seat-node';
-    node.style.position = 'absolute';
-    node.style.left = `${x.toFixed(2)}%`;
-    node.style.top = `${y.toFixed(2)}%`;
-    node.style.transform = 'translate(-50%, -50%)';
-    node.style.display = 'flex';
-    node.style.flexDirection = 'column';
-    node.style.alignItems = 'center';
+    node.className = `seat-node ${isHero ? 'is-hero' : ''} ${isActiveTurn ? 'active-turn' : ''}`;
+    node.style.cssText = `position:absolute; left:${x.toFixed(2)}%; top:${y.toFixed(2)}%; transform:translate(-50%, -50%); display:flex; flex-direction:column; align-items:center; z-index:100; pointer-events:auto;`;
+
+    const cardsHtml = (seat.holeCards && seat.holeCards.filter(c => c).length > 0)
+      ? seat.holeCards.map(cardStr => {
+          if (!cardStr) return '';
+          const rankStr = cardStr.slice(0, -1).replace('T', '10');
+          const suitChar = cardStr.slice(-1);
+          const suitMap = { s: '♠', h: '♥', d: '♦', c: '♣' };
+          const suitClassMap = { s: 'spades', h: 'hearts', d: 'diamonds', c: 'clubs' };
+          return `<span class="mini-card ${suitClassMap[suitChar] || ''}">${rankStr}${suitMap[suitChar] || ''}</span>`;
+        }).join('')
+      : (!seat.isFolded ? '<span class="mini-card card-back">🎴</span><span class="mini-card card-back">🎴</span>' : '');
+
+    const betHtml = seat.betAmount > 0 
+      ? `<div class="seat-bet" style="display:inline-block;background:#f59e0b;color:#000;font-weight:bold;padding:2px 8px;border-radius:12px;font-size:0.75rem;margin-top:4px;box-shadow:0 2px 4px rgba(0,0,0,0.5);">🪙 ${seat.betAmount} BB</div>` 
+      : '<div class="seat-bet" style="display:none;"></div>';
+
+    const turnBadgeHtml = isActiveTurn 
+      ? `<div class="turn-pointer-tag" style="background:#3b82f6;color:#fff;font-size:0.65rem;font-weight:bold;padding:1px 6px;border-radius:4px;margin-bottom:2px;">${isHero ? '👉 YOUR TURN' : '👉 TURN'}</div>` 
+      : '';
 
     node.innerHTML = `
       <div class="seat-cards-badge"></div>
