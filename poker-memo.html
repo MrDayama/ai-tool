@@ -6,9 +6,9 @@
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="style.css?v=20260901_3000">
+  <link rel="stylesheet" href="style.css?v=20260901_4000">
   <script>
-    // 強制キャッシュクリア (v20260901_3000)
+    // 強制キャッシュクリア (v20260901_4000)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
     }
@@ -55,7 +55,7 @@
 <!-- ===== PC: 3カラム メインレイアウト ===== -->
 <div class="main-layout">
 
-  <!-- 左パネル (スッキリ統合サイドバー) -->
+  <!-- 左パネル (完全統合サイドバー) -->
   <aside class="left-panel">
     <div class="card">
       <h3>ブラインド設定</h3>
@@ -87,7 +87,7 @@
       </label>
     </div>
 
-    <!-- 🔥 統合・スッキリレイアウト化された プレイヤー & スタック設定 -->
+    <!-- 🔥 統合・頑丈レイアウト化された プレイヤー & スタック設定 -->
     <div class="card">
       <h3 style="margin-bottom:8px">👥 プレイヤー & Hero(自分)設定</h3>
 
@@ -333,8 +333,8 @@
           ★ Hero (自分) の選択 ＆ 手札決定手順
         </h3>
         <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:6px;font-size:.84rem;">
-          <li><b>自分の席を選ぶ</b>: 左サイドバーの「<code>👥 プレイヤー & Hero(自分)設定</code>」リストから、自分が座っているポジションの <b><code>[★ Hero]</code> ラジオボタン</b> をタップ。</li>
-          <li><b>自分の手札2枚を選択【必須】</b>: サイドバー上部の「★ Heroの手札」枠 <code>[ ? ]</code> <code>[ ? ]</code> をタップし、絵柄一覧から手札を選択。</li>
+          <li><b>自分の席を選ぶ</b>: 左サイドバーの「<code>👥 プレイヤー & Hero(自分)設定</code>」リストから、自分が座っているポジションの <b><code>[★ 自分に指定]</code> ボタン</b> をタップ。</li>
+          <li><b>自分の手札2枚を選択【必須】</b>: サイドバー上部の「★ Heroの手札選択」枠 <code>[ ? ]</code> <code>[ ? ]</code> をタップし、絵柄一覧から手札を選択。</li>
           <li><b>ゲーム開始</b>: 「<b>▶ New Hand 開始</b>」を押すと勝負がスタートします！</li>
         </ol>
       </div>
@@ -379,7 +379,7 @@
   </div>
 </div>
 
-<script src="app.js?v=20260901_3000"></script>
+<script src="app.js?v=20260901_4000"></script>
 <script>
 /* ===== UI補助関数 ===== */
 
@@ -417,129 +417,6 @@ function applyDefaultStack() {
   renderAll();
 }
 
-function renderSeatConfigUI() {
-  const isBBUnit = AppState.blind.displayUnit === 'bb';
-  const bbVal = AppState.blind.bb || 1;
-
-  ['seat-config-list', 'seat-config-list-m'].forEach(listId => {
-    const list = document.getElementById(listId);
-    if (!list) return;
-    list.innerHTML = '';
-
-    // Hero手札設定ブロック（最上部集約）
-    const heroSeat = AppState.seats[AppState.heroSeatIndex];
-    const heroHeader = document.createElement('div');
-    heroHeader.style.cssText = 'background:linear-gradient(135deg, #2b2512 0%, #161b22 100%);border:1.5px solid var(--yellow);border-radius:8px;padding:8px 10px;margin-bottom:8px;';
-    heroHeader.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <span style="color:var(--yellow);font-weight:800;font-size:.82rem;">★ Hero (自分) の手札選択 【必須】</span>
-        <span style="font-size:.7rem;color:var(--text-sub);">位置: <b style="color:var(--yellow);">${getPositionName(AppState.heroSeatIndex)}</b></span>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center;">
-        <span style="font-size:.76rem;color:var(--text-sub);">自分手札:</span>
-        <div class="card-slot ${heroSeat?.holeCards[0] ? 'filled' : ''}" onclick="openCardPicker('hero1')" style="width:36px;height:46px;font-size:.82rem;">${formatCardDisplay(heroSeat?.holeCards[0])}</div>
-        <div class="card-slot ${heroSeat?.holeCards[1] ? 'filled' : ''}" onclick="openCardPicker('hero2')" style="width:36px;height:46px;font-size:.82rem;">${formatCardDisplay(heroSeat?.holeCards[1])}</div>
-        <button onclick="clearHeroCards()" style="padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:5px;font-size:.72rem;color:var(--red);cursor:pointer;">クリア</button>
-      </div>`;
-    list.appendChild(heroHeader);
-
-    AppState.seats.forEach((seat, i) => {
-      const isHero = (i === AppState.heroSeatIndex);
-      const displayStackVal = isBBUnit ? (seat.stack / bbVal).toFixed(1) : seat.stack;
-      const row = document.createElement('div');
-      row.className = `seat-config-row ${isHero ? 'hero-row' : ''}`;
-      row.style.cssText = isHero 
-        ? 'background:#231e0f;border:1.5px solid var(--yellow);border-radius:6px;padding:6px 8px;margin-bottom:6px;' 
-        : 'background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;margin-bottom:6px;';
-      
-      row.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
-          <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:${isHero ? 'var(--yellow)' : 'var(--text)'};cursor:pointer;user-select:none;">
-            <input type="radio" name="hero-radio-${listId}" value="${i}" ${isHero ? 'checked' : ''} class="hero-radio-input" data-seat="${i}">
-            <span>${isHero ? '★ HERO (' + getPositionName(i) + ')' : getPositionName(i)}</span>
-          </label>
-          <button class="away-toggle ${seat.isAway ? 'away-on' : ''}" data-seat="${i}" style="padding:2px 8px;font-size:.7rem;border-radius:4px;">
-            ${seat.isAway ? '離席中' : '在席'}
-          </button>
-        </div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <input type="text" value="${seat.name}" data-seat="${i}" class="player-name-input" placeholder="名前" style="flex:1;min-width:0;padding:4px 6px;font-size:.78rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);">
-          <input type="number" value="${displayStackVal}" data-seat="${i}" class="stack-input" min="0" step="1" title="${isBBUnit ? 'スタック(BB数)' : 'スタック(金額)'}" style="width:75px;padding:4px 6px;font-size:.78rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);text-align:right;">
-        </div>`;
-      list.appendChild(row);
-    });
-
-    list.querySelectorAll('.hero-radio-input').forEach(radio => {
-      radio.addEventListener('change', e => {
-        const idx = parseInt(e.target.dataset.seat);
-        AppState.heroSeatIndex = idx;
-        AppState.seats.forEach((s, seatIdx) => { s.isHero = (seatIdx === idx); });
-        renderAll();
-      });
-    });
-
-    list.querySelectorAll('.player-name-input').forEach(input => {
-      input.addEventListener('change', e => {
-        const idx = parseInt(input.dataset.seat);
-        AppState.seats[idx].name = e.target.value;
-        renderSeats();
-      });
-    });
-
-    list.querySelectorAll('.stack-input').forEach(input => {
-      input.addEventListener('change', e => {
-        const idx = parseInt(input.dataset.seat);
-        const val = parseFloat(e.target.value) || 0;
-        AppState.seats[idx].stack = isBBUnit ? val * bbVal : val;
-        renderSeats();
-      });
-    });
-
-    list.querySelectorAll('.away-toggle').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.seat);
-        AppState.seats[idx].isAway = !AppState.seats[idx].isAway;
-        renderSeatConfigUI();
-        renderSeats();
-      });
-    });
-  });
-}
-
-function renderSeatsDOM() {
-  const container = document.getElementById('seats-container');
-  if (!container) return;
-  const n = AppState.seatCount;
-  const cx = 50, cy = 50;
-  const rx = 40, ry = 30;
-  AppState.seats.forEach((seat, i) => {
-    let node = document.getElementById(`seat-${i}`);
-    if (!node) {
-      node = document.createElement('div');
-      node.className = 'seat-node';
-      node.id = `seat-${i}`;
-      node.innerHTML = `
-        <div class="seat-avatar">
-          <span class="seat-action"></span>
-        </div>
-        <div class="seat-pos"></div>
-        <div class="seat-name"></div>
-        <div class="seat-stack"></div>
-        <div class="seat-bet"></div>`;
-      container.appendChild(node);
-    }
-    const angle = (2 * Math.PI * i / n) - Math.PI / 2;
-    const x = cx + rx * Math.cos(angle);
-    const y = cy + ry * Math.sin(angle);
-    node.style.left = `${x}%`;
-    node.style.top  = `${y}%`;
-  });
-  document.querySelectorAll('.seat-node').forEach(node => {
-    const idx = parseInt(node.id.replace('seat-',''));
-    if (idx >= n) node.remove();
-  });
-}
-
 function updateTimeline() {
   ['action-timeline', 'action-timeline-m'].forEach(id => {
     const el = document.getElementById(id);
@@ -569,14 +446,6 @@ function updateTimeline() {
     if (bar) bar.max = Math.max(0, AppState.history.length - 1);
   });
 }
-
-const _origRenderAll = renderAll;
-window.renderAll = function() {
-  renderSeatsDOM();
-  renderSeatConfigUI();
-  _origRenderAll();
-  updateTimeline();
-};
 
 document.querySelectorAll('.speed-btn').forEach(btn => {
   btn.addEventListener('click', () => {

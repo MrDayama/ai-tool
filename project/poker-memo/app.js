@@ -587,25 +587,26 @@ function selectCardFromPicker(cardCode) {
   if (!activePickerSlot) return;
 
   const boardMap = { flop1:0, flop2:1, flop3:2, turn:3, river:4 };
+  const heroSeat = AppState.seats[AppState.heroSeatIndex];
+
   if (boardMap[activePickerSlot] !== undefined) {
     AppState.board[boardMap[activePickerSlot]] = cardCode;
     renderBoard();
   } else if (activePickerSlot === 'hero1') {
-    tempHeroSetup.heroCards[0] = cardCode;
-    renderHeroSetupUI();
+    if (heroSeat) heroSeat.holeCards[0] = cardCode;
+    renderAll();
   } else if (activePickerSlot === 'hero2') {
-    tempHeroSetup.heroCards[1] = cardCode;
-    renderHeroSetupUI();
-  } else if (activePickerSlot.startsWith('seat_')) {
-    const parts = activePickerSlot.split('_');
-    const sIdx = parseInt(parts[1]);
-    const cIdx = parts[2] === 'card1' ? 0 : 1;
-    if (!tempHeroSetup.villainCards[sIdx]) tempHeroSetup.villainCards[sIdx] = ['', ''];
-    tempHeroSetup.villainCards[sIdx][cIdx] = cardCode;
-    renderHeroSetupUI();
+    if (heroSeat) heroSeat.holeCards[1] = cardCode;
+    renderAll();
   }
 
   closeCardPicker();
+}
+
+function clearHeroCards() {
+  const heroSeat = AppState.seats[AppState.heroSeatIndex];
+  if (heroSeat) heroSeat.holeCards = ['', ''];
+  renderAll();
 }
 
 function applyManualCardInput() {
@@ -942,6 +943,17 @@ function renderSeats() {
   });
 }
 
+function renderAll() {
+  renderSeats();
+  renderBoard();
+  renderPot();
+  renderActionPanel();
+  renderStreetBadge();
+  if (typeof renderSeatConfigUI === 'function') {
+    renderSeatConfigUI();
+  }
+}
+
 function renderPot() {
   const mainEl = document.getElementById('pot-main');
   const sideEl = document.getElementById('pot-sides');
@@ -1046,6 +1058,121 @@ function showWinnerSelector(candidates) {
   });
 
   modal.classList.remove('hidden');
+}
+
+function renderSeatConfigUI() {
+  const isBBUnit = AppState.blind.displayUnit === 'bb';
+  const bbVal = AppState.blind.bb || 1;
+
+  ['seat-config-list', 'seat-config-list-m'].forEach(listId => {
+    const list = document.getElementById(listId);
+    if (!list) return;
+    list.innerHTML = '';
+
+    // 1. ★ Hero (自分) の手札選択カードボックス
+    const heroSeat = AppState.seats[AppState.heroSeatIndex];
+    const heroBox = document.createElement('div');
+    heroBox.className = 'hero-setup-box';
+    heroBox.style.cssText = 'background:linear-gradient(135deg, #2b2512 0%, #161b22 100%);border:2px solid var(--yellow);border-radius:8px;padding:10px 12px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.4);';
+    
+    const card1Val = heroSeat?.holeCards?.[0] ? formatCardDisplay(heroSeat.holeCards[0]) : '?';
+    const card2Val = heroSeat?.holeCards?.[1] ? formatCardDisplay(heroSeat.holeCards[1]) : '?';
+
+    heroBox.innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span style="color:var(--yellow);font-weight:800;font-size:.85rem;">★ Hero (自分) の手札選択 【必須】</span>
+        <span style="font-size:.72rem;background:var(--yellow);color:#000;padding:2px 6px;border-radius:4px;font-weight:700;">
+          位置: ${getPositionName(AppState.heroSeatIndex)}
+        </span>
+      </div>
+      <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
+        <span style="font-size:.8rem;color:var(--text);font-weight:600;">自分手札:</span>
+        <div class="card-slot ${heroSeat?.holeCards?.[0] ? 'filled' : ''}" onclick="openCardPicker('hero1')" style="width:44px;height:56px;font-size:.9rem;cursor:pointer;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--surface);">
+          ${card1Val}
+        </div>
+        <div class="card-slot ${heroSeat?.holeCards?.[1] ? 'filled' : ''}" onclick="openCardPicker('hero2')" style="width:44px;height:56px;font-size:.9rem;cursor:pointer;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--surface);">
+          ${card2Val}
+        </div>
+        <button onclick="clearHeroCards()" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.75rem;color:var(--red);cursor:pointer;font-weight:600;">クリア</button>
+      </div>`;
+    list.appendChild(heroBox);
+
+    // 2. プレイヤー一覧 Heading
+    const title = document.createElement('div');
+    title.style.cssText = 'font-size:.75rem;color:var(--text-sub);font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;';
+    title.textContent = '👥 参加プレイヤー & Hero位置指定';
+    list.appendChild(title);
+
+    // 3. 各座席
+    AppState.seats.forEach((seat, i) => {
+      const isHero = (i === AppState.heroSeatIndex);
+      const displayStackVal = isBBUnit ? (seat.stack / bbVal).toFixed(1) : seat.stack;
+      const item = document.createElement('div');
+      item.className = `seat-config-item ${isHero ? 'is-hero' : ''}`;
+      item.style.cssText = isHero 
+        ? 'background:#282110;border:2px solid var(--yellow);border-radius:8px;padding:8px 10px;margin-bottom:8px;' 
+        : 'background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:8px;';
+      
+      item.innerHTML = `
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;">
+          <div style="display:flex;align-items:center;gap:6px;">
+            <span style="font-weight:800;font-size:.85rem;color:${isHero ? 'var(--yellow)' : 'var(--text)'};">
+              ${getPositionName(i)}
+            </span>
+            ${isHero ? '<span style="background:var(--yellow);color:#000;font-size:.68rem;font-weight:800;padding:2px 6px;border-radius:4px;">★ HERO (自分)</span>' : ''}
+          </div>
+          <div style="display:flex;gap:6px;">
+            ${!isHero ? `<button class="select-hero-btn" data-seat="${i}" style="background:var(--surface2);color:var(--yellow);border:1px solid var(--yellow);border-radius:4px;padding:4px 8px;font-size:.72rem;font-weight:700;cursor:pointer;">★ 自分に指定</button>` : ''}
+            <button class="away-toggle ${seat.isAway ? 'away-on' : ''}" data-seat="${i}" style="padding:4px 8px;font-size:.72rem;border-radius:4px;cursor:pointer;">
+              ${seat.isAway ? '離席中' : '在席'}
+            </button>
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input type="text" value="${seat.name}" data-seat="${i}" class="player-name-input" placeholder="名前" style="flex:1;min-width:0;padding:6px 8px;font-size:.8rem;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);">
+          <div style="display:flex;align-items:center;gap:4px;">
+            <input type="number" value="${displayStackVal}" data-seat="${i}" class="stack-input" min="0" step="1" title="${isBBUnit ? 'スタック(BB数)' : 'スタック(金額)'}" style="width:70px;padding:6px 6px;font-size:.8rem;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);text-align:right;">
+            <span style="font-size:.72rem;color:var(--text-sub);">${isBBUnit ? 'BB' : ''}</span>
+          </div>
+        </div>`;
+      list.appendChild(item);
+    });
+
+    list.querySelectorAll('.select-hero-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.seat);
+        AppState.heroSeatIndex = idx;
+        AppState.seats.forEach((s, seatIdx) => { s.isHero = (seatIdx === idx); });
+        renderAll();
+      });
+    });
+
+    list.querySelectorAll('.player-name-input').forEach(input => {
+      input.addEventListener('change', e => {
+        const idx = parseInt(input.dataset.seat);
+        AppState.seats[idx].name = e.target.value;
+        renderSeats();
+      });
+    });
+
+    list.querySelectorAll('.stack-input').forEach(input => {
+      input.addEventListener('change', e => {
+        const idx = parseInt(input.dataset.seat);
+        const val = parseFloat(e.target.value) || 0;
+        AppState.seats[idx].stack = isBBUnit ? val * bbVal : val;
+        renderSeats();
+      });
+    });
+
+    list.querySelectorAll('.away-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.seat);
+        AppState.seats[idx].isAway = !AppState.seats[idx].isAway;
+        renderSeatConfigUI();
+        renderSeats();
+      });
+    });
+  });
 }
 
 async function renderSavedHandsModal() {
