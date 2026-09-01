@@ -1220,7 +1220,50 @@ function renderAll() {
   renderStreetBadge();
 }
 
+function ensureSeatNodes() {
+  const container = document.getElementById('seats-container');
+  if (!container) return;
+
+  const count = AppState.seatCount || 6;
+  const currentNodes = container.querySelectorAll('.seat-node');
+  if (currentNodes.length === count) return;
+
+  container.innerHTML = '';
+
+  const cx = 50;
+  const cy = 50;
+  const rx = 38;
+  const ry = 32;
+
+  for (let i = 0; i < count; i++) {
+    const angle = (2 * Math.PI / count) * i + Math.PI / 2;
+    const x = cx + rx * Math.cos(angle);
+    const y = cy + ry * Math.sin(angle);
+
+    const node = document.createElement('div');
+    node.id = `seat-${i}`;
+    node.className = 'seat-node';
+    node.style.position = 'absolute';
+    node.style.left = `${x.toFixed(2)}%`;
+    node.style.top = `${y.toFixed(2)}%`;
+    node.style.transform = 'translate(-50%, -50%)';
+
+    node.innerHTML = `
+      <div class="seat-avatar">
+        <span class="seat-name">P${i + 1}</span>
+        <span class="seat-stack">100</span>
+      </div>
+      <div class="seat-cards-badge"></div>
+      <div class="seat-bet"></div>
+      <div class="seat-action"></div>
+      <div class="seat-pos"></div>
+    `;
+    container.appendChild(node);
+  }
+}
+
 function renderSeats() {
+  ensureSeatNodes();
   AppState.seats.forEach((seat, i) => {
     const el = document.getElementById(`seat-${i}`);
     if (!el) return;
