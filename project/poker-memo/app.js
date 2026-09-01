@@ -56,6 +56,7 @@ let activePickerSlot = null; // 'flop1', 'flop2', 'flop3', 'turn', 'river'
 const AppState = {
   seatCount: 6,
   dealerSeat: 0,
+  heroSeatIndex: 0,
 
   blind: {
     sb: 1, bb: 2, anteType: 'bb', anteAmount: 2,
@@ -85,7 +86,8 @@ function initSeats() {
     isAway: false,
     isFolded: false,
     isAllIn: false,
-    holeCards: [],
+    isHero: i === AppState.heroSeatIndex,
+    holeCards: ['', ''],
   }));
 }
 
@@ -183,12 +185,18 @@ function splitPot(winnerSeats, potAmount) {
 }
 
 function startNewHand() {
+  const heroSeat = AppState.seats[AppState.heroSeatIndex];
+  if (!heroSeat || !heroSeat.holeCards || heroSeat.holeCards.filter(c => c !== '').length < 2) {
+    showError('★ Hero(自分)のポジション ＆ 手札2枚の設定が必須です');
+    openHeroSetupModal();
+    return;
+  }
+
   AppState.seats.forEach(s => {
     s.betAmount = 0;
     s.action = null;
     s.isFolded = false;
     s.isAllIn = false;
-    s.holeCards = [];
   });
   AppState.board = ['', '', '', '', ''];
   AppState.pot = { main: 0, sides: [] };
@@ -382,6 +390,140 @@ function endHand(winnerCandidates) {
 }
 
 // ===================================================
+// Hero ＆ 参加者設定モーダル 制御関数
+// ===================================================
+
+let tempHeroSetup = {
+  heroSeatIndex: 0,
+  heroCards: ['', ''],
+  villainCards: {}
+};
+
+function formatCardDisplay(cardCode) {
+  if (!cardCode) return '?';
+  const rankStr = cardCode.slice(0, -1).replace('T', '10');
+  const suitChar = cardCode.slice(-1);
+  const suitMap = { s: '♠', h: '♥', d: '♦', c: '♣' };
+  return `${rankStr}${suitMap[suitChar] || ''}`;
+}
+
+function openHeroSetupModal() {
+  const modal = document.getElementById('hero-setup-modal');
+  if (!modal) return;
+
+  tempHeroSetup.heroSeatIndex = AppState.heroSeatIndex ?? 0;
+  const heroSeat = AppState.seats[tempHeroSetup.heroSeatIndex];
+  tempHeroSetup.heroCards = (heroSeat && heroSeat.holeCards && heroSeat.holeCards.length === 2)
+    ? [...heroSeat.holeCards]
+    : ['', ''];
+
+  tempHeroSetup.villainCards = {};
+  AppState.seats.forEach((s, idx) => {
+    if (idx !== tempHeroSetup.heroSeatIndex) {
+      tempHeroSetup.villainCards[idx] = (s.holeCards && s.holeCards.length === 2)
+        ? [...s.holeCards]
+        : ['', ''];
+    }
+  });
+
+  renderHeroSetupUI();
+  modal.classList.remove('hidden');
+}
+
+function closeHeroSetupModal() {
+  const modal = document.getElementById('hero-setup-modal');
+  if (modal) modal.classList.add('hidden');
+}
+
+function renderHeroSetupUI() {
+  const select = document.getElementById('hero-seat-select');
+  if (select) {
+    select.innerHTML = '';
+    AppState.seats.forEach((s, i) => {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `${s.name} (${getPositionName(i)})`;
+      if (i === tempHeroSetup.heroSeatIndex) opt.selected = true;
+      select.appendChild(opt);
+    });
+
+    select.onchange = (e) => {
+      tempHeroSetup.heroSeatIndex = parseInt(e.target.value);
+      renderHeroSetupUI();
+    };
+  }
+
+  ['hero-card1', 'hero-card2'].forEach((id, idx) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const cardStr = tempHeroSetup.heroCards[idx];
+    if (cardStr) {
+      const suitChar = cardStr.slice(-1);
+      const suitClassMap = { s: 'spades', h: 'hearts', d: 'diamonds', c: 'clubs' };
+      el.textContent = formatCardDisplay(cardStr);
+      el.className = `card-slot ${suitClassMap[suitChar] || ''}`;
+    } else {
+      el.textContent = '?';
+      el.className = 'card-slot';
+    }
+  });
+
+  const list = document.getElementById('villains-setup-list');
+  if (list) {
+    list.innerHTML = '';
+    AppState.seats.forEach((s, i) => {
+      if (i === tempHeroSetup.heroSeatIndex) return;
+
+      const vCards = tempHeroSetup.villainCards[i] || ['', ''];
+      const row = document.createElement('div');
+      row.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;';
+
+      const card1Str = vCards[0] ? formatCardDisplay(vCards[0]) : '?';
+      const card2Str = vCards[1] ? formatCardDisplay(vCards[1]) : '?';
+
+      row.innerHTML = `
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:.75rem;color:var(--text-sub);min-width:44px">${getPositionName(i)}</span>
+          <span style="font-size:.82rem;font-weight:600">${s.name}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:.72rem;color:var(--text-sub)">手札(任意):</span>
+          <div class="card-slot" onclick="openCardPicker('seat_${i}_card1')" style="width:36px;height:46px;font-size:.78rem;">${card1Str}</div>
+          <div class="card-slot" onclick="openCardPicker('seat_${i}_card2')" style="width:36px;height:46px;font-size:.78rem;">${card2Str}</div>
+        </div>`;
+      list.appendChild(row);
+    });
+  }
+}
+
+function clearHeroCards() {
+  tempHeroSetup.heroCards = ['', ''];
+  renderHeroSetupUI();
+}
+
+function confirmHeroSetup() {
+  if (!tempHeroSetup.heroCards[0] || !tempHeroSetup.heroCards[1]) {
+    showError('★ Hero (自分) の手札を2枚選択してください (必須)');
+    return;
+  }
+
+  AppState.heroSeatIndex = tempHeroSetup.heroSeatIndex;
+
+  AppState.seats.forEach((s, i) => {
+    s.isHero = (i === AppState.heroSeatIndex);
+    if (i === AppState.heroSeatIndex) {
+      s.holeCards = [...tempHeroSetup.heroCards];
+    } else if (tempHeroSetup.villainCards[i]) {
+      s.holeCards = [...tempHeroSetup.villainCards[i]];
+    }
+  });
+
+  closeHeroSetupModal();
+  renderAll();
+  showError(`★ Heroを ${AppState.seats[AppState.heroSeatIndex].name} (${getPositionName(AppState.heroSeatIndex)}) [${formatCardDisplay(AppState.seats[AppState.heroSeatIndex].holeCards[0])} ${formatCardDisplay(AppState.seats[AppState.heroSeatIndex].holeCards[1])}] に確定しました`);
+}
+
+// ===================================================
 // 4x13 カードピッカー 制御関数
 // ===================================================
 
@@ -405,7 +547,15 @@ function renderCardPickerMatrix() {
   if (!container) return;
   container.innerHTML = '';
 
-  const usedCards = new Set(AppState.board.filter(c => c));
+  const usedCards = new Set();
+  AppState.board.filter(c => c).forEach(c => usedCards.add(c));
+  tempHeroSetup.heroCards.filter(c => c).forEach(c => usedCards.add(c));
+  Object.values(tempHeroSetup.villainCards).forEach(pair => {
+    if (pair) pair.filter(c => c).forEach(c => usedCards.add(c));
+  });
+  AppState.seats.forEach(s => {
+    if (s.holeCards) s.holeCards.filter(c => c).forEach(c => usedCards.add(c));
+  });
 
   SUITS.forEach(suit => {
     const row = document.createElement('div');
@@ -436,11 +586,26 @@ function renderCardPickerMatrix() {
 
 function selectCardFromPicker(cardCode) {
   if (!activePickerSlot) return;
-  const map = { flop1:0, flop2:1, flop3:2, turn:3, river:4 };
-  if (map[activePickerSlot] !== undefined) {
-    AppState.board[map[activePickerSlot]] = cardCode;
+
+  const boardMap = { flop1:0, flop2:1, flop3:2, turn:3, river:4 };
+  if (boardMap[activePickerSlot] !== undefined) {
+    AppState.board[boardMap[activePickerSlot]] = cardCode;
+    renderBoard();
+  } else if (activePickerSlot === 'hero1') {
+    tempHeroSetup.heroCards[0] = cardCode;
+    renderHeroSetupUI();
+  } else if (activePickerSlot === 'hero2') {
+    tempHeroSetup.heroCards[1] = cardCode;
+    renderHeroSetupUI();
+  } else if (activePickerSlot.startsWith('seat_')) {
+    const parts = activePickerSlot.split('_');
+    const sIdx = parseInt(parts[1]);
+    const cIdx = parts[2] === 'card1' ? 0 : 1;
+    if (!tempHeroSetup.villainCards[sIdx]) tempHeroSetup.villainCards[sIdx] = ['', ''];
+    tempHeroSetup.villainCards[sIdx][cIdx] = cardCode;
+    renderHeroSetupUI();
   }
-  renderBoard();
+
   closeCardPicker();
 }
 
@@ -456,11 +621,24 @@ function applyManualCardInput() {
 
 function clearCurrentCardSlot() {
   if (!activePickerSlot) return;
-  const map = { flop1:0, flop2:1, flop3:2, turn:3, river:4 };
-  if (map[activePickerSlot] !== undefined) {
-    AppState.board[map[activePickerSlot]] = '';
+  const boardMap = { flop1:0, flop2:1, flop3:2, turn:3, river:4 };
+  if (boardMap[activePickerSlot] !== undefined) {
+    AppState.board[boardMap[activePickerSlot]] = '';
+    renderBoard();
+  } else if (activePickerSlot === 'hero1') {
+    tempHeroSetup.heroCards[0] = '';
+    renderHeroSetupUI();
+  } else if (activePickerSlot === 'hero2') {
+    tempHeroSetup.heroCards[1] = '';
+    renderHeroSetupUI();
+  } else if (activePickerSlot.startsWith('seat_')) {
+    const parts = activePickerSlot.split('_');
+    const sIdx = parseInt(parts[1]);
+    const cIdx = parts[2] === 'card1' ? 0 : 1;
+    if (tempHeroSetup.villainCards[sIdx]) tempHeroSetup.villainCards[sIdx][cIdx] = '';
+    renderHeroSetupUI();
   }
-  renderBoard();
+
   closeCardPicker();
 }
 
@@ -964,6 +1142,10 @@ window.actionRaise = actionRaise;
 window.actionAllIn = actionAllIn;
 window.actionUndo = undoAction;
 window.startNewHand = startNewHand;
+window.openHeroSetupModal = openHeroSetupModal;
+window.closeHeroSetupModal = closeHeroSetupModal;
+window.confirmHeroSetup = confirmHeroSetup;
+window.clearHeroCards = clearHeroCards;
 window.openCardPicker = openCardPicker;
 window.closeCardPicker = closeCardPicker;
 window.applyManualCardInput = applyManualCardInput;

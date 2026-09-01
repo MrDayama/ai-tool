@@ -81,7 +81,10 @@
 
     <!-- プレイヤー / スタック設定 -->
     <div class="card">
-      <h3>プレイヤー & スタック</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="margin-bottom:0">プレイヤー & スタック</h3>
+        <button onclick="openHeroSetupModal()" style="background:var(--yellow);color:#000;border:none;border-radius:5px;padding:4px 8px;font-size:.75rem;font-weight:700;cursor:pointer;">★ Hero/参加者設定</button>
+      </div>
       <div class="seat-config-list" id="seat-config-list">
         <!-- app.js から動的生成 -->
       </div>
@@ -290,6 +293,52 @@
     <button onclick="document.getElementById('saved-hands-modal').classList.add('hidden')"
       style="padding:8px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);cursor:pointer;font-size:.8rem;margin-top:6px;">
       閉じる
+    </button>
+  </div>
+</div>
+
+<!-- ======= Hero (自分) ＆ 参加者設定 モーダル ======= -->
+<div class="modal-overlay hidden" id="hero-setup-modal">
+  <div class="modal-box" style="max-width:520px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;">
+      <h2>🎴 Hero (自分) ＆ 参加者設定</h2>
+      <button onclick="closeHeroSetupModal()" style="background:transparent;border:none;color:var(--text-sub);font-size:1.2rem;cursor:pointer;">✕</button>
+    </div>
+
+    <!-- 必須 1: Heroのポジション ＆ ホールカード決定 -->
+    <div style="background:var(--surface2);border:1px solid var(--yellow);border-radius:8px;padding:12px;margin-top:6px;">
+      <h3 style="font-size:.85rem;color:var(--yellow);margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+        ★ 1. Hero (自分) のポジション ＆ 手札設定 <span style="font-size:.7rem;background:var(--red);color:#fff;padding:1px 6px;border-radius:4px;font-weight:700;">必須</span>
+      </h3>
+
+      <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:12px;align-items:center;">
+        <div>
+          <label style="font-size:.78rem;color:var(--text-sub);display:block;margin-bottom:4px">Heroの座席 (ポジション)</label>
+          <select id="hero-seat-select" style="width:100%;padding:6px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:.85rem;">
+          </select>
+        </div>
+
+        <div>
+          <label style="font-size:.78rem;color:var(--text-sub);display:block;margin-bottom:4px">Heroの手札 (2枚必須)</label>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <div class="card-slot" id="hero-card1" onclick="openCardPicker('hero1')" style="width:44px;height:56px;font-size:.88rem;">?</div>
+            <div class="card-slot" id="hero-card2" onclick="openCardPicker('hero2')" style="width:44px;height:56px;font-size:.88rem;">?</div>
+            <button onclick="clearHeroCards()" style="padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:5px;font-size:.75rem;color:var(--red);cursor:pointer;">クリア</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 任意 2: 参加者 (Villains) の設定 -->
+    <div style="margin-top:12px;">
+      <h3 style="font-size:.85rem;color:var(--text-sub);margin-bottom:8px;">
+        👥 2. 他の参加者の設定 <span style="font-size:.7rem;background:var(--surface2);border:1px solid var(--border);color:var(--text-sub);padding:1px 6px;border-radius:4px;">手札は任意設定</span>
+      </h3>
+      <div id="villains-setup-list" style="max-height:220px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:4px;"></div>
+    </div>
+
+    <button onclick="confirmHeroSetup()" style="margin-top:12px;padding:12px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.95rem;cursor:pointer;">
+      設定を決定して適用
     </button>
   </div>
 </div>

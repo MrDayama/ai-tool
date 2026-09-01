@@ -183,6 +183,39 @@ body {
 .seat-action { font-size: .58rem; font-weight: 700; color: var(--accent); letter-spacing: .2px; white-space: nowrap; }
 .seat-pos    { font-size: .52rem; color: var(--text-sub); white-space: nowrap; }
 
+/* ===== Hero 座席 & ホールカード表示 ===== */
+.seat-node.is-hero .seat-avatar {
+  border-color: var(--yellow) !important;
+  box-shadow: 0 0 10px 2px rgba(210, 153, 34, 0.6);
+}
+.hero-badge-tag {
+  position: absolute;
+  top: -8px;
+  background: var(--yellow);
+  color: #000;
+  font-size: .5rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: .5px;
+}
+.seat-cards-badge {
+  display: flex;
+  gap: 2px;
+  margin-top: 1px;
+}
+.mini-card {
+  font-size: .62rem;
+  font-weight: 700;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0 3px;
+  line-height: 1.3;
+}
+.mini-card.hearts, .mini-card.diamonds { color: #f85149; }
+.mini-card.spades, .mini-card.clubs    { color: #e6edf3; }
+
 /* ===== ボードカード ===== */
 .board-area {
   display: flex;
