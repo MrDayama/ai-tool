@@ -1486,9 +1486,9 @@ function ensureSeatNodes() {
   const container = document.getElementById('seats-container');
   if (!container) return;
 
-  const count = AppState.seatCount || 6;
+  const count = AppState.seatCount || (AppState.seats ? AppState.seats.length : 6);
   const currentNodes = container.querySelectorAll('.seat-node');
-  if (currentNodes.length === count) return;
+  if (currentNodes.length === count && container.children.length > 0) return;
 
   container.innerHTML = '';
 
