@@ -310,6 +310,7 @@ function switchToTableView(skipCheck = false) {
   document.getElementById('view-input-mode')?.classList.add('hidden');
   document.getElementById('view-table-mode')?.classList.remove('hidden');
   if (typeof renderAll === 'function') renderAll();
+  if (typeof renderSeats === 'function') renderSeats();
   if (window.Replay && AppState.history && AppState.history.length > 0) {
     Replay.index = 0;
     Replay.stepTo(0);
