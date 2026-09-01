@@ -1552,6 +1552,37 @@ function renderSeats() {
     if (typeof initSeats === 'function') initSeats();
   }
   ensureSeatNodes();
+  const container = document.getElementById('seats-container');
+  if (container && container.querySelectorAll('.seat-node').length === 0) {
+    const count = AppState.seatCount || (AppState.seats ? AppState.seats.length : 6);
+    const cx = 50, cy = 50, rx = 38, ry = 32;
+    for (let i = 0; i < count; i++) {
+      const angle = (2 * Math.PI / count) * i + Math.PI / 2;
+      const x = cx + rx * Math.cos(angle);
+      const y = cy + ry * Math.sin(angle);
+      const node = document.createElement('div');
+      node.id = `seat-${i}`;
+      node.className = 'seat-node';
+      node.style.position = 'absolute';
+      node.style.left = `${x.toFixed(2)}%`;
+      node.style.top = `${y.toFixed(2)}%`;
+      node.style.transform = 'translate(-50%, -50%)';
+      node.style.display = 'flex';
+      node.style.flexDirection = 'column';
+      node.style.alignItems = 'center';
+      node.innerHTML = `
+        <div class="seat-cards-badge"></div>
+        <div class="seat-avatar">
+          <span class="seat-name">P${i + 1}</span>
+          <span class="seat-stack">100</span>
+        </div>
+        <div class="seat-bet"></div>
+        <div class="seat-action"></div>
+        <div class="seat-pos"></div>
+      `;
+      container.appendChild(node);
+    }
+  }
   AppState.seats.forEach((seat, i) => {
     const el = document.getElementById(`seat-${i}`);
     if (!el) return;
