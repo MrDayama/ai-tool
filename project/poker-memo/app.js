@@ -230,6 +230,9 @@ function startNewHand() {
   bet(bbIdx, bb);
   updateMinRaise(bb, bb);
   AppState.currentSeatIndex = getPreflopFirstSeat();
+
+  // 初期スナップショット (リプレイ再生の開始フレーム) を記録
+  recordHistory(AppState.currentSeatIndex, 'start', 0);
   renderAll();
 }
 
@@ -284,9 +287,17 @@ function actionRaise(totalAmount) {
   }
   const raiseDelta = totalAmount - maxBetOnTable;
   const additional = totalAmount - currentBet;
+
+  // レイズ発生時、他アクティブプレイヤーのactionをクリアして再コール/フォールドを要求
+  AppState.seats.forEach((s, sIdx) => {
+    if (sIdx !== idx && !s.isFolded && !s.isAllIn && !s.isAway) {
+      s.action = null;
+    }
+  });
+
   bet(idx, additional);
-  recordHistory(idx, 'raise', totalAmount);
   AppState.seats[idx].action = 'raise';
+  recordHistory(idx, 'raise', totalAmount);
   updateMinRaise(totalAmount, raiseDelta);
   advanceAction();
 }
@@ -294,9 +305,20 @@ function actionRaise(totalAmount) {
 function actionAllIn() {
   const idx = AppState.currentSeatIndex;
   const allInBet = AppState.seats[idx].betAmount + AppState.seats[idx].stack;
+  const maxBetOnTable = Math.max(...AppState.seats.map(s => s.betAmount));
+
+  // オールインがレイズ（最高額更新）になった場合、他プレイヤーのactionをクリア
+  if (allInBet > maxBetOnTable) {
+    AppState.seats.forEach((s, sIdx) => {
+      if (sIdx !== idx && !s.isFolded && !s.isAllIn && !s.isAway) {
+        s.action = null;
+      }
+    });
+  }
+
   bet(idx, AppState.seats[idx].stack);
-  recordHistory(idx, 'allin', allInBet);
   AppState.seats[idx].action = 'all-in';
+  recordHistory(idx, 'allin', allInBet);
 
   const contributions = AppState.seats
     .filter(s => !s.isAway && !s.isFolded)
@@ -686,6 +708,7 @@ function recordHistory(seatIndex, action, amount) {
     action,
     amount,
     currentSeatIndex: AppState.currentSeatIndex,
+    boardSnapshot: [...AppState.board],
     potSnapshot: JSON.parse(JSON.stringify(AppState.pot)),
     stackSnapshot: AppState.seats.map(s => ({
       id: s.id, stack: s.stack, betAmount: s.betAmount,
@@ -852,18 +875,22 @@ const Replay = {
     if (index < 0 || index >= AppState.history.length) return;
     const step = AppState.history[index];
     if (!step) return;
-    AppState.pot = JSON.parse(JSON.stringify(step.potSnapshot));
-    step.stackSnapshot.forEach(snap => {
-      const s = AppState.seats[snap.id];
-      if (s) {
-        s.stack = snap.stack;
-        s.betAmount = snap.betAmount;
-        s.isFolded = snap.isFolded;
-        s.isAllIn = snap.isAllIn;
-        s.action = snap.action;
-      }
-    });
-    AppState.street = step.street;
+    this.index = index;
+    if (step.potSnapshot) AppState.pot = JSON.parse(JSON.stringify(step.potSnapshot));
+    if (step.boardSnapshot) AppState.board = [...step.boardSnapshot];
+    if (step.stackSnapshot) {
+      step.stackSnapshot.forEach(snap => {
+        const s = AppState.seats[snap.id];
+        if (s) {
+          s.stack = snap.stack;
+          s.betAmount = snap.betAmount;
+          s.isFolded = snap.isFolded;
+          s.isAllIn = snap.isAllIn;
+          s.action = snap.action;
+        }
+      });
+    }
+    if (step.street) AppState.street = step.street;
     if (step.currentSeatIndex !== undefined) AppState.currentSeatIndex = step.currentSeatIndex;
     renderAll();
     ['replay-bar', 'replay-bar-m'].forEach(id => {
@@ -874,6 +901,7 @@ const Replay = {
 
   setSpeed(s) { this.speed = s; },
 };
+window.Replay = Replay;
 
 // ===================================================
 // ユーティリティ
