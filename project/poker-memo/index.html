@@ -6,9 +6,28 @@
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="style.css?v=20260901_5">
+  <link rel="stylesheet" href="style.css?v=20260901_6">
+  <script>
+    // キャッシュを強制消去し最新UIを読込
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
+    }
+    if ('caches' in window) {
+      caches.keys().then(ks => ks.forEach(k => caches.delete(k)));
+    }
+  </script>
 </head>
 <body>
+
+<!-- ===== スマホ専用 最上部クイックナビ ===== -->
+<div style="background:var(--surface2);border-bottom:1px solid var(--yellow);padding:8px 12px;display:flex;gap:8px;align-items:center;justify-content:space-between;">
+  <button onclick="openHeroSetupModal()" style="flex:1;background:var(--yellow);color:#000;border:none;border-radius:6px;padding:8px 10px;font-size:.85rem;font-weight:800;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.4);">
+    ★ Hero/参加者設定 (手札決定)
+  </button>
+  <button onclick="openManualModal()" style="background:var(--surface);color:var(--yellow);border:1px solid var(--yellow);border-radius:6px;padding:8px 12px;font-size:.85rem;font-weight:700;cursor:pointer;">
+    📖 マニュアル
+  </button>
+</div>
 
 <!-- ===== ヘッダー ===== -->
 <header class="header">
@@ -204,6 +223,12 @@
 
   <div class="sheet-content active" id="tab-input">
     <div id="error-msg-mobile" class="hidden" style="background:var(--red);color:#fff;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:600;margin-bottom:8px;"></div>
+
+    <!-- 🔥 スマホ最優先ボタン: Hero設定 & マニュアル -->
+    <div style="display:flex;gap:6px;margin-bottom:8px;">
+      <button onclick="openHeroSetupModal()" style="flex:1;background:var(--yellow);color:#000;border:none;border-radius:6px;padding:8px 6px;font-size:.8rem;font-weight:800;cursor:pointer;">★ Hero/手札設定</button>
+      <button onclick="openManualModal()" style="background:var(--surface2);color:var(--yellow);border:1px solid var(--yellow);border-radius:6px;padding:8px 10px;font-size:.8rem;font-weight:700;cursor:pointer;">📖 マニュアル</button>
+    </div>
 
     <!-- 🔥 手番・状況ガイダンスバナー (スマホ) -->
     <div class="current-turn-banner" id="current-turn-banner-m" style="padding:8px 12px;margin-bottom:8px;">
@@ -449,7 +474,7 @@
   </div>
 </div>
 
-<script src="project/poker-memo/app.js?v=20260901_5"></script>
+<script src="project/poker-memo/app.js?v=20260901_6"></script>
 <script>
 /* ===== UI補助関数 ===== */
 
