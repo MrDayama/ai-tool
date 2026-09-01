@@ -6,9 +6,9 @@
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="style.css?v=20260901_4000">
+  <link rel="stylesheet" href="style.css?v=20260901_5000">
   <script>
-    // 強制キャッシュクリア (v20260901_4000)
+    // 強制キャッシュクリア (v20260901_5000)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
     }
@@ -19,113 +19,99 @@
 </head>
 <body>
 
-<!-- ===== スマホ専用 最上部クイックナビ ===== -->
-<div style="background:var(--surface2);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;gap:8px;align-items:center;justify-content:space-between;">
-  <span style="font-size:.85rem;font-weight:700;color:var(--text);">🎴 Poker Memo</span>
-  <button onclick="openManualModal()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">
-    📖 使い方マニュアル
-  </button>
-</div>
-
-<!-- ===== ヘッダー ===== -->
-<header class="header">
-  <h1>🎴 Poker Memo Web</h1>
-  <span id="street-badge" class="badge">PREFLOP</span>
-
-  <select id="seat-count" title="テーブル人数">
-    <option value="2">2名 (HU)</option>
-    <option value="3">3名</option>
-    <option value="4">4名</option>
-    <option value="5">5名</option>
-    <option value="6" selected>6名 (6-Max)</option>
-    <option value="7">7名</option>
-    <option value="8">8名</option>
-    <option value="9">9名 (Full Ring)</option>
-  </select>
-
-  <button id="unit-toggle">表示: BB</button>
-
-  <!-- 共有・保存・マニュアルボタン群 -->
-  <button onclick="openManualModal()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:4px 10px;font-size:.82rem;font-weight:700;cursor:pointer;">📖 使い方マニュアル</button>
-  <button onclick="copyHandText()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">📋 ハンドコピー</button>
-  <button onclick="renderSavedHandsModal()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">💾 保存履歴</button>
-  <button onclick="exportHandsJSON()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:.82rem;cursor:pointer;">📥 エクスポート</button>
-</header>
-
-<!-- ===== PC: 3カラム メインレイアウト ===== -->
-<div class="main-layout">
-
-  <!-- 左パネル (完全統合サイドバー) -->
-  <aside class="left-panel">
-    <div class="card">
-      <h3>ブラインド設定</h3>
-      <div class="rate-presets">
-        <button class="rate-preset" data-sb="0.5" data-bb="1">0.5/1</button>
-        <button class="rate-preset" data-sb="1"   data-bb="2">1/2</button>
-        <button class="rate-preset" data-sb="2"   data-bb="5">2/5</button>
-        <button class="rate-preset" data-sb="5"   data-bb="10">5/10</button>
-        <button class="rate-preset" data-sb="10"  data-bb="20">10/20</button>
-        <button class="rate-preset" data-sb="25"  data-bb="50">25/50</button>
+<!-- ============================================================ -->
+<!-- 画面1: 📝 ハンド入力 ＆ 初期設定画面 (#view-input-mode) -->
+<!-- ============================================================ -->
+<div id="view-input-mode" class="mode-view">
+  <div style="max-width:720px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:16px;">
+    
+    <!-- ヘッダー -->
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--accent);padding-bottom:12px;">
+      <div>
+        <h1 style="font-size:1.15rem;font-weight:800;color:var(--text);">🎴 Poker Memo Web</h1>
+        <span style="font-size:.72rem;color:var(--text-sub);">【Step 1】 ハンド入力 ＆ 初期設定</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
-        <label style="font-size:.78rem;color:var(--text-sub)">SB
-          <input type="number" id="input-sb" value="1" min="0.01" step="0.5" style="width:100%;margin-top:3px">
-        </label>
-        <label style="font-size:.78rem;color:var(--text-sub)">BB
-          <input type="number" id="input-bb" value="2" min="0.01" step="0.5" style="width:100%;margin-top:3px">
-        </label>
-      </div>
-      <label style="font-size:.78rem;color:var(--text-sub);display:block;margin-top:10px">アンティ
-        <select id="ante-type" style="width:100%;margin-top:3px">
-          <option value="none">なし</option>
-          <option value="regular">通常 Ante（全員）</option>
-          <option value="bb" selected>BB Ante（BBが全員分）</option>
-        </select>
-      </label>
-      <label style="font-size:.78rem;color:var(--text-sub);display:flex;align-items:center;gap:8px;margin-top:10px">
-        <input type="checkbox" id="straddle-toggle"> UTG Straddle
-      </label>
+      <button onclick="openManualModal()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">📖 マニュアル</button>
     </div>
 
-    <!-- 🔥 統合・頑丈レイアウト化された プレイヤー & スタック設定 -->
+    <!-- 1. ゲーム基本設定 -->
     <div class="card">
-      <h3 style="margin-bottom:8px">👥 プレイヤー & Hero(自分)設定</h3>
+      <h3 style="color:var(--accent);margin-bottom:10px;font-size:.9rem;">⚙️ 基本設定 (人数・ブラインド)</h3>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px;">
+        <label style="font-size:.78rem;color:var(--text-sub);">テーブル人数
+          <select id="seat-count" style="width:100%;margin-top:4px;padding:6px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;">
+            <option value="2">2名 (HU)</option>
+            <option value="3">3名</option>
+            <option value="4">4名</option>
+            <option value="5">5名</option>
+            <option value="6" selected>6名 (6-Max)</option>
+            <option value="7">7名</option>
+            <option value="8">8名</option>
+            <option value="9">9名 (Full Ring)</option>
+          </select>
+        </label>
+        <label style="font-size:.78rem;color:var(--text-sub);">表示単位
+          <button id="unit-toggle" style="width:100%;margin-top:4px;padding:6px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;">表示: BB</button>
+        </label>
+      </div>
 
-      <div class="seat-config-list" id="seat-config-list"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+        <label style="font-size:.75rem;color:var(--text-sub);">SB
+          <input type="number" id="input-sb" value="1" min="0.01" step="0.5" style="width:100%;margin-top:3px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);">
+        </label>
+        <label style="font-size:.75rem;color:var(--text-sub);">BB
+          <input type="number" id="input-bb" value="2" min="0.01" step="0.5" style="width:100%;margin-top:3px;padding:6px;background:var(--surface);border:1px solid var(--border);border-radius:6px;color:var(--text);">
+        </label>
+        <label style="font-size:.75rem;color:var(--text-sub);">アンティ
+          <select id="ante-type" style="width:100%;margin-top:3px;padding:6px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;">
+            <option value="none">なし</option>
+            <option value="regular">通常 Ante</option>
+            <option value="bb" selected>BB Ante</option>
+          </select>
+        </label>
+      </div>
+    </div>
+
+    <!-- 2. ★ Hero(自分) ＆ 参加プレイヤー設定 -->
+    <div class="card">
+      <h3 style="color:var(--yellow);margin-bottom:10px;font-size:.9rem;">👥 プレイヤー ＆ Hero(自分)位置指定</h3>
+      <div id="seat-config-list"></div>
       <div style="display:flex;gap:8px;margin-top:10px;">
         <input type="number" id="default-stack" placeholder="全員のスタック (BB数)" style="flex:1;padding:6px 8px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:.8rem;">
         <button onclick="applyDefaultStack()" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.8rem;cursor:pointer">全員に適用</button>
       </div>
     </div>
 
-    <button id="btn-new-hand" onclick="startNewHand()">▶ New Hand 開始</button>
+    <!-- 3. ⚡ アクション＆ボードカード入力 -->
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h3 style="color:var(--green);margin-bottom:0;font-size:.9rem;">⚡ ハンドのアクション ＆ ボードカード入力</h3>
+        <button onclick="startNewHand()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 10px;font-size:.75rem;cursor:pointer;">▶ クリア</button>
+      </div>
 
-    <!-- アクションキーパッド (PCのみ) -->
-    <div class="card" id="action-panel-pc">
-      <!-- 🔥 手番・状況ガイダンスバナー -->
-      <div class="current-turn-banner" id="current-turn-banner-pc">
+      <!-- 手番状況バナー -->
+      <div class="current-turn-banner" id="current-turn-banner-pc" style="margin-bottom:10px;">
         <div>
-          <span style="font-size:.72rem;color:var(--text-sub);display:block;">現在のターン</span>
+          <span style="font-size:.68rem;color:var(--text-sub);display:block;">現在のターン</span>
           <span class="turn-name" id="turn-seat-name-pc">--</span>
         </div>
         <div style="text-align:right;">
-          <span style="font-size:.72rem;color:var(--text-sub);display:block;" id="turn-street-label-pc">PREFLOP</span>
+          <span style="font-size:.68rem;color:var(--text-sub);display:block;" id="turn-street-label-pc">PREFLOP</span>
           <span style="font-size:.85rem;color:var(--yellow);" id="turn-call-label-pc">--</span>
         </div>
       </div>
 
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-        <h3 style="margin-bottom:0">アクション入力</h3>
-        <button onclick="undoAction()" style="background:var(--surface);border:1px solid var(--border);color:var(--text-sub);border-radius:5px;padding:3px 8px;font-size:.72rem;cursor:pointer;">↩ Undo (1手戻る)</button>
-      </div>
-      <div id="error-msg" class="hidden"></div>
-      <div class="action-grid">
+      <div id="error-msg" class="hidden" style="margin-bottom:10px;"></div>
+
+      <!-- アクションボタン群 -->
+      <div class="action-grid" style="margin-bottom:10px;">
         <button id="btn-fold"  class="btn-fold"  onclick="actionFold()">FOLD</button>
         <button id="btn-call"  class="btn-call"  onclick="actionCall()">CHECK / CALL</button>
         <button id="btn-raise" class="btn-raise" onclick="toggleRaisePanel()">RAISE ▾</button>
         <button id="btn-allin" class="btn-allin" onclick="actionAllIn()">ALL IN</button>
       </div>
-      <div id="raise-panel" class="hidden" style="margin-top:10px">
+
+      <div id="raise-panel" class="hidden" style="margin-bottom:10px">
         <div class="raise-presets">
           <button class="raise-mult" data-mult="2.5">2.5x</button>
           <button class="raise-mult" data-mult="3">3x</button>
@@ -137,14 +123,54 @@
           <input type="number" id="raise-input" placeholder="カスタム額" min="0" step="0.5">
           <button id="btn-raise-confirm" onclick="actionRaise(parseFloat(document.getElementById('raise-input').value))">確定</button>
         </div>
-        <div class="min-raise-label" id="min-raise-label">Min Raise: --</div>
       </div>
-    </div>
-  </aside>
 
-  <!-- 中央パネル -->
-  <main class="center-panel">
-    <div id="table-svg-wrap">
+      <!-- コミュニティカード選択 -->
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px;text-align:center;margin-bottom:10px;">
+        <div style="font-size:.76rem;color:var(--text-sub);margin-bottom:6px;">🎴 コミュニティカード (Flop / Turn / River)</div>
+        <div class="board-area" style="justify-content:center;">
+          <div class="card-slot" id="board-flop1" onclick="openCardPicker('flop1')">?</div>
+          <div class="card-slot" id="board-flop2" onclick="openCardPicker('flop2')">?</div>
+          <div class="card-slot" id="board-flop3" onclick="openCardPicker('flop3')">?</div>
+          <div style="width:6px;"></div>
+          <div class="card-slot" id="board-turn"  onclick="openCardPicker('turn')">?</div>
+          <div style="width:6px;"></div>
+          <div class="card-slot" id="board-river" onclick="openCardPicker('river')">?</div>
+        </div>
+      </div>
+
+      <!-- 入力されたタイムライン -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+        <span style="font-size:.75rem;color:var(--text-sub);">入力されたアクション履歴</span>
+        <button onclick="undoAction()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-sub);border-radius:4px;padding:2px 8px;font-size:.7rem;cursor:pointer;">↩ 1手戻る</button>
+      </div>
+      <div class="timeline" id="action-timeline" style="max-height:160px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:8px;"></div>
+    </div>
+
+    <!-- 🚀 テーブル再生画面へ遷移する巨大ボタン -->
+    <button onclick="switchToTableView()" style="width:100%;padding:16px;background:linear-gradient(135deg, var(--green) 0%, #2ea043 100%);color:#fff;border:none;border-radius:12px;font-size:1.1rem;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(63,185,80,0.4);margin-top:4px;letter-spacing:1px;">
+      🎬 テーブルでリプレイ再生する (再生画面へ) ➔
+    </button>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 画面2: 🎴 テーブル再生・鑑賞画面 (#view-table-mode) -->
+<!-- ============================================================ -->
+<div id="view-table-mode" class="mode-view hidden">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--surface);border-bottom:1px solid var(--border);">
+    <button onclick="switchToInputView()" style="background:var(--surface2);color:var(--yellow);border:1.5px solid var(--yellow);border-radius:6px;padding:6px 14px;font-size:.85rem;font-weight:800;cursor:pointer;">
+      ✏️ 入力・編集画面に戻る
+    </button>
+    <div style="display:flex;gap:8px;">
+      <button onclick="openManualModal()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">📖 マニュアル</button>
+      <button onclick="copyHandText()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.82rem;cursor:pointer;">📋 コピー</button>
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;align-items:center;padding:16px;gap:16px;">
+    <!-- ポーカー卓 -->
+    <div id="table-svg-wrap" style="width:min(500px, 92vw);height:min(500px, 92vw);position:relative;">
       <svg id="table-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
         <ellipse class="felt" cx="200" cy="200" rx="180" ry="140"/>
         <ellipse class="felt-inner" cx="200" cy="200" rx="165" ry="125"/>
@@ -152,129 +178,28 @@
       <div id="seats-container" style="position:absolute;inset:0;"></div>
     </div>
 
-    <div style="text-align:center;">
-      <div style="font-size:.76rem;color:var(--text-sub);margin-bottom:4px;">🎴 タップしてボードカードを選択</div>
-      <div class="board-area">
-        <div class="card-slot" id="board-flop1" onclick="openCardPicker('flop1')">?</div>
-        <div class="card-slot" id="board-flop2" onclick="openCardPicker('flop2')">?</div>
-        <div class="card-slot" id="board-flop3" onclick="openCardPicker('flop3')">?</div>
-        <div style="width:4px;"></div>
-        <div class="card-slot" id="board-turn"  onclick="openCardPicker('turn')">?</div>
-        <div style="width:4px;"></div>
-        <div class="card-slot" id="board-river" onclick="openCardPicker('river')">?</div>
-      </div>
-    </div>
-  </main>
-
-  <!-- 右パネル -->
-  <aside class="right-panel">
-    <div class="card pot-info">
-      <h3>ポット</h3>
-      <div class="pot-main" id="pot-main">Main Pot: --</div>
+    <!-- ポット情報 -->
+    <div class="card" style="width:min(500px, 92vw);text-align:center;">
+      <div class="pot-main" id="pot-main" style="font-size:1.1rem;font-weight:800;color:var(--yellow);">Main Pot: --</div>
       <div class="pot-sides" id="pot-sides"></div>
     </div>
 
-    <div class="card" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
-      <h3>アクション履歴</h3>
-      <div class="timeline" id="action-timeline"></div>
-    </div>
-
-    <div class="card replay-ctrl">
-      <h3>リプレイ再生</h3>
-      <input type="range" id="replay-bar" min="0" value="0" step="1">
-      <div class="replay-btns">
-        <button id="btn-replay-prev">⏮</button>
-        <button id="btn-replay-play">▶</button>
-        <button id="btn-replay-pause">⏸</button>
-        <button id="btn-replay-next">⏭</button>
+    <!-- リプレイ再生コントローラー -->
+    <div class="card replay-ctrl" style="width:min(500px, 92vw);">
+      <h3 style="text-align:center;margin-bottom:8px;">🎬 ハンドリプレイ再生</h3>
+      <input type="range" id="replay-bar" min="0" value="0" step="1" style="width:100%;accent-color:var(--green);margin-bottom:12px;">
+      <div class="replay-btns" style="display:flex;justify-content:center;gap:10px;">
+        <button id="btn-replay-prev" style="padding:8px 16px;font-size:1rem;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;cursor:pointer;">⏮</button>
+        <button id="btn-replay-play" style="padding:8px 20px;font-size:1.1rem;background:var(--green);color:#fff;border:none;border-radius:8px;font-weight:800;cursor:pointer;">▶ 再生</button>
+        <button id="btn-replay-pause" style="padding:8px 20px;font-size:1.1rem;background:var(--yellow);color:#000;border:none;border-radius:8px;font-weight:800;cursor:pointer;">⏸ 一時停止</button>
+        <button id="btn-replay-next" style="padding:8px 16px;font-size:1rem;background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;cursor:pointer;">⏭</button>
+      </div>
+      <div style="display:flex;gap:6px;justify-content:center;margin-top:10px;">
         <button class="speed-btn" data-speed="0.5">0.5x</button>
         <button class="speed-btn active" data-speed="1">1x</button>
         <button class="speed-btn" data-speed="2">2x</button>
         <button class="speed-btn" data-speed="4">4x</button>
       </div>
-    </div>
-  </aside>
-</div>
-
-<!-- スマホ ボトムシート -->
-<div class="bottom-sheet">
-  <div class="sheet-tabs">
-    <button class="sheet-tab active" onclick="switchTab('input')">入力</button>
-    <button class="sheet-tab" onclick="switchTab('settings')">プレイヤー/スタック</button>
-    <button class="sheet-tab" onclick="switchTab('history')">履歴/共有</button>
-  </div>
-
-  <div class="sheet-content active" id="tab-input">
-    <div id="error-msg-mobile" class="hidden" style="background:var(--red);color:#fff;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:600;margin-bottom:8px;"></div>
-
-    <!-- 🔥 手番・状況ガイダンスバナー (スマホ) -->
-    <div class="current-turn-banner" id="current-turn-banner-m" style="padding:8px 12px;margin-bottom:8px;">
-      <div>
-        <span style="font-size:.68rem;color:var(--text-sub);display:block;">現在のターン</span>
-        <span class="turn-name" id="turn-seat-name-m" style="font-size:.9rem;">--</span>
-      </div>
-      <div style="text-align:right;">
-        <span style="font-size:.68rem;color:var(--text-sub);display:block;" id="turn-street-label-m">PREFLOP</span>
-        <span style="font-size:.8rem;color:var(--yellow);" id="turn-call-label-m">--</span>
-      </div>
-    </div>
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-      <span style="font-size:.78rem;color:var(--text-sub)">アクション</span>
-      <button onclick="undoAction()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-sub);border-radius:5px;padding:3px 10px;font-size:.75rem;cursor:pointer;">↩ Undo</button>
-    </div>
-    <div class="action-grid">
-      <button id="btn-fold-m"  class="btn-fold"  onclick="actionFold()">FOLD</button>
-      <button id="btn-call-m"  class="btn-call"  onclick="actionCall()">CHECK / CALL</button>
-      <button id="btn-raise-m" class="btn-raise" onclick="toggleRaisePanelMobile()">RAISE ▾</button>
-      <button id="btn-allin-m" class="btn-allin" onclick="actionAllIn()">ALL IN</button>
-    </div>
-    <div id="raise-panel-mobile" class="hidden" style="margin-top:10px">
-      <div class="raise-presets">
-        <button class="raise-mult-m" data-mult="2.5">2.5x</button>
-        <button class="raise-mult-m" data-mult="3">3x</button>
-        <button class="raise-mult-m" data-mult="3.5">3.5x</button>
-        <button class="raise-mult-m" data-mult="4">4x</button>
-        <button class="raise-mult-m" onclick="setPotRaise()">POT</button>
-      </div>
-      <div class="raise-custom">
-        <input type="number" id="raise-input-m" placeholder="カスタム額" min="0" step="0.5">
-        <button onclick="actionRaise(parseFloat(document.getElementById('raise-input-m').value))">確定</button>
-      </div>
-      <div class="min-raise-label" id="min-raise-label-m">Min Raise: --</div>
-    </div>
-    <button id="btn-new-hand-m" onclick="startNewHand()" style="width:100%;margin-top:10px;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">▶ New Hand</button>
-  </div>
-
-  <div class="sheet-content" id="tab-settings">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
-      <label style="font-size:.78rem;color:var(--text-sub)">SB
-        <input type="number" id="input-sb-m" value="1" min="0.01" step="0.5" style="width:100%;margin-top:3px">
-      </label>
-      <label style="font-size:.78rem;color:var(--text-sub)">BB
-        <input type="number" id="input-bb-m" value="2" min="0.01" step="0.5" style="width:100%;margin-top:3px">
-      </label>
-    </div>
-    <div class="rate-presets" id="rate-presets-m" style="margin-bottom:10px;">
-      <button class="rate-preset" data-sb="0.5" data-bb="1">0.5/1</button>
-      <button class="rate-preset" data-sb="1"   data-bb="2">1/2</button>
-      <button class="rate-preset" data-sb="2"   data-bb="5">2/5</button>
-      <button class="rate-preset" data-sb="5"   data-bb="10">5/10</button>
-    </div>
-    <div class="seat-config-list" id="seat-config-list-m"></div>
-  </div>
-
-  <div class="sheet-content" id="tab-history">
-    <div style="display:flex;gap:6px;margin-bottom:10px;">
-      <button onclick="copyHandText()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">📋 ハンドコピー</button>
-      <button onclick="renderSavedHandsModal()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">💾 保存履歴</button>
-    </div>
-    <div class="timeline" id="action-timeline-m"></div>
-    <input type="range" id="replay-bar-m" min="0" value="0" step="1" style="width:100%;margin-top:8px;accent-color:var(--accent);">
-    <div style="display:flex;gap:6px;margin-top:8px;justify-content:center;">
-      <button onclick="Replay.stepTo(--Replay.index)">⏮</button>
-      <button onclick="Replay.play()">▶</button>
-      <button onclick="Replay.pause()">⏸</button>
-      <button onclick="Replay.stepTo(++Replay.index)">⏭</button>
     </div>
   </div>
 </div>
@@ -286,9 +211,6 @@
     <p style="font-size:.8rem;color:var(--yellow);margin-bottom:2px;font-weight:600;">
       👇 ポットを獲得するプレイヤーをタップして選択してください
     </p>
-    <p style="font-size:.74rem;color:var(--text-sub);margin-bottom:8px;">
-      ※ 1人選択: 単独勝利 / 複数選択: スプリットポット (チョップ/等分割)
-    </p>
     <div id="winner-list"></div>
     <button id="btn-confirm-winner" onclick="confirmWinner()" style="padding:12px;background:var(--green);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.95rem;cursor:pointer;">
       確定して配当
@@ -296,23 +218,6 @@
     <button onclick="document.getElementById('winner-modal').classList.add('hidden')"
       style="padding:8px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);cursor:pointer;font-size:.8rem;margin-top:4px;">
       キャンセル
-    </button>
-  </div>
-</div>
-
-<!-- 保存済みハンド一覧 モーダル -->
-<div class="modal-overlay hidden" id="saved-hands-modal">
-  <div class="modal-box" style="max-width:440px;">
-    <h2>💾 保存済みハンド履歴</h2>
-    <div id="saved-hands-list" style="max-height:300px;overflow-y:auto;"></div>
-    <div style="display:flex;gap:8px;margin-top:10px;">
-      <button onclick="exportHandsJSON()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.8rem;color:var(--text);cursor:pointer;">📥 バックアップ保存(JSON)</button>
-      <button onclick="document.getElementById('file-import-input').click()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.8rem;color:var(--text);cursor:pointer;">📤 復元(JSON選択)</button>
-      <input type="file" id="file-import-input" class="hidden" accept=".json" onchange="importHandsJSON(this.files[0])">
-    </div>
-    <button onclick="document.getElementById('saved-hands-modal').classList.add('hidden')"
-      style="padding:8px;background:transparent;border:1px solid var(--border);border-radius:6px;color:var(--text-sub);cursor:pointer;font-size:.8rem;margin-top:6px;">
-      閉じる
     </button>
   </div>
 </div>
@@ -326,31 +231,14 @@
     </div>
 
     <div style="overflow-y:auto;padding-right:4px;display:flex;flex-direction:column;gap:14px;font-size:.85rem;line-height:1.5;margin-top:10px;">
-
-      <!-- ★ Hero選択のサイドバー案内 -->
       <div style="background:#2b2512;border:2px solid var(--yellow);border-radius:8px;padding:12px;">
-        <h3 style="color:var(--yellow);font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
-          ★ Hero (自分) の選択 ＆ 手札決定手順
-        </h3>
+        <h3 style="color:var(--yellow);font-size:.95rem;margin-bottom:8px;">🎮 使い方の手順</h3>
         <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:6px;font-size:.84rem;">
-          <li><b>自分の席を選ぶ</b>: 左サイドバーの「<code>👥 プレイヤー & Hero(自分)設定</code>」リストから、自分が座っているポジションの <b><code>[★ 自分に指定]</code> ボタン</b> をタップ。</li>
-          <li><b>自分の手札2枚を選択【必須】</b>: サイドバー上部の「★ Heroの手札選択」枠 <code>[ ? ]</code> <code>[ ? ]</code> をタップし、絵柄一覧から手札を選択。</li>
-          <li><b>ゲーム開始</b>: 「<b>▶ New Hand 開始</b>」を押すと勝負がスタートします！</li>
+          <li><b>【画面1】初期設定</b>: 左サイドバーで Hero(自分)のポジションを「<code>★ 自分に指定</code>」ボタンで選択し、手札2枚を入力。</li>
+          <li><b>【画面1】アクション入力</b>: <code>FOLD</code>, <code>CALL</code>, <code>RAISE</code> ボタンとコミュニティカードを入力。</li>
+          <li><b>【画面2】リプレイ再生</b>: 最下の「<code>🎬 テーブルでリプレイ再生する</code>」を押して卓上でゲーム再生を鑑賞！</li>
         </ol>
       </div>
-
-      <!-- 1. 基本操作フロー -->
-      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;">
-        <h3 style="color:var(--accent);font-size:.9rem;margin-bottom:8px;">🎮 1. 基本的な操作フロー (1ハンドの流れ)</h3>
-        <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:8px;">
-          <li><b>Hero設定</b>: 左サイドバーで自分の席と手札2枚を選択。</li>
-          <li><b>▶ New Hand 開始</b>: SB / BB / BBアンティが自動投入され、プリフロップから勝負が始まります。</li>
-          <li><b>⚡ アクション入力</b>: <code>FOLD</code>, <code>CHECK / CALL</code>, <code>RAISE ▾</code>, <code>ALL IN</code> ボタンで順番に進行。<i>(※押し間違えたら <code>↩ Undo</code> で即復元)</i></li>
-          <li><b>🎴 コミュニティカード選択</b>: テーブル中央下の <code>[ ? ]</code> 枠をタップして、Flop / Turn / River を 4×13 絵柄一覧からセット。</li>
-          <li><b>🏆 勝者確定 ＆ ポット配当</b>: 勝者を選択して「<b>確定して配当</b>」を押すとポットが清算され配分されます。</li>
-        </ol>
-      </div>
-
     </div>
 
     <button onclick="closeManualModal()" style="margin-top:12px;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-weight:700;cursor:pointer;width:100%;">
@@ -367,10 +255,8 @@
       <button onclick="closeCardPicker()" style="background:transparent;border:none;color:var(--text-sub);font-size:1.2rem;cursor:pointer;">✕</button>
     </div>
 
-    <!-- 4x13 ビジュアルマトリクス -->
     <div class="card-picker-matrix" id="card-picker-matrix"></div>
 
-    <!-- キーボード手入力 ＆ クリアボタン -->
     <div style="display:flex;gap:8px;align-items:center;margin-top:6px;">
       <input type="text" id="card-manual-input" placeholder="手入力 (例: As, Kh, Td, 2c)" style="flex:1;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem;">
       <button onclick="applyManualCardInput()" style="padding:8px 14px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.85rem;font-weight:700;cursor:pointer;">決定</button>
@@ -379,106 +265,29 @@
   </div>
 </div>
 
-<script src="app.js?v=20260901_4000"></script>
+<script src="app.js?v=20260901_5000"></script>
 <script>
-/* ===== UI補助関数 ===== */
-
-function switchTab(tab) {
-  document.querySelectorAll('.sheet-content').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.sheet-tab').forEach(el => el.classList.remove('active'));
-  document.getElementById(`tab-${tab}`).classList.add('active');
-  document.querySelectorAll('.sheet-tab').forEach((el, i) => {
-    if (['input','settings','history'][i] === tab) el.classList.add('active');
-  });
+function switchToTableView() {
+  const heroSeat = AppState.seats[AppState.heroSeatIndex];
+  if (!heroSeat || !heroSeat.holeCards || heroSeat.holeCards.filter(c => c !== '').length < 2) {
+    showError('⚠️ 【手札未選択】 自分(Hero)の手札2枚をタップして選択してください');
+    return;
+  }
+  document.getElementById('view-input-mode')?.classList.add('hidden');
+  document.getElementById('view-table-mode')?.classList.remove('hidden');
+  renderAll();
+  Replay.index = 0;
+  Replay.stepTo(0);
 }
 
-function toggleRaisePanel() {
-  document.getElementById('raise-panel').classList.toggle('hidden');
-}
-function toggleRaisePanelMobile() {
-  document.getElementById('raise-panel-mobile').classList.toggle('hidden');
-}
-
-function setPotRaise() {
-  const potSize = AppState.pot.main;
-  const currentCall = getCallAmount(AppState.currentSeatIndex);
-  const potRaise = (potSize + currentCall) + currentCall;
-  const pcInput = document.getElementById('raise-input');
-  const mobileInput = document.getElementById('raise-input-m');
-  if (pcInput) pcInput.value = potRaise.toFixed(1);
-  if (mobileInput) mobileInput.value = potRaise.toFixed(1);
-}
-
-function applyDefaultStack() {
-  const bbVal = AppState.blind.bb;
-  const input = document.getElementById('default-stack');
-  const bbCount = parseFloat(input?.value) || 100;
-  AppState.seats.forEach(s => { s.stack = bbCount * bbVal; });
+function switchToInputView() {
+  document.getElementById('view-table-mode')?.classList.add('hidden');
+  document.getElementById('view-input-mode')?.classList.remove('hidden');
   renderAll();
 }
 
-function updateTimeline() {
-  ['action-timeline', 'action-timeline-m'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.innerHTML = '';
-    let lastStreet = '';
-    AppState.history.forEach((step, i) => {
-      if (step.street !== lastStreet) {
-        const label = document.createElement('div');
-        label.className = 'street-label';
-        label.textContent = step.street.toUpperCase();
-        el.appendChild(label);
-        lastStreet = step.street;
-      }
-      const item = document.createElement('div');
-      item.className = 'timeline-item';
-      item.innerHTML = `
-        <span>${AppState.seats[step.seatIndex]?.name ?? `Seat ${step.seatIndex+1}`}</span>
-        <span class="action">${step.action.toUpperCase()} ${step.amount > 0 ? formatAmount(step.amount) : ''}</span>`;
-      el.appendChild(item);
-    });
-    el.scrollTop = el.scrollHeight;
-  });
-  const bars = ['replay-bar', 'replay-bar-m'];
-  bars.forEach(id => {
-    const bar = document.getElementById(id);
-    if (bar) bar.max = Math.max(0, AppState.history.length - 1);
-  });
-}
-
-document.querySelectorAll('.speed-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-});
-
-document.getElementById('btn-call-m')?.addEventListener('click', actionCall);
-document.getElementById('btn-fold-m')?.addEventListener('click', actionFold);
-document.getElementById('btn-allin-m')?.addEventListener('click', actionAllIn);
-document.querySelectorAll('.raise-mult-m').forEach(btn => {
-  btn.addEventListener('click', () => {
-    if (btn.dataset.mult) {
-      const mult = parseFloat(btn.dataset.mult);
-      const maxBet = Math.max(...AppState.seats.map(s => s.betAmount));
-      const raiseAmount = maxBet + Math.max(AppState.lastRaiseDelta, AppState.blind.bb) * mult;
-      const input = document.getElementById('raise-input-m');
-      if (input) input.value = raiseAmount.toFixed(1);
-    }
-  });
-});
-
-document.getElementById('input-sb-m')?.addEventListener('input', e => {
-  AppState.blind.sb = parseFloat(e.target.value) || 1;
-  const pc = document.getElementById('input-sb');
-  if (pc) pc.value = e.target.value;
-});
-document.getElementById('input-bb-m')?.addEventListener('input', e => {
-  AppState.blind.bb = parseFloat(e.target.value) || 2;
-  const pc = document.getElementById('input-bb');
-  if (pc) pc.value = e.target.value;
-});
+window.switchToTableView = switchToTableView;
+window.switchToInputView = switchToInputView;
 </script>
 </body>
 </html>

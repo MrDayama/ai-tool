@@ -1381,6 +1381,23 @@ window.confirmHeroSetup = confirmHeroSetup;
 window.clearHeroCards = clearHeroCards;
 window.openCardPicker = openCardPicker;
 window.closeCardPicker = closeCardPicker;
+window.switchToTableView = function() {
+  const heroSeat = AppState.seats[AppState.heroSeatIndex];
+  if (!heroSeat || !heroSeat.holeCards || heroSeat.holeCards.filter(c => c !== '').length < 2) {
+    showError('⚠️ 【手札未選択】 自分(Hero)の手札2枚をタップして選択してください');
+    return;
+  }
+  document.getElementById('view-input-mode')?.classList.add('hidden');
+  document.getElementById('view-table-mode')?.classList.remove('hidden');
+  renderAll();
+  Replay.index = 0;
+  Replay.stepTo(0);
+};
+window.switchToInputView = function() {
+  document.getElementById('view-table-mode')?.classList.add('hidden');
+  document.getElementById('view-input-mode')?.classList.remove('hidden');
+  renderAll();
+};
 window.applyManualCardInput = applyManualCardInput;
 window.clearCurrentCardSlot = clearCurrentCardSlot;
 window.copyHandText = copyHandText;
