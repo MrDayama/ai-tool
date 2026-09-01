@@ -880,12 +880,63 @@ function renderSeats() {
   AppState.seats.forEach((seat, i) => {
     const el = document.getElementById(`seat-${i}`);
     if (!el) return;
+    const isHero = (i === AppState.heroSeatIndex);
+    const isActiveTurn = (i === AppState.currentSeatIndex && !seat.isFolded && !seat.isAway);
+
+    el.classList.toggle('is-hero', isHero);
+    el.classList.toggle('active-turn', isActiveTurn);
+
+    let pointerTag = el.querySelector('.turn-pointer-tag');
+    if (isActiveTurn) {
+      if (!pointerTag) {
+        pointerTag = document.createElement('div');
+        pointerTag.className = 'turn-pointer-tag';
+        pointerTag.textContent = isHero ? '👉 YOUR TURN' : '👉 TURN';
+        el.appendChild(pointerTag);
+      } else {
+        pointerTag.textContent = isHero ? '👉 YOUR TURN' : '👉 TURN';
+      }
+    } else if (pointerTag) {
+      pointerTag.remove();
+    }
+
+    let heroTag = el.querySelector('.hero-badge-tag');
+    if (isHero) {
+      if (!heroTag) {
+        heroTag = document.createElement('div');
+        heroTag.className = 'hero-badge-tag';
+        heroTag.textContent = 'HERO';
+        el.appendChild(heroTag);
+      }
+    } else if (heroTag) {
+      heroTag.remove();
+    }
+
+    let cardsBadge = el.querySelector('.seat-cards-badge');
+    if (!cardsBadge) {
+      cardsBadge = document.createElement('div');
+      cardsBadge.className = 'seat-cards-badge';
+      el.appendChild(cardsBadge);
+    }
+
+    if (seat.holeCards && seat.holeCards.filter(c => c).length > 0) {
+      cardsBadge.innerHTML = seat.holeCards.map(cardStr => {
+        if (!cardStr) return '';
+        const rankStr = cardStr.slice(0, -1).replace('T', '10');
+        const suitChar = cardStr.slice(-1);
+        const suitMap = { s: '♠', h: '♥', d: '♦', c: '♣' };
+        const suitClassMap = { s: 'spades', h: 'hearts', d: 'diamonds', c: 'clubs' };
+        return `<span class="mini-card ${suitClassMap[suitChar] || ''}">${rankStr}${suitMap[suitChar] || ''}</span>`;
+      }).join('');
+    } else {
+      cardsBadge.innerHTML = '';
+    }
+
     el.querySelector('.seat-name').textContent = seat.name;
     el.querySelector('.seat-stack').textContent = formatAmount(seat.stack);
     el.querySelector('.seat-bet').textContent = seat.betAmount > 0 ? formatAmount(seat.betAmount) : '';
     el.querySelector('.seat-action').textContent = seat.action ? seat.action.toUpperCase() : '';
     el.querySelector('.seat-pos').textContent = getPositionName(i);
-    el.classList.toggle('active-turn', i === AppState.currentSeatIndex && !seat.isFolded && !seat.isAway);
     el.classList.toggle('away', seat.isAway);
     el.classList.toggle('folded', seat.isFolded);
     el.classList.toggle('all-in', seat.isAllIn);
@@ -909,7 +960,6 @@ function renderBoard() {
     if (el) {
       const cardStr = AppState.board[i];
       if (cardStr) {
-        // 例: 'As' -> 'A♠', 'Th' -> '10♥'
         const rankStr = cardStr.slice(0, -1).replace('T', '10');
         const suitChar = cardStr.slice(-1);
         const suitMap = { s: '♠', h: '♥', d: '♦', c: '♣' };
@@ -927,10 +977,32 @@ function renderBoard() {
 function renderActionPanel() {
   const callBtn = document.getElementById('btn-call');
   const minLabel = document.getElementById('min-raise-label');
-  if (!callBtn) return;
-  const callAmt = getCallAmount(AppState.currentSeatIndex);
-  callBtn.textContent = callAmt > 0 ? `CALL ${formatAmount(callAmt)}` : 'CHECK';
-  if (minLabel) minLabel.textContent = `Min Raise: ${formatAmount(AppState.minRaise)}`;
+  const currSeat = AppState.seats[AppState.currentSeatIndex];
+  const callAmt = currSeat ? getCallAmount(AppState.currentSeatIndex) : 0;
+
+  if (callBtn) {
+    callBtn.textContent = callAmt > 0 ? `CALL ${formatAmount(callAmt)}` : 'CHECK';
+  }
+  if (minLabel) {
+    minLabel.textContent = `Min Raise: ${formatAmount(AppState.minRaise)}`;
+  }
+
+  const turnNameStr = currSeat
+    ? `${currSeat.name} (${getPositionName(AppState.currentSeatIndex)})${currSeat.isHero ? ' ★HERO' : ''}`
+    : 'ハンド終了';
+  const callTextStr = currSeat
+    ? (callAmt > 0 ? `CALL: ${formatAmount(callAmt)}` : 'CHECK 可能')
+    : '--';
+  const streetTextStr = AppState.street.toUpperCase();
+
+  ['pc', 'm'].forEach(suffix => {
+    const nameEl = document.getElementById(`turn-seat-name-${suffix}`);
+    const callEl = document.getElementById(`turn-call-label-${suffix}`);
+    const streetEl = document.getElementById(`turn-street-label-${suffix}`);
+    if (nameEl) nameEl.textContent = turnNameStr;
+    if (callEl) callEl.textContent = callTextStr;
+    if (streetEl) streetEl.textContent = streetTextStr;
+  });
 }
 
 function renderStreetBadge() {

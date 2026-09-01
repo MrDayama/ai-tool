@@ -85,7 +85,20 @@
 
     <button id="btn-new-hand" onclick="startNewHand()">▶ New Hand 開始</button>
 
+    <!-- アクションキーパッド (PCのみ) -->
     <div class="card" id="action-panel-pc">
+      <!-- 🔥 手番・状況ガイダンスバナー -->
+      <div class="current-turn-banner" id="current-turn-banner-pc">
+        <div>
+          <span style="font-size:.72rem;color:var(--text-sub);display:block;">現在のターン</span>
+          <span class="turn-name" id="turn-seat-name-pc">--</span>
+        </div>
+        <div style="text-align:right;">
+          <span style="font-size:.72rem;color:var(--text-sub);display:block;" id="turn-street-label-pc">PREFLOP</span>
+          <span style="font-size:.85rem;color:var(--yellow);" id="turn-call-label-pc">--</span>
+        </div>
+      </div>
+
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <h3 style="margin-bottom:0">アクション入力</h3>
         <button onclick="undoAction()" style="background:var(--surface);border:1px solid var(--border);color:var(--text-sub);border-radius:5px;padding:3px 8px;font-size:.72rem;cursor:pointer;">↩ Undo (1手戻る)</button>
@@ -178,6 +191,18 @@
 
   <div class="sheet-content active" id="tab-input">
     <div id="error-msg-mobile" class="hidden" style="background:var(--red);color:#fff;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:600;margin-bottom:8px;"></div>
+
+    <!-- 🔥 手番・状況ガイダンスバナー (スマホ) -->
+    <div class="current-turn-banner" id="current-turn-banner-m" style="padding:8px 12px;margin-bottom:8px;">
+      <div>
+        <span style="font-size:.68rem;color:var(--text-sub);display:block;">現在のターン</span>
+        <span class="turn-name" id="turn-seat-name-m" style="font-size:.9rem;">--</span>
+      </div>
+      <div style="text-align:right;">
+        <span style="font-size:.68rem;color:var(--text-sub);display:block;" id="turn-street-label-m">PREFLOP</span>
+        <span style="font-size:.8rem;color:var(--yellow);" id="turn-call-label-m">--</span>
+      </div>
+    </div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
       <span style="font-size:.78rem;color:var(--text-sub)">アクション</span>
       <button onclick="undoAction()" style="background:var(--surface2);border:1px solid var(--border);color:var(--text-sub);border-radius:5px;padding:3px 10px;font-size:.75rem;cursor:pointer;">↩ Undo</button>
