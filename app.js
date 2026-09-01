@@ -795,7 +795,10 @@ function initDB() {
         d.createObjectStore('hands', { keyPath: 'id', autoIncrement: true });
       }
     };
-    req.onsuccess = e => { db = e.target.result; resolve(); };
+    req.onsuccess = e => { 
+      db = e.target.result; 
+      seedSampleHands().then(() => resolve()).catch(() => resolve());
+    };
     req.onerror = () => reject(req.error);
   });
 }
@@ -831,6 +834,80 @@ function deleteHandFromDB(id) {
     req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
   });
+}
+
+async function seedSampleHands() {
+  try {
+    const existing = await fetchAllHandsFromDB();
+    if (existing && existing.length > 0) return;
+
+    const sample1 = {
+      seatCount: 6,
+      heroSeatIndex: 0,
+      winnerIndex: 0,
+      savedAt: new Date(Date.now() - 3600000).toISOString(),
+      blind: { sb: 1, bb: 2, anteType: 'bb', anteAmount: 2, displayUnit: 'bb' },
+      board: ['J♠', '7♦', '2♣', '5♥', '3♠'],
+      pot: { main: 205, sides: [] },
+      seats: [
+        { id: 1, name: 'Seat 0 (Hero)', stack: 205, betAmount: 0, isFolded: false, isAllIn: false, holeCards: ['A♠', 'A♥'] },
+        { id: 2, name: 'Seat 1 (SB)', stack: 99, betAmount: 0, isFolded: true, isAllIn: false, holeCards: ['', ''] },
+        { id: 3, name: 'Seat 2 (BB)', stack: 96, betAmount: 0, isFolded: true, isAllIn: false, holeCards: ['', ''] },
+        { id: 4, name: 'Seat 3 (UTG)', stack: 100, betAmount: 0, isFolded: true, isAllIn: false, holeCards: ['', ''] },
+        { id: 5, name: 'Seat 4 (MP)', stack: 0, betAmount: 0, isFolded: false, isAllIn: true, holeCards: ['K♠', 'K♦'] },
+        { id: 6, name: 'Seat 5 (CO)', stack: 100, betAmount: 0, isFolded: true, isAllIn: false, holeCards: ['', ''] },
+      ],
+      history: [
+        { street: 'preflop', seatIndex: 3, action: 'start', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 5, sides: [] } },
+        { street: 'preflop', seatIndex: 3, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 5, sides: [] } },
+        { street: 'preflop', seatIndex: 4, action: 'raise', amount: 6, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 11, sides: [] } },
+        { street: 'preflop', seatIndex: 5, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 11, sides: [] } },
+        { street: 'preflop', seatIndex: 0, action: 'raise', amount: 18, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 29, sides: [] } },
+        { street: 'preflop', seatIndex: 1, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 29, sides: [] } },
+        { street: 'preflop', seatIndex: 2, action: 'fold', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 29, sides: [] } },
+        { street: 'preflop', seatIndex: 4, action: 'allin', amount: 100, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 123, sides: [] } },
+        { street: 'preflop', seatIndex: 0, action: 'call', amount: 82, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 205, sides: [] } },
+        { street: 'flop', seatIndex: 0, action: 'check', amount: 0, boardSnapshot: ['J♠', '7♦', '2♣', '', ''], potSnapshot: { main: 205, sides: [] } },
+        { street: 'turn', seatIndex: 0, action: 'check', amount: 0, boardSnapshot: ['J♠', '7♦', '2♣', '5♥', ''], potSnapshot: { main: 205, sides: [] } },
+        { street: 'river', seatIndex: 0, action: 'check', amount: 0, boardSnapshot: ['J♠', '7♦', '2♣', '5♥', '3♠'], potSnapshot: { main: 205, sides: [] } },
+      ]
+    };
+
+    const sample2 = {
+      seatCount: 6,
+      heroSeatIndex: 0,
+      winnerIndex: 0,
+      savedAt: new Date(Date.now() - 7200000).toISOString(),
+      blind: { sb: 1, bb: 2, anteType: 'bb', anteAmount: 2, displayUnit: 'bb' },
+      board: ['T♠', '9♠', '2♦', '3♣', '10♠'],
+      pot: { main: 203, sides: [] },
+      seats: [
+        { id: 1, name: 'Seat 0 (Hero)', stack: 203, betAmount: 0, isFolded: false, isAllIn: false, holeCards: ['A♠', 'K♠'] },
+        { id: 2, name: 'Seat 1 (SB)', stack: 99, betAmount: 0, isFolded: true, isAllIn: false, holeCards: ['', ''] },
+        { id: 3, name: 'Seat 2 (BB)', stack: 0, betAmount: 0, isFolded: false, isAllIn: true, holeCards: ['Q♠', 'J♠'] },
+        { id: 4, name: 'Seat 3 (UTG)', stack: 100, betAmount: 0, isFolded: true, isAllIn: false, holeCards: ['', ''] },
+        { id: 5, name: 'Seat 4 (MP)', stack: 100, betAmount: 0, isFolded: true, isAllIn: false, holeCards: ['', ''] },
+        { id: 6, name: 'Seat 5 (CO)', stack: 100, betAmount: 0, isFolded: true, isAllIn: false, holeCards: ['', ''] },
+      ],
+      history: [
+        { street: 'preflop', seatIndex: 3, action: 'start', amount: 0, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 5, sides: [] } },
+        { street: 'preflop', seatIndex: 0, action: 'raise', amount: 6, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 11, sides: [] } },
+        { street: 'preflop', seatIndex: 2, action: 'call', amount: 4, boardSnapshot: ['', '', '', '', ''], potSnapshot: { main: 15, sides: [] } },
+        { street: 'flop', seatIndex: 2, action: 'check', amount: 0, boardSnapshot: ['T♠', '9♠', '2♦', '', ''], potSnapshot: { main: 15, sides: [] } },
+        { street: 'flop', seatIndex: 0, action: 'raise', amount: 8, boardSnapshot: ['T♠', '9♠', '2♦', '', ''], potSnapshot: { main: 23, sides: [] } },
+        { street: 'flop', seatIndex: 2, action: 'call', amount: 8, boardSnapshot: ['T♠', '9♠', '2♦', '', ''], potSnapshot: { main: 31, sides: [] } },
+        { street: 'river', seatIndex: 2, action: 'check', amount: 0, boardSnapshot: ['T♠', '9♠', '2♦', '3♣', '10♠'], potSnapshot: { main: 31, sides: [] } },
+        { street: 'river', seatIndex: 0, action: 'raise', amount: 25, boardSnapshot: ['T♠', '9♠', '2♦', '3♣', '10♠'], potSnapshot: { main: 56, sides: [] } },
+        { street: 'river', seatIndex: 2, action: 'allin', amount: 86, boardSnapshot: ['T♠', '9♠', '2♦', '3♣', '10♠'], potSnapshot: { main: 142, sides: [] } },
+        { street: 'river', seatIndex: 0, action: 'call', amount: 61, boardSnapshot: ['T♠', '9♠', '2♦', '3♣', '10♠'], potSnapshot: { main: 203, sides: [] } },
+      ]
+    };
+
+    saveHand(sample1);
+    saveHand(sample2);
+  } catch (e) {
+    console.error('Failed to seed sample hands', e);
+  }
 }
 
 // ===================================================
