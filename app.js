@@ -1494,9 +1494,9 @@ function ensureSeatNodes() {
 
   const count = AppState.seatCount || (AppState.seats ? AppState.seats.length : 6);
   const currentNodes = container.querySelectorAll('.seat-node');
-  if (currentNodes.length === count && container.children.length > 0) return;
-
-  container.innerHTML = '';
+  if (currentNodes.length !== count) {
+    container.innerHTML = '';
+  }
 
   const cx = 50;
   const cy = 50;
