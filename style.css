@@ -419,6 +419,19 @@ body {
   pointer-events: none;
 }
 
+/* 🏆 飛翔移動中物理チップ (勝者へのPot配当獲得中) */
+.flying-chip-award {
+  font-size: 1rem !important;
+  font-weight: 900 !important;
+  color: #000000 !important;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%) !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 28px 10px rgba(52, 211, 153, 1), 0 8px 20px rgba(0,0,0,0.9) !important;
+  padding: 6px 18px !important;
+  border-radius: 24px !important;
+  pointer-events: none;
+}
+
 /* ===== ボードカード ===== */
 .board-area {
   display: flex;

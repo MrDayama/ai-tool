@@ -1274,11 +1274,25 @@ const Replay = {
     if (step.street) AppState.street = step.street;
     if (step.currentSeatIndex !== undefined) AppState.currentSeatIndex = step.currentSeatIndex;
 
-    // 全員のアクション完了・ストリート切替時のPot吸い込み物理集金アニメーション発火
-    if (prevStreet && step.street && prevStreet !== step.street) {
+    // 1. SB/BB ブラインド投下物理アニメーション発火 (リプレイ初期フレーム時)
+    if (targetIdx === 0 || step.action === 'start') {
+      animateBlindBets();
+    }
+    // 2. 全員のアクション完了・ストリート切替時のPot吸い込み物理集金アニメーション発火
+    else if (prevStreet && step.street && prevStreet !== step.street) {
       animateGatherChips();
-    } else if (step.seatIndex !== undefined && step.action && step.amount > 0) {
+    } 
+    // 3. アクションごとのチップ投下アニメーション
+    else if (step.seatIndex !== undefined && step.action && step.amount > 0) {
       animateBetChip(step.seatIndex, formatAmount(step.amount));
+    }
+
+    // 4. ショーダウン・勝者配当時のPot獲得物理アニメーション
+    if (targetIdx === AppState.history.length - 1) {
+      const winnerSeat = AppState.seats.find(s => s.isHero || !s.isFolded) || AppState.seats[0];
+      if (winnerSeat) {
+        animateAwardWinner(winnerSeat.id - 1, formatAmount(AppState.pot.main));
+      }
     }
 
     renderAll();
@@ -1336,7 +1350,45 @@ function renderAll() {
   renderStreetBadge();
 }
 
-// 🪙 1. チップ前出しアニメーション (座席 ➔ 卓上手前へシュッと滑り出る)
+// 🪙 0. SB/BB ブラインド投下物理アニメーション (手札配札・ゲーム開始時)
+function animateBlindBets() {
+  const sbIdx = getSBIndex();
+  const bbIdx = getBBIndex();
+  const sbAmountStr = formatAmount(AppState.blind.sb);
+  const bbAmountStr = formatAmount(AppState.blind.bb);
+
+  if (sbIdx !== -1) animateBetChip(sbIdx, `SB ${sbAmountStr}`);
+  setTimeout(() => {
+    if (bbIdx !== -1) animateBetChip(bbIdx, `BB ${bbAmountStr}`);
+  }, 200);
+}
+
+// 🏆 3. 勝者決着・メインポット獲得配当物理アニメーション (中央ポット ➔ 勝者座席へシュッと飛び移る)
+function animateAwardWinner(winnerIndex, amountStr) {
+  const container = document.getElementById('seats-container');
+  if (!container) return;
+  const seatEl = document.getElementById(`seat-${winnerIndex}`);
+  if (!seatEl) return;
+
+  const clone = document.createElement('div');
+  clone.className = 'flying-chip-award';
+  clone.innerHTML = `🏆 ${amountStr} ➔ WINNER`;
+  clone.style.position = 'absolute';
+  clone.style.left = '50%';
+  clone.style.top = '50%';
+  clone.style.transform = 'translate(-50%, -50%) scale(0.3)';
+  clone.style.transition = 'all 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+  clone.style.zIndex = '40';
+  container.appendChild(clone);
+
+  requestAnimationFrame(() => {
+    clone.style.left = seatEl.style.left;
+    clone.style.top = seatEl.style.top;
+    clone.style.transform = 'translate(-50%, -50%) scale(1.2)';
+  });
+
+  setTimeout(() => clone.remove(), 750);
+}
 function animateBetChip(seatIndex, amountStr) {
   const container = document.getElementById('seats-container');
   if (!container) return;
