@@ -6,9 +6,9 @@
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="style.css?v=20260901_2000">
+  <link rel="stylesheet" href="style.css?v=20260901_3000">
   <script>
-    // 強制キャッシュクリア (v20260901_2000)
+    // 強制キャッシュクリア (v20260901_3000)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
     }
@@ -55,7 +55,7 @@
 <!-- ===== PC: 3カラム メインレイアウト ===== -->
 <div class="main-layout">
 
-  <!-- 左パネル (集約サイドバー) -->
+  <!-- 左パネル (スッキリ統合サイドバー) -->
   <aside class="left-panel">
     <div class="card">
       <h3>ブラインド設定</h3>
@@ -87,7 +87,7 @@
       </label>
     </div>
 
-    <!-- 🔥 統合・集約された プレイヤー & スタック設定 -->
+    <!-- 🔥 統合・スッキリレイアウト化された プレイヤー & スタック設定 -->
     <div class="card">
       <h3 style="margin-bottom:8px">👥 プレイヤー & Hero(自分)設定</h3>
 
@@ -379,7 +379,7 @@
   </div>
 </div>
 
-<script src="app.js?v=20260901_2000"></script>
+<script src="app.js?v=20260901_3000"></script>
 <script>
 /* ===== UI補助関数 ===== */
 
@@ -429,16 +429,16 @@ function renderSeatConfigUI() {
     // Hero手札設定ブロック（最上部集約）
     const heroSeat = AppState.seats[AppState.heroSeatIndex];
     const heroHeader = document.createElement('div');
-    heroHeader.style.cssText = 'background:linear-gradient(135deg, #2b2512 0%, #161b22 100%);border:1.5px solid var(--yellow);border-radius:8px;padding:8px 10px;margin-bottom:10px;';
+    heroHeader.style.cssText = 'background:linear-gradient(135deg, #2b2512 0%, #161b22 100%);border:1.5px solid var(--yellow);border-radius:8px;padding:8px 10px;margin-bottom:8px;';
     heroHeader.innerHTML = `
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
-        <span style="color:var(--yellow);font-weight:800;font-size:.82rem;">★ Hero (自分) の設定 【手札必須】</span>
-        <span style="font-size:.7rem;color:var(--text-sub);">位置: <b style="color:var(--yellow);">${getPositionName(AppState.heroSeatIndex)}</b> (${heroSeat?.name || ''})</span>
+        <span style="color:var(--yellow);font-weight:800;font-size:.82rem;">★ Hero (自分) の手札選択 【必須】</span>
+        <span style="font-size:.7rem;color:var(--text-sub);">位置: <b style="color:var(--yellow);">${getPositionName(AppState.heroSeatIndex)}</b></span>
       </div>
       <div style="display:flex;gap:8px;align-items:center;">
-        <span style="font-size:.76rem;color:var(--text-sub);">Heroの手札:</span>
-        <div class="card-slot ${heroSeat?.holeCards[0] ? 'filled' : ''}" onclick="openCardPicker('hero1')" style="width:38px;height:48px;font-size:.82rem;">${formatCardDisplay(heroSeat?.holeCards[0])}</div>
-        <div class="card-slot ${heroSeat?.holeCards[1] ? 'filled' : ''}" onclick="openCardPicker('hero2')" style="width:38px;height:48px;font-size:.82rem;">${formatCardDisplay(heroSeat?.holeCards[1])}</div>
+        <span style="font-size:.76rem;color:var(--text-sub);">自分手札:</span>
+        <div class="card-slot ${heroSeat?.holeCards[0] ? 'filled' : ''}" onclick="openCardPicker('hero1')" style="width:36px;height:46px;font-size:.82rem;">${formatCardDisplay(heroSeat?.holeCards[0])}</div>
+        <div class="card-slot ${heroSeat?.holeCards[1] ? 'filled' : ''}" onclick="openCardPicker('hero2')" style="width:36px;height:46px;font-size:.82rem;">${formatCardDisplay(heroSeat?.holeCards[1])}</div>
         <button onclick="clearHeroCards()" style="padding:4px 8px;background:var(--surface);border:1px solid var(--border);border-radius:5px;font-size:.72rem;color:var(--red);cursor:pointer;">クリア</button>
       </div>`;
     list.appendChild(heroHeader);
@@ -448,21 +448,23 @@ function renderSeatConfigUI() {
       const displayStackVal = isBBUnit ? (seat.stack / bbVal).toFixed(1) : seat.stack;
       const row = document.createElement('div');
       row.className = `seat-config-row ${isHero ? 'hero-row' : ''}`;
-      row.style.cssText = isHero ? 'background:#252010;border:1px solid var(--yellow);border-radius:6px;padding:6px;margin-bottom:6px;' : 'background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px;margin-bottom:6px;';
+      row.style.cssText = isHero 
+        ? 'background:#231e0f;border:1.5px solid var(--yellow);border-radius:6px;padding:6px 8px;margin-bottom:6px;' 
+        : 'background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:6px 8px;margin-bottom:6px;';
       
       row.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
-          <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:${isHero ? 'var(--yellow)' : 'var(--text)'};cursor:pointer;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:${isHero ? 'var(--yellow)' : 'var(--text)'};cursor:pointer;user-select:none;">
             <input type="radio" name="hero-radio-${listId}" value="${i}" ${isHero ? 'checked' : ''} class="hero-radio-input" data-seat="${i}">
-            ${isHero ? '★ HERO (' + getPositionName(i) + ')' : getPositionName(i)}
+            <span>${isHero ? '★ HERO (' + getPositionName(i) + ')' : getPositionName(i)}</span>
           </label>
-          <button class="away-toggle ${seat.isAway ? 'away-on' : ''}" data-seat="${i}" style="padding:2px 6px;font-size:.7rem;">
+          <button class="away-toggle ${seat.isAway ? 'away-on' : ''}" data-seat="${i}" style="padding:2px 8px;font-size:.7rem;border-radius:4px;">
             ${seat.isAway ? '離席中' : '在席'}
           </button>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;align-items:center;">
-          <input type="text" value="${seat.name}" data-seat="${i}" class="player-name-input" placeholder="名前" style="padding:4px 6px;font-size:.78rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);">
-          <input type="number" value="${displayStackVal}" data-seat="${i}" class="stack-input" min="0" step="1" title="${isBBUnit ? 'スタック(BB数)' : 'スタック(金額)'}" style="padding:4px 6px;font-size:.78rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);">
+        <div style="display:flex;gap:6px;align-items:center;">
+          <input type="text" value="${seat.name}" data-seat="${i}" class="player-name-input" placeholder="名前" style="flex:1;min-width:0;padding:4px 6px;font-size:.78rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);">
+          <input type="number" value="${displayStackVal}" data-seat="${i}" class="stack-input" min="0" step="1" title="${isBBUnit ? 'スタック(BB数)' : 'スタック(金額)'}" style="width:75px;padding:4px 6px;font-size:.78rem;background:var(--surface2);border:1px solid var(--border);border-radius:4px;color:var(--text);text-align:right;">
         </div>`;
       list.appendChild(row);
     });

@@ -751,3 +751,25 @@ body {
   .center-panel { align-items: center; }
   #table-svg-wrap { max-width: 480px; }
 }
+
+/* ===== サイドバー二重スクロール追放 & プレイヤー行UI最適化 ===== */
+.left-panel {
+  overflow-y: auto !important;
+}
+.seat-config-list {
+  max-height: none !important;
+  overflow: visible !important;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+}
+.seat-config-row {
+  box-sizing: border-box;
+  width: 100%;
+}
+.seat-config-row input[type="text"],
+.seat-config-row input[type="number"] {
+  box-sizing: border-box;
+}
+
