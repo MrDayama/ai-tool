@@ -1255,7 +1255,20 @@ function renderSeats() {
     el.querySelector('.seat-name').textContent = seat.name;
     el.querySelector('.seat-stack').textContent = formatAmount(seat.stack);
     el.querySelector('.seat-bet').textContent = seat.betAmount > 0 ? formatAmount(seat.betAmount) : '';
-    el.querySelector('.seat-action').textContent = seat.action ? seat.action.toUpperCase() : '';
+    
+    const actEl = el.querySelector('.seat-action');
+    if (actEl) {
+      const rawAct = seat.action ? seat.action.toUpperCase() : '';
+      if (rawAct) {
+        const amtStr = (seat.betAmount > 0 && rawAct !== 'CHECK' && rawAct !== 'FOLD') ? ` ${formatAmount(seat.betAmount)}` : '';
+        actEl.textContent = `${rawAct}${amtStr}`;
+        actEl.className = `seat-action action-badge action-${seat.action.toLowerCase()}`;
+      } else {
+        actEl.textContent = '';
+        actEl.className = 'seat-action';
+      }
+    }
+
     el.querySelector('.seat-pos').textContent = getPositionName(i);
     el.classList.toggle('away', seat.isAway);
     el.classList.toggle('folded', seat.isFolded);

@@ -228,7 +228,28 @@ body {
 .seat-name   { font-size: .6rem;  font-weight: 600; color: var(--text);     white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
 .seat-stack  { font-size: .6rem;  color: var(--green);   white-space: nowrap; }
 .seat-bet    { font-size: .58rem; color: var(--yellow);  white-space: nowrap; }
-.seat-action { font-size: .58rem; font-weight: 700; color: var(--accent); letter-spacing: .2px; white-space: nowrap; }
+.seat-action { font-size: .6rem; font-weight: 800; color: var(--accent); letter-spacing: .2px; white-space: nowrap; }
+.seat-action.action-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: .62rem;
+  font-weight: 800;
+  margin-top: 2px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+  animation: popAction .25s ease-out;
+}
+.seat-action.action-fold { background: #30363d; color: #8b949e; border: 1px solid #484f58; }
+.seat-action.action-check { background: #1f6feb; color: #ffffff; border: 1px solid #388bfd; }
+.seat-action.action-call { background: #238636; color: #ffffff; border: 1px solid #2ea043; }
+.seat-action.action-raise { background: #d29922; color: #000000; border: 1px solid #f0b72f; }
+.seat-action.action-allin { background: linear-gradient(135deg, #da3633 0%, #b62324 100%); color: #ffffff; border: 1px solid #f85149; box-shadow: 0 0 8px var(--red); }
+
+@keyframes popAction {
+  0% { transform: scale(0.7); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
 .seat-pos    { font-size: .52rem; color: var(--text-sub); white-space: nowrap; }
 
 /* ===== Hero 座席 & ホールカード表示 ===== */
