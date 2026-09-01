@@ -1425,7 +1425,7 @@ function animateBetChip(seatIndex, amountStr) {
   setTimeout(() => chip.remove(), 600);
 }
 
-// 🪙 2. 全員のアクション完了・ストリート移行時 ポット吸い込み集金アニメーション (卓上 ➔ 中央ポットへ吸い込まれて消える)
+// 🪙 2. 全員のアクション完了・ストリート移行時 ポット吸い込み集金アニメーション (全チップが画面中央Potへ吸い込まれて集まる)
 function animateGatherChips() {
   const container = document.getElementById('seats-container');
   if (!container) return;
@@ -1435,28 +1435,36 @@ function animateGatherChips() {
     if (bet.style.display !== 'none' && bet.textContent.trim() !== '') {
       const clone = document.createElement('div');
       clone.className = 'flying-chip-gather';
-      clone.innerHTML = `${bet.textContent.trim()} ➔ 🪙 Pot`;
+      clone.innerHTML = `${bet.textContent.trim()} ➔ 🪙 Center Pot`;
       const rect = bet.getBoundingClientRect();
       const cRect = container.getBoundingClientRect();
 
       clone.style.position = 'absolute';
       clone.style.left = `${rect.left - cRect.left}px`;
       clone.style.top = `${rect.top - cRect.top}px`;
-      clone.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
-      clone.style.zIndex = '35';
+      clone.style.transition = 'all 0.65s cubic-bezier(0.22, 1, 0.36, 1)';
+      clone.style.zIndex = '150';
+      clone.style.background = '#f59e0b';
+      clone.style.color = '#000';
+      clone.style.fontWeight = 'bold';
+      clone.style.padding = '4px 10px';
+      clone.style.borderRadius = '16px';
+      clone.style.boxShadow = '0 0 12px rgba(245,158,11,0.8)';
       container.appendChild(clone);
 
       requestAnimationFrame(() => {
         clone.style.left = '50%';
         clone.style.top = '50%';
-        clone.style.transform = 'translate(-50%, -50%) scale(0.2)';
-        clone.style.opacity = '0.2';
+        clone.style.transform = 'translate(-50%, -50%) scale(1.3)';
+        clone.style.opacity = '1';
       });
 
-      setTimeout(() => clone.remove(), 650);
+      setTimeout(() => clone.remove(), 700);
     }
   });
-// 🪙 4. Fold(降りる)時・該当座席のチップ個別ポット吸い込み集金アニメーション (座席 ➔ 中央ポットへ吸い込まれて消える)
+}
+
+// 🪙 4. Fold(降りる)時・該当座席のチップ個別ポット吸い込み集金アニメーション (画面中央Potへシュッと吸い込まれる)
 function animateSingleSeatGather(seatIndex) {
   const container = document.getElementById('seats-container');
   if (!container) return;
@@ -1468,16 +1476,32 @@ function animateSingleSeatGather(seatIndex) {
 
   const clone = document.createElement('div');
   clone.className = 'flying-chip-gather';
-  clone.innerHTML = `${amountStr || '🪙 Bet'} ➔ 🪙 Pot`;
+  clone.innerHTML = `${amountStr || '🪙 Bet'} ➔ 🪙 Center Pot`;
   const rect = (betEl || seatEl).getBoundingClientRect();
   const cRect = container.getBoundingClientRect();
 
   clone.style.position = 'absolute';
   clone.style.left = `${rect.left - cRect.left}px`;
   clone.style.top = `${rect.top - cRect.top}px`;
-  clone.style.transition = 'all 0.55s cubic-bezier(0.4, 0, 0.2, 1)';
-  clone.style.zIndex = '35';
+  clone.style.transition = 'all 0.6s cubic-bezier(0.22, 1, 0.36, 1)';
+  clone.style.zIndex = '150';
+  clone.style.background = '#ef4444';
+  clone.style.color = '#fff';
+  clone.style.fontWeight = 'bold';
+  clone.style.padding = '4px 10px';
+  clone.style.borderRadius = '16px';
+  clone.style.boxShadow = '0 0 12px rgba(239,68,68,0.8)';
   container.appendChild(clone);
+
+  requestAnimationFrame(() => {
+    clone.style.left = '50%';
+    clone.style.top = '50%';
+    clone.style.transform = 'translate(-50%, -50%) scale(1.3)';
+    clone.style.opacity = '1';
+  });
+
+  setTimeout(() => clone.remove(), 650);
+}
 
   requestAnimationFrame(() => {
     clone.style.left = '50%';
