@@ -1034,8 +1034,7 @@ async function openHistoryModal() {
   const modal = document.getElementById('history-modal');
   if (modal) {
     modal.classList.remove('hidden');
-    modal.style.display = 'flex';
-    modal.style.zIndex = '9999';
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(13,17,23,0.85);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
   }
   await renderSavedHandsList();
 }
@@ -2219,12 +2218,18 @@ function confirmWinner() {
 
 function openManualModal() {
   const modal = document.getElementById('manual-modal');
-  if (modal) modal.classList.remove('hidden');
+  if (modal) {
+    modal.classList.remove('hidden');
+    modal.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(13,17,23,0.85);backdrop-filter:blur(6px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  }
 }
 
 function closeManualModal() {
   const modal = document.getElementById('manual-modal');
-  if (modal) modal.classList.add('hidden');
+  if (modal) {
+    modal.classList.add('hidden');
+    modal.style.display = 'none';
+  }
 }
 
 // グローバル関数バインド（ボタンイベント確実に発火）

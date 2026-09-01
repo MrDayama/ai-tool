@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
       playerListEl,
       (player) => {
         // アクティブプレイヤー切り替え時
+        mapEngine.setActivePlayer(player);
         mapEngine.setActivePlayerColor(player.colorHex);
         activePlayerName.textContent = player.name;
         activePlayerName.style.color = player.colorHex;
@@ -56,6 +57,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const activePlayer = playerManager.getActivePlayer();
     if (activePlayer) {
+      mapEngine.setActivePlayer(activePlayer);
       mapEngine.setActivePlayerColor(activePlayer.colorHex);
       activePlayerName.textContent = activePlayer.name;
       activePlayerName.style.color = activePlayer.colorHex;
