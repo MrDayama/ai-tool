@@ -1,9 +1,9 @@
 /**
  * Map Canvas Engine
- * Gamerch Wiki 完全準拠 実物・高品質マップ画像 (The Skeld / MIRA HQ / Polus / Airship / Fungle) レンダリングエンジン
+ * 高精度・実物全景見取り図マップ画像 (The Skeld / MIRA HQ / Polus / Airship / Fungle) レンダリングエンジン
  */
 
-// ローカルにダウンロードした Gamerch Wiki 実物マップ画像パス
+// ローカルに完全に配置された実物高画質マップ画像
 const MAP_IMAGE_PATHS = {
   skeld: 'assets/maps/skeld.png',
   mira: 'assets/maps/mira.png',
@@ -12,13 +12,13 @@ const MAP_IMAGE_PATHS = {
   fungle: 'assets/maps/fungle.png',
 };
 
-// サボタージュ配電盤の正確な座標 (%相対位置: xPercent, yPercent)
+// 各マップにおける停電サボタージュ配電盤の正確な相対座標 (%: xPct, yPct)
 const SABOTAGE_COORDINATES = {
-  skeld: { lights: { xPct: 29, yPct: 65, name: '電気室 (Electrical)' } },
-  mira: { lights: { xPct: 55, yPct: 50, name: 'オフィス (Office)' } },
-  polus: { lights: { xPct: 20, yPct: 70, name: '電気室 (Electrical)' } },
-  airship: { lights: { xPct: 46, yPct: 60, name: '電気室 (Electrical)' } },
-  fungle: { lights: { xPct: 50, yPct: 15, name: '展望台 (Lookout)' } },
+  skeld: { lights: { xPct: 35, yPct: 58, name: 'Electrical (電気室)' } },
+  mira: { lights: { xPct: 62, yPct: 22, name: 'Office (オフィス)' } },
+  polus: { lights: { xPct: 22, yPct: 52, name: 'Electrical (電気室)' } },
+  airship: { lights: { xPct: 60, yPct: 78, name: 'Electrical (電気室)' } },
+  fungle: { lights: { xPct: 31, yPct: 18, name: 'Lookout (展望台)' } },
 };
 
 class MapEngine {
@@ -42,7 +42,7 @@ class MapEngine {
     this.radiusCenter = null;
     this.radiusPx = 0;
 
-    // ローカル画像キャッシュ管理
+    // ローカル高画質マップ画像キャッシュ
     this.loadedImages = {};
     this.initCanvasSize();
     this.loadLocalMapImages();
@@ -51,7 +51,7 @@ class MapEngine {
 
   initCanvasSize() {
     this.canvas.width = 960;
-    this.canvas.height = 640;
+    this.canvas.height = 540; // 16:9 アスペクト比に完全適合
     this.render();
   }
 
@@ -230,8 +230,8 @@ class MapEngine {
   render() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // 1. Gamerch Wiki 完全準拠の実物高品質マップ画像描画
-    this.drawRealGamerchMapImage();
+    // 1. 実物高精度全景見取り図マップの背景描画
+    this.drawRealBlueprintMapImage();
 
     // 2. ユーザー描画線
     this.drawings.forEach(d => {
@@ -260,47 +260,40 @@ class MapEngine {
     }
   }
 
-  drawRealGamerchMapImage() {
+  drawRealBlueprintMapImage() {
     const ctx = this.ctx;
     const w = this.canvas.width;
     const h = this.canvas.height;
 
     // 暗い宇宙背景
-    ctx.fillStyle = '#0f172a';
+    ctx.fillStyle = '#090d16';
     ctx.fillRect(0, 0, w, h);
 
     const img = this.loadedImages[this.currentMapId];
 
     if (img && img.complete && img.naturalWidth !== 0) {
-      const imgRatio = img.naturalWidth / img.naturalHeight;
-      const canvasRatio = w / h;
-      let renderW = w;
-      let renderH = h;
-      let renderX = 0;
-      let renderY = 0;
-
-      if (imgRatio > canvasRatio) {
-        renderH = w / imgRatio;
-        renderY = (h - renderH) / 2;
-      } else {
-        renderW = h * imgRatio;
-        renderX = (w - renderW) / 2;
-      }
-
-      ctx.drawImage(img, renderX, renderY, renderW, renderH);
+      ctx.drawImage(img, 0, 0, w, h);
+    } else {
+      // 読み込み待ち状態の表示
+      ctx.fillStyle = '#1e293b';
+      ctx.fillRect(20, 20, w - 40, h - 40);
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = 'bold 18px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(`MAP: [${this.currentMapId.toUpperCase()}] 高解像度見取り図マップ読み込み中...`, w / 2, h / 2);
     }
 
-    // マップ名ラベルヘッダー
+    // マップ名ラベル
     ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
-    ctx.fillRect(w - 210, 10, 200, 32);
+    ctx.fillRect(w - 220, 10, 210, 32);
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(w - 210, 10, 200, 32);
+    ctx.strokeRect(w - 220, 10, 210, 32);
 
     ctx.fillStyle = '#38bdf8';
     ctx.font = 'bold 14px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText(`MAP: ${this.currentMapId.toUpperCase()}`, w - 110, 31);
+    ctx.fillText(`MAP: ${this.currentMapId.toUpperCase()}`, w - 115, 31);
   }
 
   drawPlayerPin(pin) {

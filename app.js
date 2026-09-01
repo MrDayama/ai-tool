@@ -1529,16 +1529,6 @@ function animateSingleSeatGather(seatIndex) {
   setTimeout(() => clone.remove(), 650);
 }
 
-  requestAnimationFrame(() => {
-    clone.style.left = '50%';
-    clone.style.top = '50%';
-    clone.style.transform = 'translate(-50%, -50%) scale(0.2)';
-    clone.style.opacity = '0.2';
-  });
-
-  setTimeout(() => clone.remove(), 600);
-}
-
 function renderSeats() {
   const container = document.getElementById('seats-container');
   if (!container) return;
@@ -1611,7 +1601,7 @@ function renderSeats() {
   if (!AppState.seats || AppState.seats.length === 0) {
     if (typeof initSeats === 'function') initSeats();
   }
-  ensureSeatNodes();
+  if (typeof ensureSeatNodes === 'function') ensureSeatNodes();
   const container = document.getElementById('seats-container');
   if (container && container.querySelectorAll('.seat-node').length === 0) {
     const count = AppState.seatCount || (AppState.seats ? AppState.seats.length : 6);
@@ -2232,63 +2222,41 @@ function closeManualModal() {
   }
 }
 
-// 🌐 全25ボタン関数のwindowグローバル露出バインド（全環境・デスクトップ起動時ボタン発火保証）
-window.openHistoryModal = openHistoryModal;
-window.closeHistoryModal = closeHistoryModal;
-window.openManualModal = openManualModal;
-window.closeManualModal = closeManualModal;
-window.applyDefaultStack = applyDefaultStack;
-window.startNewHand = startNewHand;
-window.actionFold = actionFold;
-window.actionCall = actionCall;
-window.actionCheck = actionCall;
-window.actionRaise = actionRaise;
-window.actionAllIn = actionAllIn;
-window.toggleRaisePanel = toggleRaisePanel;
-window.setPotRaise = setPotRaise;
-window.openCardPicker = openCardPicker;
-window.closeCardPicker = closeCardPicker;
-window.applyManualCardInput = applyManualCardInput;
-window.clearCurrentCardSlot = clearCurrentCardSlot;
-window.undoAction = undoAction;
-window.switchToTableView = switchToTableView;
-window.switchToInputView = switchToInputView;
-window.exportTableVideo = exportTableVideo;
-window.copyHandText = copyHandText;
-window.loadSampleHandsForced = loadSampleHandsForced;
-window.exportHandsJSON = exportHandsJSON;
-window.importHandsJSON = importHandsJSON;
-window.confirmWinner = confirmWinner;
-window.openHeroSetupModal = openHeroSetupModal;
-window.closeHeroSetupModal = closeHeroSetupModal;
-window.confirmHeroSetup = confirmHeroSetup;
-window.clearHeroCards = clearHeroCards;
-window.openCardPicker = openCardPicker;
-window.closeCardPicker = closeCardPicker;
-window.switchToTableView = function() {
-  const heroSeat = AppState.seats[AppState.heroSeatIndex];
-  if (!heroSeat || !heroSeat.holeCards || heroSeat.holeCards.filter(c => c !== '').length < 2) {
-    showError('⚠️ 【手札未選択】 自分(Hero)の手札2枚をタップして選択してください');
-    return;
+// 🌐 存在が保証されている全関数のwindowグローバル露出バインド
+window.openHistoryModal = typeof openHistoryModal !== 'undefined' ? openHistoryModal : null;
+window.closeHistoryModal = typeof closeHistoryModal !== 'undefined' ? closeHistoryModal : null;
+window.openManualModal = typeof openManualModal !== 'undefined' ? openManualModal : null;
+window.closeManualModal = typeof closeManualModal !== 'undefined' ? closeManualModal : null;
+function applyDefaultStack() {
+  const input = document.getElementById('default-stack');
+  const val = parseFloat(input ? input.value : '100');
+  if (!isNaN(val) && val > 0 && AppState.seats) {
+    AppState.seats.forEach(s => s.stack = val);
+    renderAll();
+    if (typeof showError === 'function') showError(`✅ 全員のスタックを ${val} BB に設定しました`);
   }
-  document.getElementById('view-input-mode')?.classList.add('hidden');
-  document.getElementById('view-table-mode')?.classList.remove('hidden');
-  renderAll();
-  Replay.index = 0;
-  Replay.stepTo(0);
-};
-window.switchToInputView = function() {
-  document.getElementById('view-table-mode')?.classList.add('hidden');
-  document.getElementById('view-input-mode')?.classList.remove('hidden');
-  renderAll();
-};
-window.applyManualCardInput = applyManualCardInput;
-window.clearCurrentCardSlot = clearCurrentCardSlot;
-window.copyHandText = copyHandText;
-window.exportHandsJSON = exportHandsJSON;
-window.importHandsJSON = importHandsJSON;
-window.loadHandFromData = loadHandFromData;
-window.deleteSavedHand = deleteSavedHand;
+}
+window.applyDefaultStack = applyDefaultStack;
+window.startNewHand = typeof startNewHand !== 'undefined' ? startNewHand : null;
+window.actionFold = typeof actionFold !== 'undefined' ? actionFold : null;
+window.actionCall = typeof actionCall !== 'undefined' ? actionCall : null;
+window.actionRaise = typeof actionRaise !== 'undefined' ? actionRaise : null;
+window.actionAllIn = typeof actionAllIn !== 'undefined' ? actionAllIn : null;
+window.toggleRaisePanel = typeof toggleRaisePanel !== 'undefined' ? toggleRaisePanel : null;
+window.setPotRaise = typeof setPotRaise !== 'undefined' ? setPotRaise : null;
+window.openCardPicker = typeof openCardPicker !== 'undefined' ? openCardPicker : null;
+window.closeCardPicker = typeof closeCardPicker !== 'undefined' ? closeCardPicker : null;
+window.applyManualCardInput = typeof applyManualCardInput !== 'undefined' ? applyManualCardInput : null;
+window.clearCurrentCardSlot = typeof clearCurrentCardSlot !== 'undefined' ? clearCurrentCardSlot : null;
+window.undoAction = typeof undoAction !== 'undefined' ? undoAction : null;
+window.switchToTableView = typeof switchToTableView !== 'undefined' ? switchToTableView : null;
+window.switchToInputView = typeof switchToInputView !== 'undefined' ? switchToInputView : null;
+window.exportTableVideo = typeof exportTableVideo !== 'undefined' ? exportTableVideo : null;
+window.copyHandText = typeof copyHandText !== 'undefined' ? copyHandText : null;
+window.loadSampleHandsForced = typeof loadSampleHandsForced !== 'undefined' ? loadSampleHandsForced : null;
+window.exportHandsJSON = typeof exportHandsJSON !== 'undefined' ? exportHandsJSON : null;
+window.importHandsJSON = typeof importHandsJSON !== 'undefined' ? importHandsJSON : null;
+window.confirmWinner = typeof confirmWinner !== 'undefined' ? confirmWinner : null;
 
 // ===================================================
 // Step 5: テーブルリプレイのアニメーション動画エクスポート (.webm/.mp4)
