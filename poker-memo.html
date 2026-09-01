@@ -176,11 +176,11 @@
   <div style="display:flex;flex-direction:column;align-items:center;padding:16px;gap:16px;">
     <!-- ポーカー卓 -->
     <div id="table-svg-wrap" style="width:min(500px, 92vw);height:min(500px, 92vw);position:relative;">
-      <svg id="table-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+      <svg id="table-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;">
         <ellipse class="felt" cx="200" cy="200" rx="180" ry="140"/>
         <ellipse class="felt-inner" cx="200" cy="200" rx="165" ry="125"/>
       </svg>
-      <div id="seats-container" style="position:absolute;inset:0;"></div>
+      <div id="seats-container" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50;"></div>
     </div>
 
     <!-- ポット情報 -->
@@ -266,7 +266,7 @@
       <div style="background:#2b2512;border:2px solid var(--yellow);border-radius:8px;padding:12px;">
         <h3 style="color:var(--yellow);font-size:.95rem;margin-bottom:8px;">🎮 使い方の手順</h3>
         <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:6px;font-size:.84rem;">
-          <li><b>【画面1】初期設定</b>: 左サイドバーで Hero(自分)のポジションを「<code>★ 自分に指定</code>」ボタンで選択し、手札2枚を入力。</li>
+          <li><b>【画面1】初期設定 ＆ 手札選択</b>: 各プレイヤー行内で Hero(自分)の位置を「<code>★ 自分に指定</code>」ボタンで選択し、Heroの手札2枚(必須)をタップ入力。</li>
           <li><b>【画面1】アクション入力</b>: <code>FOLD</code>, <code>CALL</code>, <code>RAISE</code> ボタンとコミュニティカードを入力。</li>
           <li><b>【画面2】リプレイ再生</b>: 最下の「<code>🎬 テーブルでリプレイ再生する</code>」を押して卓上でゲーム再生を鑑賞！</li>
         </ol>
