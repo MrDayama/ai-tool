@@ -1,219 +1,24 @@
 /**
  * Map Canvas Engine
- * ゲーム内管理画面 (Admin Map / ゲーム内全全対マップ) 同等・完全忠実グラフィック描画エンジン
+ * Gamerch Wiki 完全準拠 実物・高品質マップ画像 (The Skeld / MIRA HQ / Polus / Airship / Fungle) レンダリングエンジン
  */
 
-const INGAME_ADMIN_MAPS = {
-  // 1. The Skeld (インゲーム・Adminマップ再現)
-  skeld: {
-    name: 'The Skeld (ゲーム内Adminマップ)',
-    bgStyle: '#080c16',
-    rooms: [
-      { id: 'cafeteria', name: 'Cafeteria', shape: 'octagon', x: 350, y: 30, w: 220, h: 150, isSpawn: true },
-      { id: 'weapons', name: 'Weapons', shape: 'rect', x: 630, y: 50, w: 150, h: 120 },
-      { id: 'o2', name: 'O2', shape: 'rect', x: 570, y: 200, w: 100, h: 90 },
-      { id: 'navigation', name: 'Navigation', shape: 'pointer', x: 720, y: 230, w: 140, h: 150 },
-      { id: 'shields', name: 'Shields', shape: 'rect', x: 610, y: 420, w: 150, h: 120 },
-      { id: 'communications', name: 'Comms', shape: 'rect', x: 480, y: 470, w: 110, h: 90 },
-      { id: 'storage', name: 'Storage', shape: 'rect', x: 350, y: 340, w: 190, h: 190 },
-      { id: 'admin', name: 'Admin', shape: 'rect', x: 570, y: 310, w: 120, h: 120, hasAdminTable: true },
-      { id: 'electrical', name: 'Electrical', shape: 't_room', x: 200, y: 340, w: 130, h: 140 },
-      { id: 'lower_engine', name: 'Lower Engine', shape: 'rect', x: 50, y: 420, w: 130, h: 130 },
-      { id: 'security', name: 'Security', shape: 'rect', x: 130, y: 240, w: 90, h: 90, hasCams: true },
-      { id: 'upper_engine', name: 'Upper Engine', shape: 'rect', x: 50, y: 70, w: 130, h: 130 },
-      { id: 'reactor', name: 'Reactor', shape: 'octagon', x: 10, y: 200, w: 100, h: 180 },
-      { id: 'medbay', name: 'MedBay', shape: 'rect', x: 210, y: 160, w: 110, h: 110, hasScan: true },
-    ],
-    corridors: [
-      { from: {x: 460, y: 180}, to: {x: 460, y: 340} }, // Cafe - Storage
-      { from: {x: 270, y: 110}, to: {x: 350, y: 110} }, // Upper Engine - Cafe
-      { from: {x: 570, y: 110}, to: {x: 630, y: 110} }, // Cafe - Weapons
-      { from: {x: 115, y: 200}, to: {x: 115, y: 420} }, // Reactor Main Hallway
-      { from: {x: 110, y: 285}, to: {x: 130, y: 285} }, // Reactor - Security
-      { from: {x: 220, y: 285}, to: {x: 260, y: 285} }, // Security - Elec Hallway
-      { from: {x: 330, y: 410}, to: {x: 350, y: 410} }, // Elec - Storage
-      { from: {x: 540, y: 410}, to: {x: 570, y: 370} }, // Storage - Admin
-      { from: {x: 690, y: 310}, to: {x: 720, y: 310} }, // Admin - Nav
-      { from: {x: 680, y: 170}, to: {x: 720, y: 240} }, // Weapons - Nav
-      { from: {x: 685, y: 380}, to: {x: 685, y: 420} }, // Nav - Shields
-    ],
-    vents: [
-      { x: 370, y: 160, label: '🌀 Cafe' },
-      { x: 580, y: 330, label: '🌀 Admin' },
-      { x: 220, y: 460, label: '🌀 Elec' },
-      { x: 140, y: 310, label: '🌀 Sec' },
-      { x: 220, y: 250, label: '🌀 Med' },
-      { x: 70, y: 210, label: '🌀 React-U' },
-      { x: 70, y: 360, label: '🌀 React-L' },
-      { x: 730, y: 250, label: '🌀 Nav-N' },
-      { x: 730, y: 370, label: '🌀 Nav-S' },
-      { x: 700, y: 80, label: '🌀 Weapons' },
-      { x: 680, y: 500, label: '🌀 Shields' },
-    ],
-    lightsElectX: 260, lightsElectY: 410
-  },
+// ローカルにダウンロードした Gamerch Wiki 実物マップ画像パス
+const MAP_IMAGE_PATHS = {
+  skeld: 'assets/maps/skeld.png',
+  mira: 'assets/maps/mira.png',
+  polus: 'assets/maps/polus.png',
+  airship: 'assets/maps/airship.png',
+  fungle: 'assets/maps/fungle.png',
+};
 
-  // 2. MIRA HQ (インゲーム・Adminマップ再現)
-  mira: {
-    name: 'MIRA HQ (ゲーム内Adminマップ)',
-    bgStyle: '#0d1322',
-    rooms: [
-      { id: 'launchpad', name: 'Launchpad', shape: 'rect', x: 40, y: 440, w: 160, h: 130 },
-      { id: 'medbay', name: 'MedBay', shape: 'rect', x: 240, y: 460, w: 120, h: 100 },
-      { id: 'comms', name: 'Comms', shape: 'rect', x: 260, y: 330, w: 120, h: 90 },
-      { id: 'storage', name: 'Storage', shape: 'rect', x: 420, y: 420, w: 150, h: 130 },
-      { id: 'cafeteria', name: 'Cafeteria', shape: 'octagon', x: 630, y: 390, w: 180, h: 150 },
-      { id: 'balcony', name: 'Balcony', shape: 'rect', x: 750, y: 260, w: 120, h: 90 },
-      { id: 'admin', name: 'Admin', shape: 'rect', x: 610, y: 240, w: 110, h: 100 },
-      { id: 'office', name: 'Office', shape: 'rect', x: 430, y: 250, w: 130, h: 110 },
-      { id: 'greenhouse', name: 'Greenhouse (温室)', shape: 'leaf', x: 410, y: 30, w: 200, h: 150 },
-      { id: 'laboratory', name: 'Laboratory', shape: 'rect', x: 180, y: 150, w: 140, h: 130 },
-      { id: 'reactor', name: 'Reactor', shape: 'octagon', x: 40, y: 150, w: 110, h: 130 },
-    ],
-    corridors: [
-      { from: {x: 200, y: 505}, to: {x: 240, y: 505} },
-      { from: {x: 360, y: 505}, to: {x: 420, y: 505} },
-      { from: {x: 570, y: 475}, to: {x: 630, y: 475} },
-      { from: {x: 495, y: 420}, to: {x: 495, y: 360} },
-      { from: {x: 495, y: 250}, to: {x: 495, y: 180} },
-      { from: {x: 430, y: 305}, to: {x: 320, y: 215} },
-      { from: {x: 180, y: 215}, to: {x: 150, y: 215} },
-    ],
-    vents: [
-      { x: 180, y: 460, label: '🌀 Launchpad' },
-      { x: 340, y: 350, label: '🌀 Comms' },
-      { x: 540, y: 440, label: '🌀 Storage' },
-      { x: 770, y: 410, label: '🌀 Cafe' },
-      { x: 810, y: 280, label: '🌀 Balcony' },
-      { x: 680, y: 260, label: '🌀 Admin' },
-      { x: 510, y: 270, label: '🌀 Office' },
-      { x: 510, y: 60, label: '🌀 Greenhouse' },
-      { x: 260, y: 170, label: '🌀 Lab' },
-      { x: 90, y: 170, label: '🌀 Reactor' },
-    ],
-    lightsElectX: 495, lightsElectY: 305
-  },
-
-  // 3. Polus (インゲーム・Adminマップ再現)
-  polus: {
-    name: 'Polus (ゲーム内Adminマップ)',
-    bgStyle: '#0f141d',
-    rooms: [
-      { id: 'dropship', name: 'Dropship', shape: 'rect', x: 380, y: 30, w: 150, h: 110 },
-      { id: 'electrical', name: 'Electrical', shape: 'rect', x: 110, y: 350, w: 140, h: 150 },
-      { id: 'security', name: 'Security', shape: 'rect', x: 110, y: 210, w: 110, h: 100 },
-      { id: 'o2', name: 'O2', shape: 'rect', x: 250, y: 190, w: 120, h: 120 },
-      { id: 'communications', name: 'Comms', shape: 'rect', x: 250, y: 350, w: 110, h: 100 },
-      { id: 'storage', name: 'Storage', shape: 'rect', x: 420, y: 230, w: 170, h: 170 },
-      { id: 'office', name: 'Office & Admin', shape: 'rect', x: 630, y: 210, w: 190, h: 150, hasVitals: true },
-      { id: 'weapons', name: 'Weapons', shape: 'rect', x: 650, y: 70, w: 140, h: 100 },
-      { id: 'laboratory', name: 'Laboratory', shape: 'rect', x: 630, y: 390, w: 190, h: 160 },
-      { id: 'specimen', name: 'Specimen Room', shape: 'rect', x: 380, y: 460, w: 170, h: 110 },
-    ],
-    corridors: [
-      { from: {x: 455, y: 140}, to: {x: 455, y: 230} },
-      { from: {x: 370, y: 250}, to: {x: 420, y: 250} },
-      { from: {x: 590, y: 290}, to: {x: 630, y: 290} },
-      { from: {x: 720, y: 170}, to: {x: 720, y: 210} },
-      { from: {x: 720, y: 360}, to: {x: 720, y: 390} },
-      { from: {x: 465, y: 400}, to: {x: 465, y: 460} },
-      { from: {x: 220, y: 310}, to: {x: 220, y: 350} },
-    ],
-    vents: [
-      { x: 220, y: 370, label: '🌀 Elec' },
-      { x: 200, y: 230, label: '🌀 Sec' },
-      { x: 340, y: 210, label: '🌀 O2' },
-      { x: 560, y: 250, label: '🌀 Storage' },
-      { x: 790, y: 230, label: '🌀 Office-N' },
-      { x: 650, y: 320, label: '🌀 Office-S' },
-      { x: 760, y: 90, label: '🌀 Weapons' },
-      { x: 790, y: 410, label: '🌀 Lab' },
-      { x: 400, y: 480, label: '🌀 Specimen' },
-    ],
-    lightsElectX: 180, lightsElectY: 420
-  },
-
-  // 4. The Airship (インゲーム・Adminマップ完全再現)
-  airship: {
-    name: 'The Airship (ゲーム内Adminマップ)',
-    bgStyle: '#170c17',
-    rooms: [
-      { id: 'cockpit', name: 'Cockpit', shape: 'pointer', x: 20, y: 140, w: 140, h: 130 },
-      { id: 'vault', name: 'Vault', shape: 'rect', x: 180, y: 30, w: 150, h: 130 },
-      { id: 'brig', name: 'Brig', shape: 'rect', x: 180, y: 180, w: 130, h: 130 },
-      { id: 'gap_room', name: 'Gap Room (昇降機)', shape: 'rect', x: 340, y: 120, w: 170, h: 150, hasPlatform: true },
-      { id: 'meeting', name: 'Meeting Room', shape: 'octagon', x: 700, y: 20, w: 180, h: 140 },
-      { id: 'engine', name: 'Engine Room', shape: 'rect', x: 160, y: 340, w: 160, h: 150 },
-      { id: 'records', name: 'Records', shape: 'rect', x: 540, y: 60, w: 140, h: 160 },
-      { id: 'lounge', name: 'Lounge', shape: 'rect', x: 740, y: 180, w: 130, h: 110 },
-      { id: 'showers', name: 'Showers', shape: 'rect', x: 740, y: 310, w: 130, h: 110 },
-      { id: 'electrical', name: 'Electrical (スイッチ迷路)', shape: 'rect', x: 350, y: 300, w: 160, h: 150, isMaze: true },
-      { id: 'main_hall', name: 'Main Hall', shape: 'rect', x: 350, y: 480, w: 190, h: 110 },
-      { id: 'medical', name: 'Medical', shape: 'rect', x: 530, y: 240, w: 120, h: 110 },
-      { id: 'kitchen', name: 'Kitchen', shape: 'rect', x: 570, y: 370, w: 140, h: 110 },
-      { id: 'cargo', name: 'Cargo Bay', shape: 'rect', x: 730, y: 440, w: 140, h: 130 },
-    ],
-    corridors: [
-      { from: {x: 160, y: 205}, to: {x: 180, y: 205} },
-      { from: {x: 255, y: 160}, to: {x: 255, y: 180} },
-      { from: {x: 310, y: 235}, to: {x: 340, y: 235} },
-      { from: {x: 510, y: 185}, to: {x: 540, y: 140} },
-      { from: {x: 680, y: 100}, to: {x: 700, y: 85} },
-      { from: {x: 240, y: 310}, to: {x: 240, y: 340} },
-      { from: {x: 320, y: 415}, to: {x: 350, y: 375} },
-      { from: {x: 430, y: 450}, to: {x: 430, y: 480} },
-      { from: {x: 540, y: 520}, to: {x: 570, y: 440} },
-      { from: {x: 680, y: 160}, to: {x: 740, y: 220} },
-      { from: {x: 805, y: 290}, to: {x: 805, y: 310} },
-      { from: {x: 805, y: 420}, to: {x: 805, y: 440} },
-    ],
-    vents: [
-      { x: 300, y: 50, label: '🌀 Vault' },
-      { x: 270, y: 200, label: '🌀 Brig' },
-      { x: 480, y: 140, label: '🌀 Gap' },
-      { x: 480, y: 330, label: '🌀 Elec' },
-      { x: 500, y: 520, label: '🌀 Hall' },
-      { x: 650, y: 80, label: '🌀 Records' },
-      { x: 840, y: 330, label: '🌀 Showers' },
-      { x: 840, y: 460, label: '🌀 Cargo' },
-    ],
-    lightsElectX: 430, lightsElectY: 375
-  },
-
-  // 5. The Fungle (インゲーム・Adminマップ再現)
-  fungle: {
-    name: 'The Fungle (ゲーム内Adminマップ)',
-    bgStyle: '#0d1a14',
-    rooms: [
-      { id: 'lookout', name: 'Lookout', shape: 'rect', x: 380, y: 30, w: 140, h: 100 },
-      { id: 'kitchen', name: 'Kitchen', shape: 'rect', x: 580, y: 90, w: 140, h: 120 },
-      { id: 'beach', name: 'Beach', shape: 'rect', x: 740, y: 230, w: 140, h: 170 },
-      { id: 'comms', name: 'Comms', shape: 'rect', x: 560, y: 250, w: 130, h: 120 },
-      { id: 'greenhouse', name: 'Greenhouse', shape: 'leaf', x: 370, y: 210, w: 150, h: 140 },
-      { id: 'reactor', name: 'Generator', shape: 'rect', x: 180, y: 170, w: 130, h: 130 },
-      { id: 'mining', name: 'Mining Pit', shape: 'rect', x: 50, y: 230, w: 110, h: 190 },
-      { id: 'laboratory', name: 'Lab', shape: 'rect', x: 220, y: 370, w: 150, h: 140 },
-      { id: 'camp', name: 'Campfire', shape: 'octagon', x: 420, y: 390, w: 180, h: 160 },
-    ],
-    corridors: [
-      { from: {x: 450, y: 130}, to: {x: 450, y: 210} },
-      { from: {x: 520, y: 150}, to: {x: 580, y: 150} },
-      { from: {x: 310, y: 250}, to: {x: 370, y: 250} },
-      { from: {x: 520, y: 280}, to: {x: 560, y: 280} },
-      { from: {x: 690, y: 310}, to: {x: 740, y: 310} },
-      { from: {x: 510, y: 350}, to: {x: 510, y: 390} },
-      { from: {x: 370, y: 440}, to: {x: 420, y: 440} },
-    ],
-    vents: [
-      { x: 490, y: 60, label: '🌀 Lookout' },
-      { x: 690, y: 110, label: '🌀 Kitchen' },
-      { x: 840, y: 260, label: '🌀 Beach' },
-      { x: 660, y: 270, label: '🌀 Comms' },
-      { x: 280, y: 190, label: '🌀 Generator' },
-      { x: 340, y: 400, label: '🌀 Lab' },
-    ],
-    lightsElectX: 450, lightsElectY: 80
-  }
+// サボタージュ配電盤の正確な座標 (%相対位置: xPercent, yPercent)
+const SABOTAGE_COORDINATES = {
+  skeld: { lights: { xPct: 29, yPct: 65, name: '電気室 (Electrical)' } },
+  mira: { lights: { xPct: 55, yPct: 50, name: 'オフィス (Office)' } },
+  polus: { lights: { xPct: 20, yPct: 70, name: '電気室 (Electrical)' } },
+  airship: { lights: { xPct: 46, yPct: 60, name: '電気室 (Electrical)' } },
+  fungle: { lights: { xPct: 50, yPct: 15, name: '展望台 (Lookout)' } },
 };
 
 class MapEngine {
@@ -237,7 +42,10 @@ class MapEngine {
     this.radiusCenter = null;
     this.radiusPx = 0;
 
+    // ローカル画像キャッシュ管理
+    this.loadedImages = {};
     this.initCanvasSize();
+    this.loadLocalMapImages();
     this.bindEvents();
   }
 
@@ -247,8 +55,21 @@ class MapEngine {
     this.render();
   }
 
+  loadLocalMapImages() {
+    Object.keys(MAP_IMAGE_PATHS).forEach(mapId => {
+      const img = new Image();
+      img.src = MAP_IMAGE_PATHS[mapId];
+      img.onload = () => {
+        this.loadedImages[mapId] = img;
+        if (mapId === this.currentMapId) {
+          this.render();
+        }
+      };
+    });
+  }
+
   setMap(mapId) {
-    if (INGAME_ADMIN_MAPS[mapId]) {
+    if (MAP_IMAGE_PATHS[mapId]) {
       this.currentMapId = mapId;
       this.render();
     }
@@ -409,8 +230,8 @@ class MapEngine {
   render() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // 1. ゲーム内Adminマップと同等のインゲームグラフィック描画
-    this.drawInGameAdminMap();
+    // 1. Gamerch Wiki 完全準拠の実物高品質マップ画像描画
+    this.drawRealGamerchMapImage();
 
     // 2. ユーザー描画線
     this.drawings.forEach(d => {
@@ -419,7 +240,7 @@ class MapEngine {
       else if (d.type === 'arrow') this.drawArrow(d.start, d.end, d.colorHex, d.width);
     });
 
-    // 3. 移動半径サークル
+    // 3. 移動可能半径サークル
     if (this.showRadiusOverlay && this.radiusCenter && this.radiusPx > 0) {
       this.drawRadiusCircle(this.radiusCenter, this.radiusPx);
     }
@@ -439,161 +260,47 @@ class MapEngine {
     }
   }
 
-  drawInGameAdminMap() {
+  drawRealGamerchMapImage() {
     const ctx = this.ctx;
     const w = this.canvas.width;
     const h = this.canvas.height;
-    const mapDef = INGAME_ADMIN_MAPS[this.currentMapId] || INGAME_ADMIN_MAPS['skeld'];
 
-    // インゲーム背景色
-    ctx.fillStyle = mapDef.bgStyle || '#080c16';
+    // 暗い宇宙背景
+    ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, w, h);
 
-    // ネオンホログラムグリッド (ゲーム内Adminマップテイスト)
-    ctx.strokeStyle = 'rgba(56, 189, 248, 0.08)';
-    ctx.lineWidth = 1;
-    for (let x = 0; x < w; x += 30) {
-      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
-    }
-    for (let y = 0; y < h; y += 30) {
-      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-    }
+    const img = this.loadedImages[this.currentMapId];
 
-    // 1. 廊下（Corridor）ネオンダクト描画
-    if (mapDef.corridors) {
-      ctx.strokeStyle = '#1e293b';
-      ctx.lineWidth = 26;
-      ctx.lineCap = 'round';
-      mapDef.corridors.forEach(c => {
-        ctx.beginPath();
-        ctx.moveTo(c.from.x, c.from.y);
-        ctx.lineTo(c.to.x, c.to.y);
-        ctx.stroke();
-      });
+    if (img && img.complete && img.naturalWidth !== 0) {
+      const imgRatio = img.naturalWidth / img.naturalHeight;
+      const canvasRatio = w / h;
+      let renderW = w;
+      let renderH = h;
+      let renderX = 0;
+      let renderY = 0;
 
-      // 廊下青ネオン枠
-      ctx.strokeStyle = '#0284c7';
-      ctx.lineWidth = 2.5;
-      mapDef.corridors.forEach(c => {
-        ctx.beginPath();
-        ctx.moveTo(c.from.x, c.from.y);
-        ctx.lineTo(c.to.x, c.to.y);
-        ctx.stroke();
-      });
-    }
-
-    // 2. 各部屋のインゲーム専用形状グラフィック描画
-    mapDef.rooms.forEach(room => {
-      ctx.save();
-
-      // 部屋背景
-      ctx.fillStyle = '#0f172a';
-
-      if (room.shape === 'octagon') {
-        this.drawOctagonPath(ctx, room.x, room.y, room.w, room.h);
-        ctx.fill();
-        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.5; ctx.stroke();
-      } else if (room.shape === 'pointer') {
-        this.drawPointerPath(ctx, room.x, room.y, room.w, room.h);
-        ctx.fill();
-        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.5; ctx.stroke();
-      } else if (room.shape === 'leaf') {
-        this.drawLeafPath(ctx, room.x, room.y, room.w, room.h);
-        ctx.fill();
-        ctx.strokeStyle = '#22c55e'; ctx.lineWidth = 2.5; ctx.stroke();
+      if (imgRatio > canvasRatio) {
+        renderH = w / imgRatio;
+        renderY = (h - renderH) / 2;
       } else {
-        // 標準長方形部屋
-        ctx.fillRect(room.x, room.y, room.w, room.h);
-        ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2.5;
-        ctx.strokeRect(room.x, room.y, room.w, room.h);
+        renderW = h * imgRatio;
+        renderX = (w - renderW) / 2;
       }
 
-      // 特殊アイコン・オブジェクト描画
-      if (room.isSpawn) {
-        // Cafe 中央ボタン
-        const cx = room.x + room.w / 2;
-        const cy = room.y + room.h / 2 + 10;
-        ctx.beginPath(); ctx.arc(cx, cy, 18, 0, Math.PI * 2);
-        ctx.fillStyle = '#334155'; ctx.fill(); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2; ctx.stroke();
-        ctx.beginPath(); ctx.arc(cx, cy, 7, 0, Math.PI * 2);
-        ctx.fillStyle = '#ef4444'; ctx.fill();
-      }
-
-      if (room.hasAdminTable) {
-        // Admin テーブル
-        ctx.fillStyle = '#0284c7';
-        ctx.fillRect(room.x + 20, room.y + room.h - 30, room.w - 40, 15);
-      }
-
-      // 部屋名ラベル
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = 'bold 12px system-ui';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(room.name, room.x + room.w / 2, room.y + room.h / 2);
-
-      ctx.restore();
-    });
-
-    // 3. インゲーム ベント (Vent 🌀)
-    if (mapDef.vents) {
-      mapDef.vents.forEach(v => {
-        ctx.beginPath();
-        ctx.arc(v.x, v.y, 8, 0, Math.PI * 2);
-        ctx.fillStyle = '#f59e0b';
-        ctx.fill();
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.fillStyle = '#fbbf24';
-        ctx.font = 'bold 10px system-ui';
-        ctx.textAlign = 'center';
-        ctx.fillText(v.label, v.x, v.y - 12);
-      });
+      ctx.drawImage(img, renderX, renderY, renderW, renderH);
     }
 
-    // 4. ゲーム内 Admin モード表示ヘッダー
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-    ctx.fillRect(w - 240, 10, 230, 34);
+    // マップ名ラベルヘッダー
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.fillRect(w - 210, 10, 200, 32);
     ctx.strokeStyle = '#38bdf8';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect(w - 240, 10, 230, 34);
+    ctx.strokeRect(w - 210, 10, 200, 32);
 
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 13px system-ui';
+    ctx.font = 'bold 14px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText(`💻 ADMIN MAP: ${mapDef.name.toUpperCase()}`, w - 125, 32);
-  }
-
-  // 形状パスユーティリティ
-  drawOctagonPath(ctx, x, y, w, h) {
-    const cut = 20;
-    ctx.beginPath();
-    ctx.moveTo(x + cut, y);
-    ctx.lineTo(x + w - cut, y);
-    ctx.lineTo(x + w, y + cut);
-    ctx.lineTo(x + w, y + h - cut);
-    ctx.lineTo(x + w - cut, y + h);
-    ctx.lineTo(x + cut, y + h);
-    ctx.lineTo(x, y + h - cut);
-    ctx.lineTo(x, y + cut);
-    ctx.closePath();
-  }
-
-  drawPointerPath(ctx, x, y, w, h) {
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + w * 0.7, y);
-    ctx.lineTo(x + w, y + h / 2);
-    ctx.lineTo(x + w * 0.7, y + h);
-    ctx.lineTo(x, y + h);
-    ctx.closePath();
-  }
-
-  drawLeafPath(ctx, x, y, w, h) {
-    ctx.beginPath();
-    ctx.arc(x + w / 2, y + h / 2, Math.min(w, h) / 2, 0, Math.PI * 2);
+    ctx.fillText(`MAP: ${this.currentMapId.toUpperCase()}`, w - 110, 31);
   }
 
   drawPlayerPin(pin) {
@@ -718,21 +425,22 @@ class MapEngine {
     ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
     ctx.fillRect(0, 0, w, h);
 
-    const mapDef = INGAME_ADMIN_MAPS[this.currentMapId] || INGAME_ADMIN_MAPS['skeld'];
-    const electX = mapDef.lightsElectX || 260;
-    const electY = mapDef.lightsElectY || 410;
+    const coord = SABOTAGE_COORDINATES[this.currentMapId] || SABOTAGE_COORDINATES['skeld'];
+    const lights = coord.lights;
+    const electX = (w * lights.xPct) / 100;
+    const electY = (h * lights.yPct) / 100;
 
     ctx.beginPath();
-    ctx.arc(electX, electY, 30, 0, Math.PI * 2);
+    ctx.arc(electX, electY, 32, 0, Math.PI * 2);
     ctx.strokeStyle = '#f59e0b';
     ctx.lineWidth = 3;
     ctx.setLineDash([4, 4]);
     ctx.stroke();
 
     ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 13px system-ui';
+    ctx.font = 'bold 14px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText('💡 配電盤 (停電解除箇所)', electX, electY - 35);
+    ctx.fillText(`💡 配電盤 (${lights.name})`, electX, electY - 40);
     ctx.restore();
   }
 }

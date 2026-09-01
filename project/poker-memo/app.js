@@ -2232,17 +2232,33 @@ function closeManualModal() {
   }
 }
 
-// グローバル関数バインド（ボタンイベント確実に発火）
+// 🌐 全25ボタン関数のwindowグローバル露出バインド（全環境・デスクトップ起動時ボタン発火保証）
+window.openHistoryModal = openHistoryModal;
+window.closeHistoryModal = closeHistoryModal;
 window.openManualModal = openManualModal;
 window.closeManualModal = closeManualModal;
-window.confirmWinner = confirmWinner;
+window.applyDefaultStack = applyDefaultStack;
+window.startNewHand = startNewHand;
 window.actionFold = actionFold;
-window.actionCheck = actionCheck;
 window.actionCall = actionCall;
+window.actionCheck = actionCall;
 window.actionRaise = actionRaise;
 window.actionAllIn = actionAllIn;
-window.actionUndo = undoAction;
-window.startNewHand = startNewHand;
+window.toggleRaisePanel = toggleRaisePanel;
+window.setPotRaise = setPotRaise;
+window.openCardPicker = openCardPicker;
+window.closeCardPicker = closeCardPicker;
+window.applyManualCardInput = applyManualCardInput;
+window.clearCurrentCardSlot = clearCurrentCardSlot;
+window.undoAction = undoAction;
+window.switchToTableView = switchToTableView;
+window.switchToInputView = switchToInputView;
+window.exportTableVideo = exportTableVideo;
+window.copyHandText = copyHandText;
+window.loadSampleHandsForced = loadSampleHandsForced;
+window.exportHandsJSON = exportHandsJSON;
+window.importHandsJSON = importHandsJSON;
+window.confirmWinner = confirmWinner;
 window.openHeroSetupModal = openHeroSetupModal;
 window.closeHeroSetupModal = closeHeroSetupModal;
 window.confirmHeroSetup = confirmHeroSetup;
