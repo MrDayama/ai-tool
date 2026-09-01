@@ -6,9 +6,9 @@
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="style.css?v=20260901_5000">
+  <link rel="stylesheet" href="style.css?v=20260901_7000">
   <script>
-    // 強制キャッシュクリア (v20260901_5000)
+    // 強制キャッシュクリア (v20260901_7000)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
     }
@@ -234,7 +234,7 @@
       <div style="background:#2b2512;border:2px solid var(--yellow);border-radius:8px;padding:12px;">
         <h3 style="color:var(--yellow);font-size:.95rem;margin-bottom:8px;">🎮 使い方の手順</h3>
         <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:6px;font-size:.84rem;">
-          <li><b>【画面1】初期設定</b>: 左サイドバーで Hero(自分)のポジションを「<code>★ 自分に指定</code>」ボタンで選択し、手札2枚を入力。</li>
+          <li><b>【画面1】初期設定 ＆ 手札選択</b>: 各プレイヤー行内で Hero(自分)の位置を「<code>★ 自分に指定</code>」ボタンで選択し、Heroの手札2枚(必須)をタップ入力。</li>
           <li><b>【画面1】アクション入力</b>: <code>FOLD</code>, <code>CALL</code>, <code>RAISE</code> ボタンとコミュニティカードを入力。</li>
           <li><b>【画面2】リプレイ再生</b>: 最下の「<code>🎬 テーブルでリプレイ再生する</code>」を押して卓上でゲーム再生を鑑賞！</li>
         </ol>
@@ -265,7 +265,7 @@
   </div>
 </div>
 
-<script src="app.js?v=20260901_5000"></script>
+<script src="app.js?v=20260901_7000"></script>
 <script>
 function switchToTableView() {
   const heroSeat = AppState.seats[AppState.heroSeatIndex];

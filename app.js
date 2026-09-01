@@ -593,10 +593,25 @@ function selectCardFromPicker(cardCode) {
     AppState.board[boardMap[activePickerSlot]] = cardCode;
     renderBoard();
   } else if (activePickerSlot === 'hero1') {
-    if (heroSeat) heroSeat.holeCards[0] = cardCode;
+    if (heroSeat) {
+      if (!heroSeat.holeCards) heroSeat.holeCards = ['', ''];
+      heroSeat.holeCards[0] = cardCode;
+    }
     renderAll();
   } else if (activePickerSlot === 'hero2') {
-    if (heroSeat) heroSeat.holeCards[1] = cardCode;
+    if (heroSeat) {
+      if (!heroSeat.holeCards) heroSeat.holeCards = ['', ''];
+      heroSeat.holeCards[1] = cardCode;
+    }
+    renderAll();
+  } else if (activePickerSlot.startsWith('seat_')) {
+    const parts = activePickerSlot.split('_');
+    const sIdx = parseInt(parts[1]);
+    const cIdx = parts[2] === 'card1' ? 0 : 1;
+    if (AppState.seats[sIdx]) {
+      if (!AppState.seats[sIdx].holeCards) AppState.seats[sIdx].holeCards = ['', ''];
+      AppState.seats[sIdx].holeCards[cIdx] = cardCode;
+    }
     renderAll();
   }
 
@@ -608,6 +623,14 @@ function clearHeroCards() {
   if (heroSeat) heroSeat.holeCards = ['', ''];
   renderAll();
 }
+
+function clearSeatCards(seatIdx) {
+  if (AppState.seats[seatIdx]) {
+    AppState.seats[seatIdx].holeCards = ['', ''];
+  }
+  renderAll();
+}
+window.clearSeatCards = clearSeatCards;
 
 function applyManualCardInput() {
   const input = document.getElementById('card-manual-input');
@@ -1079,56 +1102,26 @@ function renderSeatConfigUI() {
     if (!list) return;
     list.innerHTML = '';
 
-    // 1. ★ Hero (自分) の手札選択カードボックス
-    const heroSeat = AppState.seats[AppState.heroSeatIndex];
-    const heroBox = document.createElement('div');
-    heroBox.className = 'hero-setup-box';
-    heroBox.style.cssText = 'background:linear-gradient(135deg, #2b2512 0%, #161b22 100%);border:2px solid var(--yellow);border-radius:8px;padding:10px 12px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.4);';
-    
-    const c1 = heroSeat?.holeCards?.[0];
-    const c2 = heroSeat?.holeCards?.[1];
-    const card1Val = (c1 && c1 !== '') ? formatCardDisplay(c1) : '?';
-    const card2Val = (c2 && c2 !== '') ? formatCardDisplay(c2) : '?';
-
-    heroBox.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-        <span style="color:var(--yellow);font-weight:800;font-size:.85rem;">★ Hero (自分) の手札選択 【必須】</span>
-        <span style="font-size:.72rem;background:var(--yellow);color:#000;padding:2px 6px;border-radius:4px;font-weight:700;">
-          位置: ${getPositionName(AppState.heroSeatIndex)}
-        </span>
-      </div>
-      <div style="display:flex;gap:10px;align-items:center;margin-top:6px;">
-        <span style="font-size:.8rem;color:var(--text);font-weight:600;">自分手札:</span>
-        <div class="card-slot ${(c1 && c1 !== '') ? 'filled' : ''}" onclick="openCardPicker('hero1')" style="width:44px;height:56px;font-size:.9rem;cursor:pointer;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--surface);">
-          ${card1Val}
-        </div>
-        <div class="card-slot ${(c2 && c2 !== '') ? 'filled' : ''}" onclick="openCardPicker('hero2')" style="width:44px;height:56px;font-size:.9rem;cursor:pointer;border:2px solid var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;background:var(--surface);">
-          ${card2Val}
-        </div>
-        <button onclick="clearHeroCards()" style="padding:6px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.75rem;color:var(--red);cursor:pointer;font-weight:600;">クリア</button>
-      </div>`;
-    list.appendChild(heroBox);
-
-    // 2. プレイヤー一覧 Heading
-    const title = document.createElement('div');
-    title.style.cssText = 'font-size:.75rem;color:var(--text-sub);font-weight:700;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.5px;';
-    title.textContent = '👥 参加プレイヤー & Hero位置指定';
-    list.appendChild(title);
-
-    // 3. 各座席
     AppState.seats.forEach((seat, i) => {
       const isHero = (i === AppState.heroSeatIndex);
       const displayStackVal = isBBUnit ? (seat.stack / bbVal).toFixed(1) : seat.stack;
       const item = document.createElement('div');
       item.className = `seat-config-item ${isHero ? 'is-hero' : ''}`;
       item.style.cssText = isHero 
-        ? 'background:#282110;border:2px solid var(--yellow);border-radius:8px;padding:8px 10px;margin-bottom:8px;' 
-        : 'background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 10px;margin-bottom:8px;';
+        ? 'background:#241d0c;border:2px solid var(--yellow);border-radius:8px;padding:10px 12px;margin-bottom:10px;box-shadow:0 2px 8px rgba(210,153,34,0.25);' 
+        : 'background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:10px;';
       
+      const c1 = seat.holeCards?.[0];
+      const c2 = seat.holeCards?.[1];
+      const card1Val = (c1 && c1 !== '') ? formatCardDisplay(c1) : '?';
+      const card2Val = (c2 && c2 !== '') ? formatCardDisplay(c2) : '?';
+      const slot1Target = isHero ? 'hero1' : `seat_${i}_card1`;
+      const slot2Target = isHero ? 'hero2' : `seat_${i}_card2`;
+
       item.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:8px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
           <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-weight:800;font-size:.85rem;color:${isHero ? 'var(--yellow)' : 'var(--text)'};">
+            <span style="font-weight:800;font-size:.9rem;color:${isHero ? 'var(--yellow)' : 'var(--text)'};">
               ${getPositionName(i)}
             </span>
             ${isHero ? '<span style="background:var(--yellow);color:#000;font-size:.68rem;font-weight:800;padding:2px 6px;border-radius:4px;">★ HERO (自分)</span>' : ''}
@@ -1140,12 +1133,26 @@ function renderSeatConfigUI() {
             </button>
           </div>
         </div>
-        <div style="display:flex;gap:8px;align-items:center;">
+
+        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
           <input type="text" value="${seat.name}" data-seat="${i}" class="player-name-input" placeholder="名前" style="flex:1;min-width:0;padding:6px 8px;font-size:.8rem;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);">
           <div style="display:flex;align-items:center;gap:4px;">
-            <input type="number" value="${displayStackVal}" data-seat="${i}" class="stack-input" min="0" step="1" title="${isBBUnit ? 'スタック(BB数)' : 'スタック(金額)'}" style="width:70px;padding:6px 6px;font-size:.8rem;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);text-align:right;">
+            <input type="number" value="${displayStackVal}" data-seat="${i}" class="stack-input" min="0" step="1" title="${isBBUnit ? 'スタック(BB数)' : 'スタック(金額)'}" style="width:75px;padding:6px 6px;font-size:.8rem;background:var(--surface2);border:1px solid var(--border);border-radius:5px;color:var(--text);text-align:right;">
             <span style="font-size:.72rem;color:var(--text-sub);">${isBBUnit ? 'BB' : ''}</span>
           </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;background:var(--surface2);padding:6px 10px;border-radius:6px;border:1px solid ${isHero ? 'rgba(210,153,34,0.4)' : 'var(--border)'};">
+          <span style="font-size:.76rem;font-weight:700;color:${isHero ? 'var(--yellow)' : 'var(--text-sub)'};min-width:70px;">
+            ${isHero ? '★手札(必須):' : '手札(任意):'}
+          </span>
+          <div class="card-slot ${(c1 && c1 !== '') ? 'filled' : ''}" onclick="openCardPicker('${slot1Target}')" style="width:36px;height:46px;font-size:.82rem;cursor:pointer;border:1.5px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;background:var(--surface);">
+            ${card1Val}
+          </div>
+          <div class="card-slot ${(c2 && c2 !== '') ? 'filled' : ''}" onclick="openCardPicker('${slot2Target}')" style="width:36px;height:46px;font-size:.82rem;cursor:pointer;border:1.5px solid var(--border);border-radius:5px;display:flex;align-items:center;justify-content:center;background:var(--surface);">
+            ${card2Val}
+          </div>
+          <button onclick="${isHero ? 'clearHeroCards()' : `clearSeatCards(${i})`}" style="padding:4px 8px;background:transparent;border:1px solid var(--border);border-radius:4px;font-size:.72rem;color:var(--red);cursor:pointer;margin-left:auto;">クリア</button>
         </div>`;
       list.appendChild(item);
     });
