@@ -6,9 +6,9 @@
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="style.css?v=20260901_8000">
+  <link rel="stylesheet" href="style.css?v=20260901_9000">
   <script>
-    // 強制キャッシュクリア (v20260901_8000)
+    // 強制キャッシュクリア (v20260901_9000)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations().then(rs => rs.forEach(r => r.unregister()));
     }
@@ -162,7 +162,7 @@
     <button onclick="switchToInputView()" style="background:var(--surface2);color:var(--yellow);border:1.5px solid var(--yellow);border-radius:6px;padding:6px 14px;font-size:.85rem;font-weight:800;cursor:pointer;">
       ✏️ 入力・編集画面に戻る
     </button>
-    <div style="display:flex;gap:8px;">
+      <button onclick="exportTableVideo()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">🎥 動画書き出し</button>
       <button onclick="openManualModal()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">📖 マニュアル</button>
       <button onclick="copyHandText()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.82rem;cursor:pointer;">📋 コピー</button>
     </div>
@@ -265,7 +265,7 @@
   </div>
 </div>
 
-<script src="app.js?v=20260901_8000"></script>
+<script src="app.js?v=20260901_9000"></script>
 <script>
 function switchToTableView() {
   const heroSeat = AppState.seats[AppState.heroSeatIndex];
