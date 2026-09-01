@@ -1580,6 +1580,12 @@ function renderSeats() {
 
     let heroTag = el.querySelector('.hero-badge-tag');
     const avatarEl = el.querySelector('.seat-avatar');
+    if (avatarEl) {
+      avatarEl.innerHTML = `
+        <span class="seat-name">${seat.name || `P${i+1}`}</span>
+        <span class="seat-stack">${seat.stack !== undefined ? seat.stack : 100}</span>
+      `;
+    }
     if (isHero && avatarEl) {
       if (!heroTag) {
         heroTag = document.createElement('div');
