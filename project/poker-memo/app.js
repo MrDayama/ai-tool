@@ -1493,6 +1493,7 @@ function ensureSeatNodes() {
   }
 
   container.innerHTML = '';
+  const count = AppState.seatCount || (AppState.seats ? AppState.seats.length : 6);
 
   const cx = 50;
   const cy = 50;
