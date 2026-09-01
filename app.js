@@ -1739,18 +1739,6 @@ function renderTimeline() {
 }
 window.renderTimeline = renderTimeline;
 
-function renderAll() {
-  renderSeats();
-  renderBoard();
-  renderPot();
-  renderActionPanel();
-  renderStreetBadge();
-  renderTimeline();
-  if (typeof renderSeatConfigUI === 'function') {
-    renderSeatConfigUI();
-  }
-}
-
 function renderPot() {
   const mainEl = document.getElementById('pot-main');
   const sideEl = document.getElementById('pot-sides');
