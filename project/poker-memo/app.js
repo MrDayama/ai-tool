@@ -976,12 +976,59 @@ function renderSeats() {
   });
 }
 
+function renderTimeline() {
+  ['action-timeline', 'action-timeline-m'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+
+    if (!AppState.history || AppState.history.length === 0) {
+      el.innerHTML = '<div style="font-size:.74rem;color:var(--text-sub);padding:4px;">まだアクション履歴がありません</div>';
+      return;
+    }
+
+    let lastStreet = '';
+    AppState.history.forEach((step) => {
+      if (step.street !== lastStreet) {
+        const label = document.createElement('div');
+        label.style.cssText = 'font-size:.7rem;font-weight:800;color:var(--accent);margin:6px 0 3px 0;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:2px;';
+        label.textContent = `--- ${step.street.toUpperCase()} ---`;
+        el.appendChild(label);
+        lastStreet = step.street;
+      }
+      const seat = AppState.seats[step.seatIndex];
+      const seatName = seat ? `${seat.name} (${getPositionName(step.seatIndex)})` : `Seat ${step.seatIndex + 1}`;
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;font-size:.76rem;padding:3px 4px;border-bottom:1px solid rgba(255,255,255,0.05);';
+      
+      const actionColorMap = {
+        fold: 'var(--text-sub)',
+        check: 'var(--text)',
+        call: 'var(--green)',
+        raise: 'var(--yellow)',
+        allin: 'var(--red)',
+        'all-in': 'var(--red)'
+      };
+      const actColor = actionColorMap[step.action] || 'var(--text)';
+
+      item.innerHTML = `
+        <span style="color:var(--text);font-weight:600;">${seatName}</span>
+        <span style="color:${actColor};font-weight:800;">${step.action.toUpperCase()} ${step.amount > 0 ? formatAmount(step.amount) : ''}</span>
+      `;
+      el.appendChild(item);
+    });
+    el.scrollTop = el.scrollHeight;
+  });
+}
+window.renderTimeline = renderTimeline;
+
 function renderAll() {
   renderSeats();
   renderBoard();
   renderPot();
   renderActionPanel();
   renderStreetBadge();
+  renderTimeline();
   if (typeof renderSeatConfigUI === 'function') {
     renderSeatConfigUI();
   }

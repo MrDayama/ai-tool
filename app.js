@@ -976,12 +976,59 @@ function renderSeats() {
   });
 }
 
+function renderTimeline() {
+  ['action-timeline', 'action-timeline-m'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.innerHTML = '';
+
+    if (!AppState.history || AppState.history.length === 0) {
+      el.innerHTML = '<div style="font-size:.74rem;color:var(--text-sub);padding:4px;">まだアクション履歴がありません</div>';
+      return;
+    }
+
+    let lastStreet = '';
+    AppState.history.forEach((step) => {
+      if (step.street !== lastStreet) {
+        const label = document.createElement('div');
+        label.style.cssText = 'font-size:.7rem;font-weight:800;color:var(--accent);margin:6px 0 3px 0;text-transform:uppercase;border-bottom:1px solid var(--border);padding-bottom:2px;';
+        label.textContent = `--- ${step.street.toUpperCase()} ---`;
+        el.appendChild(label);
+        lastStreet = step.street;
+      }
+      const seat = AppState.seats[step.seatIndex];
+      const seatName = seat ? `${seat.name} (${getPositionName(step.seatIndex)})` : `Seat ${step.seatIndex + 1}`;
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex;justify-content:space-between;align-items:center;font-size:.76rem;padding:3px 4px;border-bottom:1px solid rgba(255,255,255,0.05);';
+      
+      const actionColorMap = {
+        fold: 'var(--text-sub)',
+        check: 'var(--text)',
+        call: 'var(--green)',
+        raise: 'var(--yellow)',
+        allin: 'var(--red)',
+        'all-in': 'var(--red)'
+      };
+      const actColor = actionColorMap[step.action] || 'var(--text)';
+
+      item.innerHTML = `
+        <span style="color:var(--text);font-weight:600;">${seatName}</span>
+        <span style="color:${actColor};font-weight:800;">${step.action.toUpperCase()} ${step.amount > 0 ? formatAmount(step.amount) : ''}</span>
+      `;
+      el.appendChild(item);
+    });
+    el.scrollTop = el.scrollHeight;
+  });
+}
+window.renderTimeline = renderTimeline;
+
 function renderAll() {
   renderSeats();
   renderBoard();
   renderPot();
   renderActionPanel();
   renderStreetBadge();
+  renderTimeline();
   if (typeof renderSeatConfigUI === 'function') {
     renderSeatConfigUI();
   }
@@ -1428,6 +1475,175 @@ window.exportHandsJSON = exportHandsJSON;
 window.importHandsJSON = importHandsJSON;
 window.loadHandFromData = loadHandFromData;
 window.deleteSavedHand = deleteSavedHand;
+
+// ===================================================
+// Step 5: テーブルリプレイのアニメーション動画エクスポート (.webm/.mp4)
+// ===================================================
+
+async function exportTableVideo() {
+  if (!window.MediaRecorder) {
+    showError('⚠️ お使いのブラウザは画面動画キャプチャ(MediaRecorder)に対応していません');
+    return;
+  }
+
+  // 画面2(テーブル画面)へ遷移
+  const tableModeEl = document.getElementById('view-table-mode');
+  if (tableModeEl && tableModeEl.classList.contains('hidden')) {
+    switchToTableView();
+  }
+
+  showError('🎬 【動画書き出し開始】 アニメーションを録画しています。完了までお待ちください...');
+
+  // 1. キャプチャ用 Offscreen/Onscreen Canvas の準備 (600x600 高画質)
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 600;
+  const ctx = canvas.getContext('2d');
+
+  // 2. 毎フレーム Canvas レンダリング関数
+  function drawCanvasFrame() {
+    ctx.fillStyle = '#0d1117';
+    ctx.fillRect(0, 0, 600, 600);
+
+    // ポーカー卓 (緑のフェルト)
+    ctx.save();
+    ctx.beginPath();
+    ctx.ellipse(300, 300, 260, 190, 0, 0, Math.PI * 2);
+    ctx.fillStyle = '#0f5132';
+    ctx.fill();
+    ctx.lineWidth = 10;
+    ctx.strokeStyle = '#2d1b0f';
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(300, 300, 240, 170, 0, 0, Math.PI * 2);
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.stroke();
+    ctx.restore();
+
+    // 中央ボードカード
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px sans-serif';
+    ctx.textAlign = 'center';
+    AppState.board.forEach((c, i) => {
+      const x = 200 + i * 42;
+      const y = 285;
+      ctx.fillStyle = c ? '#161b22' : '#21262d';
+      ctx.strokeStyle = '#30363d';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.roundRect(x, y, 36, 48, 5);
+      ctx.fill();
+      ctx.stroke();
+
+      if (c) {
+        const rankStr = c.slice(0, -1).replace('T', '10');
+        const suitChar = c.slice(-1);
+        const isRed = suitChar === 'h' || suitChar === 'd';
+        ctx.fillStyle = isRed ? '#f85149' : '#e6edf3';
+        const suitMap = { s: '♠', h: '♥', d: '♦', c: '♣' };
+        ctx.fillText(`${rankStr}${suitMap[suitChar]||''}`, x + 18, y + 28);
+      } else {
+        ctx.fillStyle = '#8b949e';
+        ctx.fillText('?', x + 18, y + 28);
+      }
+    });
+
+    // ポット表示
+    ctx.fillStyle = '#d29922';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.fillText(`Main Pot: ${formatAmount(AppState.pot.main)}`, 300, 260);
+
+    // 座席配置
+    const seatCount = AppState.seatCount;
+    AppState.seats.forEach((seat, i) => {
+      const angle = (i / seatCount) * Math.PI * 2 + Math.PI / 2;
+      const rx = 240;
+      const ry = 170;
+      const sx = 300 + rx * Math.cos(angle);
+      const sy = 300 + ry * Math.sin(angle);
+
+      // 座席サークル
+      const isCurrent = (i === AppState.currentSeatIndex);
+      ctx.fillStyle = isCurrent ? '#d29922' : '#161b22';
+      ctx.strokeStyle = seat.isHero ? '#d29922' : '#30363d';
+      ctx.lineWidth = seat.isHero ? 3 : 2;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 34, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // プレイヤー名 ＆ スタック
+      ctx.fillStyle = isCurrent ? '#000000' : '#e6edf3';
+      ctx.font = 'bold 11px sans-serif';
+      ctx.fillText(seat.name.slice(0, 8), sx, sy - 6);
+
+      ctx.fillStyle = isCurrent ? '#111111' : '#8b949e';
+      ctx.font = '10px sans-serif';
+      ctx.fillText(`${formatAmount(seat.stack)}`, sx, sy + 10);
+
+      // ベット額
+      if (seat.betAmount > 0) {
+        const bx = sx + (300 - sx) * 0.25;
+        const by = sy + (300 - sy) * 0.25;
+        ctx.fillStyle = '#3fb950';
+        ctx.font = 'bold 11px sans-serif';
+        ctx.fillText(`${formatAmount(seat.betAmount)}`, bx, by);
+      }
+    });
+  }
+
+  // 3. MediaRecorder の初期化 (WebM/MP4)
+  const stream = canvas.captureStream(30);
+  let mimeType = 'video/webm;codecs=vp9';
+  if (!MediaRecorder.isTypeSupported(mimeType)) {
+    mimeType = MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : 'video/mp4';
+  }
+
+  const recorder = new MediaRecorder(stream, { mimeType });
+  const chunks = [];
+  recorder.ondataavailable = e => { if (e.data.size > 0) chunks.push(e.data); };
+
+  recorder.onstop = () => {
+    clearInterval(renderInterval);
+    const blob = new Blob(chunks, { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const ext = mimeType.includes('mp4') ? 'mp4' : 'webm';
+    a.href = url;
+    a.download = `poker_hand_replay_${Date.now()}.${ext}`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showError('✅ 【動画書き出し完了】 リプレイ動画ファイルを保存しました！');
+  };
+
+  // 4. 録画と自動リプレイ開始
+  recorder.start();
+  Replay.index = 0;
+  Replay.stepTo(0);
+
+  const renderInterval = setInterval(() => {
+    drawCanvasFrame();
+  }, 1000 / 30);
+
+  let stepCounter = 0;
+  const playInterval = setInterval(() => {
+    stepCounter++;
+    if (stepCounter < AppState.history.length) {
+      Replay.stepTo(stepCounter);
+    } else {
+      clearInterval(playInterval);
+      setTimeout(() => {
+        recorder.stop();
+      }, 1200);
+    }
+  }, 800);
+}
+
+window.exportTableVideo = exportTableVideo;
 
 window.addEventListener('DOMContentLoaded', init);
 
