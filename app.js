@@ -1253,7 +1253,11 @@ const Replay = {
   stepTo(index) {
     if (!AppState.history || AppState.history.length === 0) return;
     if (!AppState.seats || AppState.seats.length === 0) {
-      if (typeof initSeatsList === 'function') initSeatsList();
+      if (typeof initSeats === 'function') initSeats();
+    }
+    if (window.activeAnimations) {
+      window.activeAnimations.forEach(a => a?.remove());
+      window.activeAnimations = [];
     }
     const targetIdx = Math.max(0, Math.min(index, AppState.history.length - 1));
     const step = AppState.history[targetIdx];
