@@ -5,9 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🎴 Poker Memo Web</title>
   <meta name="description" content="ライブポーカー ハンド入力・アクションテーブル・ハンドリプレイ Webツール">
-  <!-- PWA設定 -->
   <meta name="theme-color" content="#0d1117">
-  <link rel="stylesheet" href="style.css?v=20260901_3">
+  <link rel="stylesheet" href="style.css?v=20260901_4">
 </head>
 <body>
 
@@ -16,7 +15,6 @@
   <h1>🎴 Poker Memo Web</h1>
   <span id="street-badge" class="badge">PREFLOP</span>
 
-  <!-- 卓人数 -->
   <select id="seat-count" title="テーブル人数">
     <option value="2">2名 (HU)</option>
     <option value="3">3名</option>
@@ -28,7 +26,6 @@
     <option value="9">9名 (Full Ring)</option>
   </select>
 
-  <!-- 表示単位切替 -->
   <button id="unit-toggle">表示: BB</button>
 
   <!-- 共有・保存・マニュアルボタン群 -->
@@ -41,13 +38,10 @@
 <!-- ===== PC: 3カラム メインレイアウト ===== -->
 <div class="main-layout">
 
-  <!-- ======= 左パネル: ブラインド/スタック設定 & 入力 ======= -->
+  <!-- 左パネル -->
   <aside class="left-panel">
-
-    <!-- ブラインド設定 -->
     <div class="card">
       <h3>ブラインド設定</h3>
-      <!-- レートプリセット -->
       <div class="rate-presets">
         <button class="rate-preset" data-sb="0.5" data-bb="1">0.5/1</button>
         <button class="rate-preset" data-sb="1"   data-bb="2">1/2</button>
@@ -56,7 +50,6 @@
         <button class="rate-preset" data-sb="10"  data-bb="20">10/20</button>
         <button class="rate-preset" data-sb="25"  data-bb="50">25/50</button>
       </div>
-      <!-- カスタム入力 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px;">
         <label style="font-size:.78rem;color:var(--text-sub)">SB
           <input type="number" id="input-sb" value="1" min="0.01" step="0.5" style="width:100%;margin-top:3px">
@@ -65,7 +58,6 @@
           <input type="number" id="input-bb" value="2" min="0.01" step="0.5" style="width:100%;margin-top:3px">
         </label>
       </div>
-      <!-- アンティ種別 -->
       <label style="font-size:.78rem;color:var(--text-sub);display:block;margin-top:10px">アンティ
         <select id="ante-type" style="width:100%;margin-top:3px">
           <option value="none">なし</option>
@@ -73,10 +65,8 @@
           <option value="bb" selected>BB Ante（BBが全員分）</option>
         </select>
       </label>
-      <!-- Straddle -->
       <label style="font-size:.78rem;color:var(--text-sub);display:flex;align-items:center;gap:8px;margin-top:10px">
-        <input type="checkbox" id="straddle-toggle">
-        UTG Straddle
+        <input type="checkbox" id="straddle-toggle"> UTG Straddle
       </label>
     </div>
 
@@ -86,16 +76,13 @@
         <h3 style="margin-bottom:0">プレイヤー & スタック</h3>
         <button onclick="openHeroSetupModal()" style="background:var(--yellow);color:#000;border:none;border-radius:5px;padding:4px 8px;font-size:.75rem;font-weight:700;cursor:pointer;">★ Hero/参加者設定</button>
       </div>
-      <div class="seat-config-list" id="seat-config-list">
-        <!-- app.js から動的生成 -->
-      </div>
+      <div class="seat-config-list" id="seat-config-list"></div>
       <div style="display:flex;gap:8px;margin-top:10px;">
         <input type="number" id="default-stack" placeholder="全員のスタック (BB数)" style="flex:1;padding:6px 8px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:6px;font-size:.8rem;">
         <button onclick="applyDefaultStack()" style="padding:6px 12px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:.8rem;cursor:pointer">全員に適用</button>
       </div>
     </div>
 
-    <!-- ハンド開始 -->
     <button id="btn-new-hand" onclick="startNewHand()">▶ New Hand 開始</button>
 
     <!-- アクションキーパッド (PCのみ) -->
@@ -123,7 +110,6 @@
         <button id="btn-raise" class="btn-raise" onclick="toggleRaisePanel()">RAISE ▾</button>
         <button id="btn-allin" class="btn-allin" onclick="actionAllIn()">ALL IN</button>
       </div>
-      <!-- レイズ入力パネル -->
       <div id="raise-panel" class="hidden" style="margin-top:10px">
         <div class="raise-presets">
           <button class="raise-mult" data-mult="2.5">2.5x</button>
@@ -141,20 +127,16 @@
     </div>
   </aside>
 
-  <!-- ======= 中央パネル: SVGポーカー卓 ======= -->
+  <!-- 中央パネル -->
   <main class="center-panel">
-    <!-- SVG テーブル (座席ノードはapp.jsが描画) -->
     <div id="table-svg-wrap">
       <svg id="table-svg" viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
-        <!-- テーブルフェルト -->
         <ellipse class="felt" cx="200" cy="200" rx="180" ry="140"/>
         <ellipse class="felt-inner" cx="200" cy="200" rx="165" ry="125"/>
       </svg>
-      <!-- 座席ノード (app.jsが .seat-node を動的追加) -->
       <div id="seats-container" style="position:absolute;inset:0;"></div>
     </div>
 
-    <!-- ボードカード (ガイド注記付き) -->
     <div style="text-align:center;">
       <div style="font-size:.76rem;color:var(--text-sub);margin-bottom:4px;">🎴 タップしてボードカードを選択</div>
       <div class="board-area">
@@ -169,23 +151,19 @@
     </div>
   </main>
 
-  <!-- ======= 右パネル: ポット情報 / ログ / リプレイ ======= -->
+  <!-- 右パネル -->
   <aside class="right-panel">
-
-    <!-- ポット情報 -->
     <div class="card pot-info">
       <h3>ポット</h3>
       <div class="pot-main" id="pot-main">Main Pot: --</div>
       <div class="pot-sides" id="pot-sides"></div>
     </div>
 
-    <!-- アクションログ -->
     <div class="card" style="flex:1;overflow:hidden;display:flex;flex-direction:column;">
       <h3>アクション履歴</h3>
       <div class="timeline" id="action-timeline"></div>
     </div>
 
-    <!-- リプレイコントローラー -->
     <div class="card replay-ctrl">
       <h3>リプレイ再生</h3>
       <input type="range" id="replay-bar" min="0" value="0" step="1">
@@ -200,20 +178,17 @@
         <button class="speed-btn" data-speed="4">4x</button>
       </div>
     </div>
-
   </aside>
 </div>
 
-<!-- ======= スマホ: ボトムシート ======= -->
+<!-- スマホ ボトムシート -->
 <div class="bottom-sheet">
-  <!-- タブ -->
   <div class="sheet-tabs">
     <button class="sheet-tab active" onclick="switchTab('input')">入力</button>
     <button class="sheet-tab" onclick="switchTab('settings')">ブラインド/スタック</button>
     <button class="sheet-tab" onclick="switchTab('history')">履歴/共有</button>
   </div>
 
-  <!-- 入力タブ -->
   <div class="sheet-content active" id="tab-input">
     <div id="error-msg-mobile" class="hidden" style="background:var(--red);color:#fff;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:600;margin-bottom:8px;"></div>
 
@@ -255,7 +230,6 @@
     <button id="btn-new-hand-m" onclick="startNewHand()" style="width:100%;margin-top:10px;padding:10px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;">▶ New Hand</button>
   </div>
 
-  <!-- ブラインド/スタック設定タブ -->
   <div class="sheet-content" id="tab-settings">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
       <label style="font-size:.78rem;color:var(--text-sub)">SB
@@ -274,7 +248,6 @@
     <div class="seat-config-list" id="seat-config-list-m"></div>
   </div>
 
-  <!-- 履歴・共有タブ (スマホ) -->
   <div class="sheet-content" id="tab-history">
     <div style="display:flex;gap:6px;margin-bottom:10px;">
       <button onclick="copyHandText()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-size:.78rem;color:var(--text);cursor:pointer;">📋 ハンドコピー</button>
@@ -312,7 +285,7 @@
   </div>
 </div>
 
-<!-- ======= 保存済みハンド一覧 モーダル ======= -->
+<!-- 保存済みハンド一覧 モーダル -->
 <div class="modal-overlay hidden" id="saved-hands-modal">
   <div class="modal-box" style="max-width:440px;">
     <h2>💾 保存済みハンド履歴</h2>
@@ -339,27 +312,28 @@
 
     <div style="overflow-y:auto;padding-right:4px;display:flex;flex-direction:column;gap:14px;font-size:.85rem;line-height:1.5;margin-top:10px;">
 
+      <!-- ★ Hero選択の単独・詳細ステップ案内 -->
+      <div style="background:#2b2512;border:2px solid var(--yellow);border-radius:8px;padding:12px;">
+        <h3 style="color:var(--yellow);font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          ★ Hero (自分) のポジション ＆ 手札選択手順 <span style="font-size:.7rem;background:var(--red);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700;">必須</span>
+        </h3>
+        <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:6px;font-size:.84rem;">
+          <li><b>設定画面を開く</b>: 左パネルの「<code>★ Hero/参加者設定</code>」ボタンをタップ。（<code>▶ New Hand</code> 開始時にも自動起動します）</li>
+          <li><b>自分のポジションを選択</b>: 「Heroの座席 (ポジション)」から自分の位置（例: <code>Seat 1 (BTN)</code> や <code>Seat 3 (BB)</code>）を選びます。</li>
+          <li><b>手札 2枚を決定【必須】</b>: 手札枠 <code>[ ? ]</code> <code>[ ? ]</code> をタップし、<b>4×13絵柄一覧（♠♥♦♣ A〜K）</b>から自分のカード（例: <code>A♠</code> <code>K♥</code>）をタップ選択します。</li>
+          <li><b>適用してゲーム開始</b>: 「<b>設定を決定して適用</b>」を押すと、ポーカー卓上に <b>★ HERO</b> バッジと自分手札が美しく表示されます！</li>
+        </ol>
+      </div>
+
       <!-- 1. 基本操作フロー -->
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;">
-        <h3 style="color:var(--yellow);font-size:.9rem;margin-bottom:8px;">🎮 1. 基本的な操作フロー (1ハンドの流れ)</h3>
+        <h3 style="color:var(--accent);font-size:.9rem;margin-bottom:8px;">🎮 1. 基本的な操作フロー (1ハンドの流れ)</h3>
         <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:8px;">
-          <li><b>★ Hero (自分) ＆ 参加者の設定 【必須】</b><br>
-            ボタン「<code>★ Hero/参加者設定</code>」を押して、Hero（自分）の<b>ポジション (座席)</b> と <b>手札 2枚 (例: A♠ K♥)</b> を指定します。<br>
-            <span style="color:var(--red);font-size:.78rem;">※ Heroの手札2枚が未決定の状態では「▶ New Hand 開始」は行えない安全設計です。</span>
-          </li>
-          <li><b>▶ New Hand 開始</b><br>
-            SB / BB / BBアンティが自動投入され、プリフロップから勝負が始まります。
-          </li>
-          <li><b>⚡ アクション入力</b><br>
-            <code>FOLD</code>, <code>CHECK / CALL</code>, <code>RAISE ▾</code>, <code>ALL IN</code> ボタンで進行します。<br>
-            <i>※ 押し間違えた場合は <code>↩ Undo (1手戻る)</code> で即座に取り消せます。</i>
-          </li>
-          <li><b>🎴 コミュニティカード選択 (ボード)</b><br>
-            テーブル中央下の <code>[ ? ]</code> 枠をタップすると、<b>4×13ビジュアル絵柄マトリクス</b>が開きます。カード柄（♠♥♦♣ A〜K）をタップしてFlop/Turn/Riverをセットします。<i>(※カード未選択でも進行可)</i>
-          </li>
-          <li><b>🏆 勝者確定 ＆ ポット配当</b><br>
-            勝者を選択して「<b>確定して配当</b>」を押すと、ポットが自動清算されて勝者に配分されます。あとは「▶ New Hand 開始」で次のハンドへ！
-          </li>
+          <li><b>Hero設定（必須）</b>: 上記の手順で Hero のポジションと手札2枚を決定します。</li>
+          <li><b>▶ New Hand 開始</b>: SB / BB / BBアンティが自動投入され、プリフロップから勝負が始まります。</li>
+          <li><b>⚡ アクション入力</b>: <code>FOLD</code>, <code>CHECK / CALL</code>, <code>RAISE ▾</code>, <code>ALL IN</code> ボタンで順番に進行。<i>(※押し間違えたら <code>↩ Undo</code> で即復元)</i></li>
+          <li><b>🎴 コミュニティカード選択</b>: テーブル中央下の <code>[ ? ]</code> 枠をタップして、Flop / Turn / River を 4×13 絵柄一覧からセット。</li>
+          <li><b>🏆 勝者確定 ＆ ポット配当</b>: 勝者を選択して「<b>確定して配当</b>」を押すとポットが清算され配分されます。</li>
         </ol>
       </div>
 
@@ -439,7 +413,7 @@
   </div>
 </div>
 
-<!-- ======= 4x13 カードピッカー モーダル ======= -->
+<!-- 4x13 カードピッカー モーダル -->
 <div class="modal-overlay hidden" id="card-picker-modal">
   <div class="modal-box card-picker-box">
     <div style="display:flex;justify-content:space-between;align-items:center">
@@ -459,7 +433,7 @@
   </div>
 </div>
 
-<script src="app.js?v=20260901_3"></script>
+<script src="project/poker-memo/app.js?v=20260901_4"></script>
 <script>
 /* ===== UI補助関数 ===== */
 
@@ -593,8 +567,7 @@ function updateTimeline() {
         el.appendChild(label);
         lastStreet = step.street;
       }
-      const item = document.createElement('div');
-      item.className = 'timeline-item';
+      const item = document.className = 'timeline-item';
       item.innerHTML = `
         <span>${AppState.seats[step.seatIndex]?.name ?? `Seat ${step.seatIndex+1}`}</span>
         <span class="action">${step.action.toUpperCase()} ${step.amount > 0 ? formatAmount(step.amount) : ''}</span>`;

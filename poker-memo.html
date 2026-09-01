@@ -312,27 +312,28 @@
 
     <div style="overflow-y:auto;padding-right:4px;display:flex;flex-direction:column;gap:14px;font-size:.85rem;line-height:1.5;margin-top:10px;">
 
+      <!-- ★ Hero選択の単独・詳細ステップ案内 -->
+      <div style="background:#2b2512;border:2px solid var(--yellow);border-radius:8px;padding:12px;">
+        <h3 style="color:var(--yellow);font-size:.95rem;margin-bottom:8px;display:flex;align-items:center;gap:6px;">
+          ★ Hero (自分) のポジション ＆ 手札選択手順 <span style="font-size:.7rem;background:var(--red);color:#fff;padding:2px 6px;border-radius:4px;font-weight:700;">必須</span>
+        </h3>
+        <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:6px;font-size:.84rem;">
+          <li><b>設定画面を開く</b>: 左パネルの「<code>★ Hero/参加者設定</code>」ボタンをタップ。（<code>▶ New Hand</code> 開始時にも自動起動します）</li>
+          <li><b>自分のポジションを選択</b>: 「Heroの座席 (ポジション)」から自分の位置（例: <code>Seat 1 (BTN)</code> や <code>Seat 3 (BB)</code>）を選びます。</li>
+          <li><b>手札 2枚を決定【必須】</b>: 手札枠 <code>[ ? ]</code> <code>[ ? ]</code> をタップし、<b>4×13絵柄一覧（♠♥♦♣ A〜K）</b>から自分のカード（例: <code>A♠</code> <code>K♥</code>）をタップ選択します。</li>
+          <li><b>適用してゲーム開始</b>: 「<b>設定を決定して適用</b>」を押すと、ポーカー卓上に <b>★ HERO</b> バッジと自分手札が美しく表示されます！</li>
+        </ol>
+      </div>
+
       <!-- 1. 基本操作フロー -->
       <div style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px;">
-        <h3 style="color:var(--yellow);font-size:.9rem;margin-bottom:8px;">🎮 1. 基本的な操作フロー (1ハンドの流れ)</h3>
+        <h3 style="color:var(--accent);font-size:.9rem;margin-bottom:8px;">🎮 1. 基本的な操作フロー (1ハンドの流れ)</h3>
         <ol style="padding-left:20px;margin:0;display:flex;flex-direction:column;gap:8px;">
-          <li><b>★ Hero (自分) ＆ 参加者の設定 【必須】</b><br>
-            ボタン「<code>★ Hero/参加者設定</code>」を押して、Hero（自分）の<b>ポジション (座席)</b> と <b>手札 2枚 (例: A♠ K♥)</b> を指定します。<br>
-            <span style="color:var(--red);font-size:.78rem;">※ Heroの手札2枚が未決定の状態では「▶ New Hand 開始」は行えない安全設計です。</span>
-          </li>
-          <li><b>▶ New Hand 開始</b><br>
-            SB / BB / BBアンティが自動投入され、プリフロップから勝負が始まります。
-          </li>
-          <li><b>⚡ アクション入力</b><br>
-            <code>FOLD</code>, <code>CHECK / CALL</code>, <code>RAISE ▾</code>, <code>ALL IN</code> ボタンで進行します。<br>
-            <i>※ 押し間違えた場合は <code>↩ Undo (1手戻る)</code> で即座に取り消せます。</i>
-          </li>
-          <li><b>🎴 コミュニティカード選択 (ボード)</b><br>
-            テーブル中央下の <code>[ ? ]</code> 枠をタップすると、<b>4×13ビジュアル絵柄マトリクス</b>が開きます。カード柄（♠♥♦♣ A〜K）をタップしてFlop/Turn/Riverをセットします。<i>(※カード未選択でも進行可)</i>
-          </li>
-          <li><b>🏆 勝者確定 ＆ ポット配当</b><br>
-            勝者を選択して「<b>確定して配当</b>」を押すと、ポットが自動清算されて勝者に配分されます。あとは「▶ New Hand 開始」で次のハンドへ！
-          </li>
+          <li><b>Hero設定（必須）</b>: 上記の手順で Hero のポジションと手札2枚を決定します。</li>
+          <li><b>▶ New Hand 開始</b>: SB / BB / BBアンティが自動投入され、プリフロップから勝負が始まります。</li>
+          <li><b>⚡ アクション入力</b>: <code>FOLD</code>, <code>CHECK / CALL</code>, <code>RAISE ▾</code>, <code>ALL IN</code> ボタンで順番に進行。<i>(※押し間違えたら <code>↩ Undo</code> で即復元)</i></li>
+          <li><b>🎴 コミュニティカード選択</b>: テーブル中央下の <code>[ ? ]</code> 枠をタップして、Flop / Turn / River を 4×13 絵柄一覧からセット。</li>
+          <li><b>🏆 勝者確定 ＆ ポット配当</b>: 勝者を選択して「<b>確定して配当</b>」を押すとポットが清算され配分されます。</li>
         </ol>
       </div>
 
