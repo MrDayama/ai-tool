@@ -1665,6 +1665,14 @@ function renderSeats() {
       if (seat.betAmount > 0) {
         betEl.textContent = `🪙 ${formatAmount(seat.betAmount)}`;
         betEl.style.display = 'inline-block';
+        betEl.style.background = '#f59e0b';
+        betEl.style.color = '#000';
+        betEl.style.fontWeight = 'bold';
+        betEl.style.padding = '2px 8px';
+        betEl.style.borderRadius = '12px';
+        betEl.style.fontSize = '0.75rem';
+        betEl.style.marginTop = '4px';
+        betEl.style.boxShadow = '0 2px 4px rgba(0,0,0,0.5)';
       } else {
         betEl.textContent = '';
         betEl.style.display = 'none';
