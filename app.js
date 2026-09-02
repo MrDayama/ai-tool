@@ -15,12 +15,12 @@ const STREETS = ['preflop', 'flop', 'turn', 'river', 'showdown'];
 const POSITIONS_BY_COUNT = {
   2:  ['BTN/SB', 'BB'],
   3:  ['BTN', 'SB', 'BB'],
-  4:  ['BTN', 'SB', 'BB', 'UTG'],
-  5:  ['BTN', 'SB', 'BB', 'UTG', 'CO'],
-  6:  ['BTN', 'SB', 'BB', 'UTG', 'MP', 'CO'],
-  7:  ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP', 'CO'],
-  8:  ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'MP', 'HJ', 'CO'],
-  9:  ['BTN', 'SB', 'BB', 'UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO'],
+  4:  ['UTG', 'BTN', 'SB', 'BB'],
+  5:  ['UTG', 'CO', 'BTN', 'SB', 'BB'],
+  6:  ['UTG', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
+  7:  ['UTG', 'UTG+1', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
+  8:  ['UTG', 'UTG+1', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
+  9:  ['UTG', 'UTG+1', 'UTG+2', 'MP', 'HJ', 'CO', 'BTN', 'SB', 'BB'],
 };
 
 // 4x13 カード定義
@@ -55,8 +55,8 @@ let activePickerSlot = null; // 'flop1', 'flop2', 'flop3', 'turn', 'river'
 
 const AppState = {
   seatCount: 6,
-  dealerSeat: 0,
-  heroSeatIndex: 0,
+  dealerSeat: 3,
+  heroSeatIndex: 3,
 
   blind: {
     sb: 1, bb: 2, anteType: 'bb', anteAmount: 2,
