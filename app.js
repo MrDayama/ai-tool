@@ -1339,11 +1339,11 @@ window.Replay = Replay;
 // ===================================================
 
 function formatAmount(n) {
-  if (n === undefined || n === null) return '';
+  if (n === undefined || n === null || isNaN(n)) return '';
   if (AppState.blind.displayUnit === 'bb') {
-    return (n / AppState.blind.bb).toFixed(1) + ' BB';
+    return Number(n).toFixed(1) + ' BB';
   }
-  return '$' + n.toFixed(1);
+  return '$' + (Number(n) * (AppState.blind.bb || 1)).toFixed(1);
 }
 
 function showError(msg) {
@@ -1366,6 +1366,7 @@ function renderAll() {
   }
   renderSeats();
   if (typeof renderSeatConfigUI === 'function') renderSeatConfigUI();
+  if (typeof renderTimeline === 'function') renderTimeline();
   renderPot();
   renderBoard();
   renderActionPanel();
