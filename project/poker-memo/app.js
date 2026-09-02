@@ -356,10 +356,21 @@ function setPotPctRaise(pct) {
   actionRaise(targetAmount);
 }
 
-function setBbMultRaise(mult) {
-  const targetAmount = Math.max(mult * (AppState.blind.bb || 1.0), AppState.minRaise);
+function setRaiseMultiplier(mult) {
+  const maxBetOnTable = AppState.seats ? Math.max(...AppState.seats.map(s => s.betAmount), 0) : 0;
+  let targetAmount = 0;
+  if (maxBetOnTable > 0) {
+    targetAmount = maxBetOnTable * mult;
+  } else {
+    const potTotal = AppState.pot.main + AppState.seats.reduce((sum, s) => sum + s.betAmount, 0);
+    targetAmount = potTotal * mult;
+  }
+  targetAmount = Math.max(targetAmount, AppState.minRaise);
+  targetAmount = Math.round(targetAmount * 10) / 10;
   actionRaise(targetAmount);
 }
+window.setRaiseMultiplier = setRaiseMultiplier;
+window.setPotPctRaise = setPotPctRaise;
 
 function confirmCustomRaise() {
   const input = document.getElementById('raise-input');
@@ -1877,7 +1888,26 @@ function renderActionPanel() {
     raiseBtn.textContent = (maxBetOnTable === 0) ? 'BET ▾' : 'RAISE ▾';
   }
   if (minLabel) {
-    minLabel.textContent = (maxBetOnTable === 0) ? `Min Bet: ${formatAmount(AppState.minRaise)}` : `Min Raise: ${formatAmount(AppState.minRaise)}`;
+    minLabel.textContent = (maxBetOnTable === 0) ? `Min Bet: ${formatAmount(AppState.minRaise)} (Pot%)` : `Min Raise: ${formatAmount(AppState.minRaise)} (相手ベット倍数)`;
+  }
+
+  const presetsContainer = document.getElementById('raise-presets-container');
+  if (presetsContainer) {
+    if (maxBetOnTable === 0) {
+      presetsContainer.innerHTML = `
+        <button class="raise-mult" onclick="setPotPctRaise(0.33)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">33% POT</button>
+        <button class="raise-mult" onclick="setPotPctRaise(0.50)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">50% POT</button>
+        <button class="raise-mult" onclick="setPotPctRaise(0.75)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">75% POT</button>
+        <button class="raise-mult" onclick="setPotPctRaise(1.00)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;">100% POT</button>
+      `;
+    } else {
+      presetsContainer.innerHTML = `
+        <button class="raise-mult" onclick="setRaiseMultiplier(2.0)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">2x (${formatAmount(maxBetOnTable * 2)})</button>
+        <button class="raise-mult" onclick="setRaiseMultiplier(2.5)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">2.5x (${formatAmount(maxBetOnTable * 2.5)})</button>
+        <button class="raise-mult" onclick="setRaiseMultiplier(3.0)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">3x (${formatAmount(maxBetOnTable * 3)})</button>
+        <button class="raise-mult" onclick="setRaiseMultiplier(4.0)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;">4x (${formatAmount(maxBetOnTable * 4)})</button>
+      `;
+    }
   }
 
   const potBannerEl = document.getElementById('input-pot-total-pc');

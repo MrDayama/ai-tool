@@ -117,14 +117,7 @@
 
       <div id="raise-panel" class="hidden" style="margin-bottom:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:10px;">
         <div style="font-size:.72rem;color:var(--text-sub);margin-bottom:6px;font-weight:800;" id="min-raise-label">Min Bet: 2.0 BB</div>
-        <div class="raise-presets" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
-          <button class="raise-mult" onclick="setPotPctRaise(0.33)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">33% POT</button>
-          <button class="raise-mult" onclick="setPotPctRaise(0.50)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">50% POT</button>
-          <button class="raise-mult" onclick="setPotPctRaise(0.75)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">75% POT</button>
-          <button class="raise-mult" onclick="setPotPctRaise(1.00)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;">100% POT</button>
-          <button class="raise-mult" onclick="setBbMultRaise(2.5)" style="padding:6px 8px;font-size:.75rem;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;">2.5x</button>
-          <button class="raise-mult" onclick="setBbMultRaise(3.0)" style="padding:6px 8px;font-size:.75rem;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;">3x</button>
-        </div>
+        <div class="raise-presets" id="raise-presets-container" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"></div>
         <div class="raise-custom" style="display:flex;gap:8px;">
           <input type="number" id="raise-input" placeholder="ベット/レイズ額 (BB)" min="0" step="0.5" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.9rem;font-weight:800;">
           <button id="btn-raise-confirm" onclick="confirmCustomRaise()" style="padding:8px 18px;background:var(--yellow);color:#000;border:none;border-radius:6px;font-weight:900;font-size:.88rem;cursor:pointer;">確定 ➔</button>
