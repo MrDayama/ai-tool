@@ -7,7 +7,8 @@
 ## ⚡ 1. 自動右ペイン計画 ＆ タスク展開の義務化 (Auto-Right-Pane Workflow)
 
 1. **指示なしでの自動起動**:
-   - 新規プロジェクトでの作業開始時、またはユーザーから複雑なタスク・改修・新規開発リクエストを受領した際、**ユーザーからの指示を待たずに自動的**に画面右ペイン（Auxiliary Pane）に `implementation_plan.md` および `task.md` アーティファクトを作成・展開すること。
+   - 新規プロジェクト開始時および任意の作業時には、右ペイン（Auxiliary Pane）に作業計画 (`implementation_plan.md`) と AIトークン消費量ダッシュボード (`token_dashboard.md`) を別のタブ（独立アーティファクト）として自動作成・表示します。
+   - 作業計画タブ (`implementation_plan.md`) と トークン監視タブ (`token_dashboard.md`) は切り離し、別々のタブとして個別にアクセス・確認できるように構成します。
    - `ArtifactMetadata` に `UserFacing: true` および `RequestFeedback: true` を設定し、右側パネルに自動固定表示させること。
 
 2. **計画記載の徹底・超詳細化**:

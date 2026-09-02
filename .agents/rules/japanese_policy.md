@@ -13,6 +13,6 @@ trigger: always_on
 ## 3. システムツール用メタデータの日本語化
 - AIが生成するすべてのツール呼び出しの `toolAction`, `toolSummary`, `Description`, `Instruction` などの概要テキストパラメータは、必ず日本語で記述して呼び出してください。
 
-## 4. 右ペイン計画＆モデル別トークン監視
-- 計画作成・変更作業の際は、右ペイン（Auxiliary Pane）に `implementation_plan.md` および `task.md` を作成・表示してください。
-- 計画書上部には、主要モデル（Gemini 3.6 Flash / Gemini 3.6 Pro / Gemini 3.5 Flash Lite）ごとのコンテキスト残量とトークン消費量をリアルタイムで視覚表示・更新してください。
+## 4. 右ペイン計画＆モデル別トークン監視の分離タブ運用
+- 計画作成・変更作業の際は、右ペイン（Auxiliary Pane）に `implementation_plan.md`（作業計画＆タスク進捗）および `token_dashboard.md`（トークン消費量・残量比較ダッシュボード）を別々の独立タブ（別アーティファクト）として作成・表示してください。
+- `token_dashboard.md` 内には、主要モデル（Gemini 3.6 Flash/Pro, Claude 3.5 Sonnet/Opus, OpenAI o1/o3-mini/GPT-4o, DeepSeek R1/V3）ごとのコンテキスト残量とトークン消費量をリアルタイムで視覚表示・更新してください。

@@ -13,8 +13,8 @@
 - 作業開始時や変更時は、必ず右ペイン（Auxiliary Pane）に Implementation Plan (`implementation_plan.md`) および Task List (`task.md`) を作成・表示してください。
 - **【計画記載の超詳細化】**: 単なる概要にとどめず、**全体作業の工程、対象ファイル・関数、具体的修正内容、前提条件、検証手順、および潜在リスクをステップバイステップで網羅して明記**してください。
 
-## 4. 各モデル別 AIトークン消費量・残量の右ペインリアルタイム監視 (Token Monitoring)
-- 右ペインのアーティファクト上部に、主要モデル（Gemini 3.6 Flash / Gemini 3.6 Pro / Gemini 3.5 Flash Lite）ごとの **最大コンテキスト枠・推定消費量・残量比較ダッシュボード** を常に設置・更新してください。
+## 4. 各モデル別 AIトークン消費量・残量の右ペイン分離タブリアルタイム監視 (Token Monitoring)
+- 右ペインのアーティファクトとして、作業計画 (`implementation_plan.md`) とは別のタブ `token_dashboard.md` を独立設置し、主要モデル（Gemini 3.6 Flash / Pro, Claude 3.5 Sonnet / Opus, OpenAI o1 / o3-mini / GPT-4o, DeepSeek R1 / V3）ごとの **最大コンテキスト枠・推定消費量・残量比較ダッシュボード** を独立して設置・更新してください。
 
 ## 5. Obsidian Vault 運用権限 (Obsidian Authority Rules)
 - `01_Imo/` (思考メモ) および `02_Read-only/` (静的ツール) は **読込専用 (保護)** とし、上書き・削除を行わないでください。
