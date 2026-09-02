@@ -1925,7 +1925,13 @@ function selectHeroSeat(idx) {
   renderAll();
   showError(`★ Hero(自分)の位置を ${getPositionName(idx)} に指定しました`);
 }
-window.selectHeroSeat = selectHeroSeat;
+function toggleAwaySeat(idx) {
+  if (AppState.seats && AppState.seats[idx]) {
+    AppState.seats[idx].isAway = !AppState.seats[idx].isAway;
+    renderAll();
+  }
+}
+window.toggleAwaySeat = toggleAwaySeat;
 
 function renderSeatConfigUI() {
   const isBBUnit = AppState.blind.displayUnit === 'bb';
@@ -1953,19 +1959,19 @@ function renderSeatConfigUI() {
       const slot2Target = isHero ? 'hero2' : `seat_${i}_card2`;
 
       item.innerHTML = `
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:8px;">
-          <div style="display:flex;align-items:center;gap:6px;">
-            <span style="font-weight:800;font-size:.9rem;color:${isHero ? 'var(--yellow)' : 'var(--text)'};">
-              ${getPositionName(i)}
-            </span>
-            ${isHero ? '<span style="background:var(--yellow);color:#000;font-size:.68rem;font-weight:800;padding:2px 6px;border-radius:4px;">★ HERO (自分)</span>' : ''}
-          </div>
-          <div style="display:flex;gap:6px;">
-            ${!isHero ? `<button onclick="selectHeroSeat(${i})" style="background:var(--surface2);color:var(--yellow);border:1.5px solid var(--yellow);border-radius:4px;padding:4px 10px;font-size:.75rem;font-weight:800;cursor:pointer;">★ 自分(Hero)に指定</button>` : ''}
-            <button class="away-toggle ${seat.isAway ? 'away-on' : ''}" data-seat="${i}" style="padding:4px 8px;font-size:.72rem;border-radius:4px;cursor:pointer;">
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;">
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-weight:800;font-size:1rem;color:${isHero ? 'var(--yellow)' : 'var(--text)'};">
+                ${getPositionName(i)}
+              </span>
+              ${isHero ? '<span style="background:var(--yellow);color:#000;font-size:.72rem;font-weight:900;padding:2px 8px;border-radius:4px;">★ HERO (自分)</span>' : ''}
+            </div>
+            <button class="away-toggle ${seat.isAway ? 'away-on' : ''}" onclick="toggleAwaySeat(${i})" style="padding:4px 10px;font-size:.75rem;border-radius:4px;cursor:pointer;background:var(--surface2);color:var(--text);border:1px solid var(--border);">
               ${seat.isAway ? '離席中' : '在席'}
             </button>
           </div>
+          ${!isHero ? `<button onclick="selectHeroSeat(${i})" style="width:100%;background:var(--surface2);color:var(--yellow);border:1.5px solid var(--yellow);border-radius:6px;padding:8px 12px;font-size:.85rem;font-weight:900;cursor:pointer;margin-top:2px;box-shadow:0 2px 6px rgba(0,0,0,0.3);touch-action:manipulation;">★ 自分(Hero)に指定</button>` : ''}
         </div>
 
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">

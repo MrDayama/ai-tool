@@ -165,11 +165,11 @@
     <button onclick="switchToInputView()" style="background:var(--surface2);color:var(--yellow);border:1.5px solid var(--yellow);border-radius:6px;padding:6px 14px;font-size:.85rem;font-weight:800;cursor:pointer;">
       ✏️ 入力・編集画面に戻る
     </button>
-    <div style="display:flex;gap:8px;">
+    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+      <button onclick="startNewHand()" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:6px 14px;font-size:.85rem;font-weight:900;cursor:pointer;box-shadow:0 2px 8px rgba(46,160,67,0.4);">▶ Next Hand (次のハンド)</button>
       <button onclick="openHistoryModal()" style="background:var(--accent);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">📚 履歴一覧</button>
-      <button onclick="exportTableVideo()" style="background:var(--green);color:#fff;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">🎥 動画書き出し</button>
+      <button onclick="exportTableVideo()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.82rem;cursor:pointer;">🎥 動画書き出し</button>
       <button onclick="openManualModal()" style="background:var(--yellow);color:#000;border:none;border-radius:6px;padding:6px 12px;font-size:.82rem;font-weight:800;cursor:pointer;">📖 マニュアル</button>
-      <button onclick="copyHandText()" style="background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:6px 10px;font-size:.82rem;cursor:pointer;">📋 コピー</button>
     </div>
   </div>
 
@@ -206,6 +206,9 @@
         <button class="speed-btn" data-speed="2">2x</button>
         <button class="speed-btn" data-speed="4">4x</button>
       </div>
+      <button onclick="startNewHand()" style="width:100%;margin-top:12px;padding:12px;background:linear-gradient(135deg, var(--green) 0%, #2ea043 100%);color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:900;cursor:pointer;box-shadow:0 4px 10px rgba(46,160,67,0.4);touch-action:manipulation;">
+        ▶ Next Hand (次のハンドを開始)
+      </button>
     </div>
   </div>
 </div>
