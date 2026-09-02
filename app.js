@@ -193,12 +193,18 @@ function splitPot(winnerSeats, potAmount) {
   }
 }
 
-function startNewHand() {
-  const heroSeat = AppState.seats[AppState.heroSeatIndex];
-  if (!heroSeat || !heroSeat.holeCards || heroSeat.holeCards.filter(c => c !== '').length < 2) {
-    showError('⚠️ 【手札未選択】 左サイドバーの「★ Hero(自分)の設定」で自分手札2枚をタップ選択してください');
-    return;
+function startHandValidation() {
+  const heroIndex = AppState.heroSeatIndex;
+  const heroSeat = AppState.seats[heroIndex];
+  if (!heroSeat || !heroSeat.holeCards || !heroSeat.holeCards[0] || !heroSeat.holeCards[1]) {
+    showError('⚠️ 【手札未選択】 「★ HERO (自分)」の設定枠で自分手札2枚をタップ選択してください');
+    return false;
   }
+  return true;
+}
+
+function startNewHand() {
+  if (!startHandValidation()) return;
 
   AppState.seats.forEach(s => {
     s.betAmount = 0;
@@ -220,10 +226,9 @@ function startNewHand() {
 
   bet(sbIdx, sb);
   bet(bbIdx, bb);
-  AppState.minRaise = 2.0; // 最小オープンレイズ額は 2.0 BB
+  AppState.minRaise = 2.0;
   AppState.currentSeatIndex = getPreflopFirstSeat();
 
-  // 初期スナップショット (リプレイ再生の開始フレーム) を記録
   recordHistory(AppState.currentSeatIndex, 'start', 0);
   renderAll();
 }
@@ -287,6 +292,15 @@ function actionCall() {
 function actionRaise(totalAmount) {
   if (isProcessingAction) return;
   lockActionProcessing();
+function getCurrentMainPot() {
+  const accumulated = AppState.pot ? (AppState.pot.main || 0) : 0;
+  const currentBets = AppState.seats ? AppState.seats.reduce((sum, s) => sum + (s.betAmount || 0), 0) : 0;
+  return accumulated + currentBets;
+}
+
+function actionRaise(totalAmount) {
+  if (isProcessingAction) return;
+  lockActionProcessing();
   const idx = AppState.currentSeatIndex;
   const currentBet = AppState.seats[idx].betAmount;
   const maxBetOnTable = Math.max(...AppState.seats.map(s => s.betAmount));
@@ -297,13 +311,15 @@ function actionRaise(totalAmount) {
     return;
   }
 
-  if (totalAmount < AppState.minRaise && AppState.seats[idx].stack > 0) {
-    showError(`最小ベット/レイズ額は ${formatAmount(AppState.minRaise)} です`);
+  const isFirstBet = (maxBetOnTable === 0);
+  const minAllowed = isFirstBet ? 1.0 : (maxBetOnTable === 1.0 ? 2.0 : maxBetOnTable + 1.0);
+
+  if (totalAmount < minAllowed && AppState.seats[idx].stack > 0) {
+    showError(`最小${isFirstBet ? 'ベット' : 'レイズ'}額は ${formatAmount(minAllowed)} です`);
     return;
   }
   const raiseDelta = totalAmount - maxBetOnTable;
   const additional = totalAmount - currentBet;
-  const isFirstBet = (maxBetOnTable === 0);
   const actionName = isFirstBet ? 'bet' : 'raise';
 
   // レイズ/ベット発生時、他アクティブプレイヤーのactionとactedInStreetをクリアして再行動を要求
@@ -331,8 +347,10 @@ function toggleRaisePanel() {
   if (!panel.classList.contains('hidden')) {
     const input = document.getElementById('raise-input');
     if (input) {
-      input.placeholder = `最小: ${formatAmount(AppState.minRaise)}`;
-      input.value = AppState.minRaise;
+      const maxBetOnTable = AppState.seats ? Math.max(...AppState.seats.map(s => s.betAmount), 0) : 0;
+      const minVal = (maxBetOnTable === 0) ? 1.0 : (maxBetOnTable === 1.0 ? 2.0 : maxBetOnTable + 1.0);
+      input.placeholder = `最小: ${formatAmount(minVal)}`;
+      input.value = minVal;
       input.focus();
     }
   }
@@ -344,13 +362,12 @@ function setPotPctRaise(pct) {
   const currentBet = currentSeat ? currentSeat.betAmount : 0;
   const callAmount = Math.max(0, maxBet - currentBet);
   
-  const potTotal = AppState.pot.main + AppState.seats.reduce((sum, s) => sum + s.betAmount, 0);
+  const potTotal = getCurrentMainPot();
   
   let targetAmount = (maxBet === 0) 
-    ? Math.max(potTotal * pct, AppState.minRaise) 
+    ? Math.max(potTotal * pct, 1.0) 
     : maxBet + (potTotal + callAmount) * pct;
     
-  targetAmount = Math.max(targetAmount, AppState.minRaise);
   targetAmount = Math.round(targetAmount * 10) / 10;
   actionRaise(targetAmount);
 }
@@ -361,10 +378,9 @@ function setRaiseMultiplier(mult) {
   if (maxBetOnTable > 0) {
     targetAmount = maxBetOnTable * mult;
   } else {
-    const potTotal = AppState.pot.main + AppState.seats.reduce((sum, s) => sum + s.betAmount, 0);
+    const potTotal = getCurrentMainPot();
     targetAmount = potTotal * mult;
   }
-  targetAmount = Math.max(targetAmount, AppState.minRaise);
   targetAmount = Math.round(targetAmount * 10) / 10;
   actionRaise(targetAmount);
 }
@@ -1370,10 +1386,7 @@ window.Replay = Replay;
 
 function formatAmount(n) {
   if (n === undefined || n === null || isNaN(n)) return '';
-  if (AppState.blind.displayUnit === 'bb') {
-    return Number(n).toFixed(1) + ' BB';
-  }
-  return '$' + (Number(n) * (AppState.blind.bb || 1)).toFixed(1);
+  return Number(n).toFixed(1) + ' BB';
 }
 
 function showError(msg) {
@@ -1391,7 +1404,7 @@ function showError(msg) {
 // ===================================================
 
 function renderAll() {
-  if (!AppState.seats || AppState.seats.length === 0) {
+  if (!AppState.seats || AppState.seats.length === 0 || !AppState.history || AppState.history.length === 0) {
     if (typeof initSeats === 'function') initSeats();
   }
   renderSeats();
