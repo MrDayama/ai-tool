@@ -2353,8 +2353,8 @@ async function exportTableVideo() {
       if (c) {
         const rankStr = c.slice(0, -1).replace('T', '10');
         const suitChar = c.slice(-1);
-        const isRed = suitChar === 'h' || suitChar === 'd';
-        ctx.fillStyle = isRed ? '#f85149' : '#e6edf3';
+        const colorMap = { s: '#f8fafc', h: '#ef4444', d: '#3b82f6', c: '#22c55e' };
+        ctx.fillStyle = colorMap[suitChar] || '#e6edf3';
         const suitMap = { s: '♠', h: '♥', d: '♦', c: '♣' };
         ctx.fillText(`${rankStr}${suitMap[suitChar]||''}`, x + 18, y + 28);
       } else {

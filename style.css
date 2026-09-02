@@ -278,8 +278,11 @@ body {
   padding: 0 3px;
   line-height: 1.3;
 }
-.mini-card.hearts, .mini-card.diamonds { color: #f85149; }
-.mini-card.spades, .mini-card.clubs    { color: #e6edf3; }
+/* 🎨 ポーカー4色デッキカラー定義 (♠黒, ♥赤, ♦青, ♣緑) */
+.mini-card.spades   { color: #f8fafc; font-weight: 900; }
+.mini-card.hearts   { color: #ef4444; font-weight: 900; }
+.mini-card.diamonds { color: #3b82f6; font-weight: 900; }
+.mini-card.clubs    { color: #22c55e; font-weight: 900; }
 
 /* ===== ボードカード ===== */
 .board-area {
@@ -292,20 +295,22 @@ body {
 .card-slot {
   width: 38px; height: 54px;
   background: var(--surface2);
-  border: 1px solid var(--border);
+  border: 1.5px solid var(--border);
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: .85rem;
-  font-weight: 700;
+  font-size: .95rem;
+  font-weight: 900;
   cursor: pointer;
   transition: background .2s, border-color .2s;
   flex-shrink: 0;
 }
-.card-slot:hover  { background: var(--surface); border-color: var(--yellow); }
-.card-slot.hearts, .card-slot.diamonds { color: #f85149; }
-.card-slot.spades, .card-slot.clubs    { color: var(--text); }
+.card-slot:hover     { background: var(--surface); border-color: var(--yellow); }
+.card-slot.spades   { color: #f8fafc !important; }
+.card-slot.hearts   { color: #ef4444 !important; }
+.card-slot.diamonds { color: #3b82f6 !important; }
+.card-slot.clubs    { color: #22c55e !important; }
 
 /* ===== ポット情報 ===== */
 .pot-info  { display: flex; flex-direction: column; gap: 4px; }
@@ -635,10 +640,10 @@ body {
   text-align: center;
   line-height: 1;
 }
-.suit-s { color: #e6edf3; } /* Spades: 黒/白 */
-.suit-h { color: #f85149; } /* Hearts: 赤 */
-.suit-d { color: #58a6ff; } /* Diamonds: 青 */
-.suit-c { color: #3fb950; } /* Clubs: 緑 */
+.suit-s { color: #f8fafc; font-weight: 900; } /* Spades: 黒 (ダークテーマ時白テキスト) */
+.suit-h { color: #ef4444; font-weight: 900; } /* Hearts: 赤 */
+.suit-d { color: #3b82f6; font-weight: 900; } /* Diamonds: 青 */
+.suit-c { color: #22c55e; font-weight: 900; } /* Clubs: 緑 */
 
 .picker-card-cell {
   aspect-ratio: 2/3;
