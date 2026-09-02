@@ -219,10 +219,23 @@ function startNewHand() {
   AppState.history = [];
   AppState.replayIndex = 0;
 
-  AppState.blind = { sb: 0.5, bb: 1.0, anteType: 'none', anteAmount: 0, displayUnit: 'bb' };
-  const { sb, bb } = AppState.blind;
+  const { sb, bb, anteType, anteAmount } = AppState.blind;
   const sbIdx = getSBIndex();
   const bbIdx = getBBIndex();
+
+  if (anteType === 'bb' && anteAmount > 0) {
+    const actualAnte = Math.min(anteAmount, AppState.seats[bbIdx].stack);
+    AppState.seats[bbIdx].stack -= actualAnte;
+    AppState.pot.main += actualAnte;
+  } else if (anteType === 'regular' && anteAmount > 0) {
+    AppState.seats.forEach(s => {
+      if (!s.isAway) {
+        const actualAnte = Math.min(anteAmount, s.stack);
+        s.stack -= actualAnte;
+        AppState.pot.main += actualAnte;
+      }
+    });
+  }
 
   bet(sbIdx, sb);
   bet(bbIdx, bb);
@@ -445,8 +458,10 @@ function undoAction() {
         s.isFolded = snap.isFolded ?? false;
         s.isAllIn = snap.isAllIn ?? false;
         s.action = snap.action ?? null;
+        s.actedInStreet = snap.actedInStreet ?? false;
       }
     });
+    AppState.board = [...prevStep.boardSnapshot];
     AppState.street = prevStep.street;
     AppState.currentSeatIndex = prevStep.currentSeatIndex;
   } else {
@@ -504,6 +519,11 @@ function isStreetComplete() {
 }
 
 function advanceStreet() {
+  // ストリートで投下された全チップをメインポットへ合算回収
+  const currentStreetChips = AppState.seats ? AppState.seats.reduce((sum, s) => sum + (s.betAmount || 0), 0) : 0;
+  if (!AppState.pot) AppState.pot = { main: 0, sides: [] };
+  AppState.pot.main += currentStreetChips;
+
   const streetOrder = ['preflop', 'flop', 'turn', 'river', 'showdown'];
   const nextIdx = streetOrder.indexOf(AppState.street) + 1;
   if (nextIdx >= streetOrder.length) {
@@ -516,7 +536,7 @@ function advanceStreet() {
     s.actedInStreet = false;
   });
   AppState.street = streetOrder[nextIdx];
-  updateMinRaise(0, AppState.blind.bb);
+  AppState.minRaise = AppState.blind.bb || 1.0;
   AppState.currentSeatIndex = getPostflopFirstSeat();
 
   const next = AppState.seats[AppState.currentSeatIndex];
@@ -824,7 +844,8 @@ function recordHistory(seatIndex, action, amount) {
     potSnapshot: JSON.parse(JSON.stringify(AppState.pot)),
     stackSnapshot: AppState.seats.map(s => ({
       id: s.id, stack: s.stack, betAmount: s.betAmount,
-      isFolded: s.isFolded, isAllIn: s.isAllIn, action: s.action
+      isFolded: s.isFolded, isAllIn: s.isAllIn, action: s.action,
+      actedInStreet: s.actedInStreet
     })),
   });
 }
@@ -1851,6 +1872,7 @@ function renderTimeline() {
     el.scrollTop = el.scrollHeight;
   });
 }
+window.AppState = AppState;
 window.renderTimeline = renderTimeline;
 
 function renderPot() {
