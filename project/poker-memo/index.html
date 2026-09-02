@@ -93,14 +93,15 @@
       </div>
 
       <!-- 手番状況バナー -->
-      <div class="current-turn-banner" id="current-turn-banner-pc" style="margin-bottom:10px;">
+      <!-- 💰 ポット総額 ＆ 手番状況リアルタイム表示バナー -->
+      <div class="current-turn-banner" id="current-turn-banner-pc" style="margin-bottom:10px;background:linear-gradient(135deg, var(--surface2) 0%, rgba(245,158,11,0.15) 100%);border:1.5px solid rgba(245,158,11,0.4);border-radius:8px;padding:10px 14px;">
         <div>
           <span style="font-size:.68rem;color:var(--text-sub);display:block;">現在のターン</span>
-          <span class="turn-name" id="turn-seat-name-pc">--</span>
+          <span class="turn-name" id="turn-seat-name-pc" style="font-size:1.05rem;font-weight:900;">--</span>
         </div>
         <div style="text-align:right;">
-          <span style="font-size:.68rem;color:var(--text-sub);display:block;" id="turn-street-label-pc">PREFLOP</span>
-          <span style="font-size:.85rem;color:var(--yellow);" id="turn-call-label-pc">--</span>
+          <span style="font-size:.78rem;font-weight:900;color:var(--yellow);display:block;" id="input-pot-total-pc">💰 Main Pot: 0.0 BB</span>
+          <span style="font-size:.78rem;color:var(--green);font-weight:800;" id="turn-call-label-pc">--</span>
         </div>
       </div>
 
@@ -110,21 +111,23 @@
       <div class="action-grid" style="margin-bottom:10px;">
         <button id="btn-fold"  class="btn-fold"  onclick="actionFold()">FOLD</button>
         <button id="btn-call"  class="btn-call"  onclick="actionCall()">CHECK / CALL</button>
-        <button id="btn-raise" class="btn-raise" onclick="toggleRaisePanel()">RAISE ▾</button>
+        <button id="btn-raise" class="btn-raise" onclick="toggleRaisePanel()">BET / RAISE ▾</button>
         <button id="btn-allin" class="btn-allin" onclick="actionAllIn()">ALL IN</button>
       </div>
 
-      <div id="raise-panel" class="hidden" style="margin-bottom:10px">
-        <div class="raise-presets">
-          <button class="raise-mult" data-mult="2.5">2.5x</button>
-          <button class="raise-mult" data-mult="3">3x</button>
-          <button class="raise-mult" data-mult="3.5">3.5x</button>
-          <button class="raise-mult" data-mult="4">4x</button>
-          <button class="raise-mult" onclick="setPotRaise()">POT</button>
+      <div id="raise-panel" class="hidden" style="margin-bottom:10px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:10px;">
+        <div style="font-size:.72rem;color:var(--text-sub);margin-bottom:6px;font-weight:800;" id="min-raise-label">Min Bet: 2.0 BB</div>
+        <div class="raise-presets" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;">
+          <button class="raise-mult" onclick="setPotPctRaise(0.33)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">33% POT</button>
+          <button class="raise-mult" onclick="setPotPctRaise(0.50)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">50% POT</button>
+          <button class="raise-mult" onclick="setPotPctRaise(0.75)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--surface2);color:var(--yellow);border:1px solid var(--border);border-radius:6px;cursor:pointer;">75% POT</button>
+          <button class="raise-mult" onclick="setPotPctRaise(1.00)" style="padding:6px 10px;font-size:.78rem;font-weight:800;background:var(--green);color:#fff;border:none;border-radius:6px;cursor:pointer;">100% POT</button>
+          <button class="raise-mult" onclick="setBbMultRaise(2.5)" style="padding:6px 8px;font-size:.75rem;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;">2.5x</button>
+          <button class="raise-mult" onclick="setBbMultRaise(3.0)" style="padding:6px 8px;font-size:.75rem;background:var(--surface2);color:var(--text);border:1px solid var(--border);border-radius:6px;cursor:pointer;">3x</button>
         </div>
-        <div class="raise-custom">
-          <input type="number" id="raise-input" placeholder="カスタム額" min="0" step="0.5">
-          <button id="btn-raise-confirm" onclick="actionRaise(parseFloat(document.getElementById('raise-input').value))">確定</button>
+        <div class="raise-custom" style="display:flex;gap:8px;">
+          <input type="number" id="raise-input" placeholder="ベット/レイズ額 (BB)" min="0" step="0.5" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.9rem;font-weight:800;">
+          <button id="btn-raise-confirm" onclick="confirmCustomRaise()" style="padding:8px 18px;background:var(--yellow);color:#000;border:none;border-radius:6px;font-weight:900;font-size:.88rem;cursor:pointer;">確定 ➔</button>
         </div>
       </div>
 

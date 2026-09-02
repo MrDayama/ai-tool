@@ -339,18 +339,38 @@ function toggleRaisePanel() {
   }
 }
 
-function setPotRaise() {
-  const maxBet = Math.max(...AppState.seats.map(s => s.betAmount));
+function setPotPctRaise(pct) {
+  const maxBet = AppState.seats ? Math.max(...AppState.seats.map(s => s.betAmount), 0) : 0;
   const currentSeat = AppState.seats[AppState.currentSeatIndex];
   const currentBet = currentSeat ? currentSeat.betAmount : 0;
-  const callAmount = maxBet - currentBet;
+  const callAmount = Math.max(0, maxBet - currentBet);
   
   const potTotal = AppState.pot.main + AppState.seats.reduce((sum, s) => sum + s.betAmount, 0);
-  const potRaiseAmount = maxBet + potTotal + callAmount;
   
-  const finalAmount = Math.max(potRaiseAmount, AppState.minRaise);
-  actionRaise(finalAmount);
-  document.getElementById('raise-panel')?.classList.add('hidden');
+  let targetAmount = (maxBet === 0) 
+    ? Math.max(potTotal * pct, AppState.minRaise) 
+    : maxBet + (potTotal + callAmount) * pct;
+    
+  targetAmount = Math.max(targetAmount, AppState.minRaise);
+  targetAmount = Math.round(targetAmount * 10) / 10;
+  actionRaise(targetAmount);
+}
+
+function setBbMultRaise(mult) {
+  const targetAmount = Math.max(mult * (AppState.blind.bb || 1.0), AppState.minRaise);
+  actionRaise(targetAmount);
+}
+
+function confirmCustomRaise() {
+  const input = document.getElementById('raise-input');
+  if (!input) return;
+  const val = parseFloat(input.value);
+  if (isNaN(val) || val <= 0) {
+    showError('有効なベット/レイズ額を入力してください');
+    return;
+  }
+  actionRaise(val);
+  input.value = '';
 }
 
 function actionAllIn() {
@@ -1858,6 +1878,12 @@ function renderActionPanel() {
   }
   if (minLabel) {
     minLabel.textContent = (maxBetOnTable === 0) ? `Min Bet: ${formatAmount(AppState.minRaise)}` : `Min Raise: ${formatAmount(AppState.minRaise)}`;
+  }
+
+  const potBannerEl = document.getElementById('input-pot-total-pc');
+  if (potBannerEl) {
+    const totalPot = AppState.pot.main + (AppState.seats ? AppState.seats.reduce((s, x) => s + x.betAmount, 0) : 0);
+    potBannerEl.textContent = `💰 Main Pot: ${formatAmount(totalPot)}`;
   }
 
   const turnNameStr = currSeat
