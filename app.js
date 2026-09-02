@@ -229,7 +229,7 @@ function startNewHand() {
 
   bet(sbIdx, sb);
   bet(bbIdx, bb);
-  updateMinRaise(bb, bb);
+  AppState.minRaise = bb; // 最小オープンレイズ/ベット額は 2.0 BB
   AppState.currentSeatIndex = getPreflopFirstSeat();
 
   // 初期スナップショット (リプレイ再生の開始フレーム) を記録
