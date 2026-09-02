@@ -279,10 +279,16 @@ function actionCall() {
   if (isProcessingAction) return;
   lockActionProcessing();
   const idx = AppState.currentSeatIndex;
-  const callAmount = getCallAmount(idx);
-  bet(idx, callAmount);
-  recordHistory(idx, 'call', callAmount);
-  AppState.seats[idx].action = 'call';
+  const maxBetOnTable = Math.max(...AppState.seats.map(s => s.betAmount));
+  const currentBet = AppState.seats[idx].betAmount;
+  const additional = Math.min(maxBetOnTable - currentBet, AppState.seats[idx].stack);
+  const targetBet = currentBet + additional;
+
+  bet(idx, additional);
+  const isBetState = (maxBetOnTable === 0);
+  const actionName = isBetState ? 'check' : 'call';
+  recordHistory(idx, actionName, targetBet);
+  AppState.seats[idx].action = actionName;
   AppState.seats[idx].actedInStreet = true;
   advanceAction();
 }
@@ -301,13 +307,15 @@ function actionRaise(totalAmount) {
   }
 
   if (totalAmount < AppState.minRaise && AppState.seats[idx].stack > 0) {
-    showError(`最小レイズ額は ${formatAmount(AppState.minRaise)} です`);
+    showError(`最小ベット/レイズ額は ${formatAmount(AppState.minRaise)} です`);
     return;
   }
   const raiseDelta = totalAmount - maxBetOnTable;
   const additional = totalAmount - currentBet;
+  const isFirstBet = (maxBetOnTable === 0);
+  const actionName = isFirstBet ? 'bet' : 'raise';
 
-  // レイズ発生時、他アクティブプレイヤーのactionとactedInStreetをクリアして再行動を要求
+  // レイズ/ベット発生時、他アクティブプレイヤーのactionとactedInStreetをクリアして再行動を要求
   AppState.seats.forEach((s, sIdx) => {
     if (sIdx !== idx && !s.isFolded && !s.isAllIn && !s.isAway) {
       s.action = null;
@@ -316,9 +324,9 @@ function actionRaise(totalAmount) {
   });
 
   bet(idx, additional);
-  AppState.seats[idx].action = 'raise';
+  AppState.seats[idx].action = actionName;
   AppState.seats[idx].actedInStreet = true;
-  recordHistory(idx, 'raise', totalAmount);
+  recordHistory(idx, actionName, totalAmount);
   updateMinRaise(totalAmount, raiseDelta);
   document.getElementById('raise-panel')?.classList.add('hidden');
   advanceAction();
@@ -1843,15 +1851,21 @@ function renderBoard() {
 
 function renderActionPanel() {
   const callBtn = document.getElementById('btn-call');
+  const raiseBtn = document.getElementById('btn-raise');
   const minLabel = document.getElementById('min-raise-label');
   const currSeat = AppState.seats[AppState.currentSeatIndex];
+  const maxBetOnTable = AppState.seats ? Math.max(...AppState.seats.map(s => s.betAmount), 0) : 0;
   const callAmt = currSeat ? getCallAmount(AppState.currentSeatIndex) : 0;
 
   if (callBtn) {
     callBtn.textContent = callAmt > 0 ? `CALL ${formatAmount(callAmt)}` : 'CHECK';
+    callBtn.style.background = callAmt > 0 ? 'var(--green)' : 'var(--surface2)';
+  }
+  if (raiseBtn) {
+    raiseBtn.textContent = (maxBetOnTable === 0) ? 'BET ▾' : 'RAISE ▾';
   }
   if (minLabel) {
-    minLabel.textContent = `Min Raise: ${formatAmount(AppState.minRaise)}`;
+    minLabel.textContent = (maxBetOnTable === 0) ? `Min Bet: ${formatAmount(AppState.minRaise)}` : `Min Raise: ${formatAmount(AppState.minRaise)}`;
   }
 
   const turnNameStr = currSeat
