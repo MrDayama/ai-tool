@@ -1361,7 +1361,11 @@ function showError(msg) {
 // ===================================================
 
 function renderAll() {
+  if (!AppState.seats || AppState.seats.length === 0) {
+    if (typeof initSeats === 'function') initSeats();
+  }
   renderSeats();
+  if (typeof renderSeatConfigUI === 'function') renderSeatConfigUI();
   renderPot();
   renderBoard();
   renderActionPanel();
@@ -2435,7 +2439,18 @@ async function exportTableVideo() {
         recorder.stop();
       }, 1200);
     }
-  }, 800);
+  }, 1000);
+}
+
+// 🚀 DOMロード時・即時レンダリング自動実行（「プレイヤー＆Hero位置指定」フォーム消滅完全防止）
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof initSeats === 'function') initSeats();
+    renderAll();
+  });
+} else {
+  if (typeof initSeats === 'function') initSeats();
+  renderAll();
 }
 
 window.exportTableVideo = exportTableVideo;

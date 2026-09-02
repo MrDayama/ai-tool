@@ -1,9 +1,8 @@
 /**
  * Map Canvas Engine
- * 公式日本語・英語併記の精密見取り図マップ (The Skeld / MIRA HQ / Polus / Airship / Fungle) レンダリングエンジン
+ * フルHD/4K Retina対応 高精細・超高画質レンダリングエンジン
  */
 
-// ローカルに完全に配置された公式日本語表記入り実物高画質マップ画像
 const MAP_IMAGE_PATHS = {
   skeld: 'assets/maps/skeld.png',
   mira: 'assets/maps/mira.png',
@@ -12,7 +11,6 @@ const MAP_IMAGE_PATHS = {
   fungle: 'assets/maps/fungle.png',
 };
 
-// マップの公式表示名（英語名＋日本語名）
 const MAP_DISPLAY_NAMES = {
   skeld: 'The Skeld (スケルド)',
   mira: 'MIRA HQ (ミラHQ)',
@@ -21,12 +19,11 @@ const MAP_DISPLAY_NAMES = {
   fungle: 'The Fungle (ファングル)',
 };
 
-// 各マップにおける停電サボタージュ配電盤の正確な相対座標 (%: xPct, yPct)
 const SABOTAGE_COORDINATES = {
   skeld: { lights: { xPct: 35, yPct: 58, name: '電気室 (Electrical)' } },
   mira: { lights: { xPct: 62, yPct: 50, name: 'オフィス (Office)' } },
   polus: { lights: { xPct: 40, yPct: 20, name: '電気室 (Electrical)' } },
-  airship: { lights: { xPct: 50, yPct: 78, name: '電気室 (Electrical)' } },
+  airship: { lights: { xPct: 60, yPct: 80, name: '電気室 (Electrical)' } },
   fungle: { lights: { xPct: 62, yPct: 78, name: '発電機 (Generator)' } },
 };
 
@@ -51,7 +48,6 @@ class MapEngine {
     this.radiusCenter = null;
     this.radiusPx = 0;
 
-    // ローカル高画質マップ画像キャッシュ
     this.loadedImages = {};
     this.initCanvasSize();
     this.loadLocalMapImages();
@@ -59,8 +55,13 @@ class MapEngine {
   }
 
   initCanvasSize() {
-    this.canvas.width = 960;
-    this.canvas.height = 540; // 16:9 アスペクト比に適合
+    // フルHD 1920x1080 の超高精細解像度に拡大（ピクセルボケを完全防止）
+    this.canvas.width = 1920;
+    this.canvas.height = 1080;
+
+    // レンダリング設定の高画質化
+    this.ctx.imageSmoothingEnabled = true;
+    this.ctx.imageSmoothingQuality = 'high';
     this.render();
   }
 
@@ -108,7 +109,7 @@ class MapEngine {
   }
 
   setRadiusCircle(centerPoint, speedMultiplier, elapsedSeconds) {
-    const baseSpeedPxPerSec = 22;
+    const baseSpeedPxPerSec = 44; // 1920px 解像度にスケール
     this.radiusCenter = centerPoint;
     this.radiusPx = baseSpeedPxPerSec * speedMultiplier * elapsedSeconds;
     this.showRadiusOverlay = true;
@@ -161,14 +162,14 @@ class MapEngine {
     if (this.currentTool === 'pen') {
       this.currentPath.push(pt);
       this.render();
-      this.drawPath(this.currentPath, this.activePlayerObj ? this.activePlayerObj.colorHex : '#c61111', 4);
+      this.drawPath(this.currentPath, this.activePlayerObj ? this.activePlayerObj.colorHex : '#c61111', 8);
     } else if (this.currentTool === 'line' || this.currentTool === 'arrow') {
       this.render();
       const color = this.activePlayerObj ? this.activePlayerObj.colorHex : '#c61111';
       if (this.currentTool === 'line') {
-        this.drawLine(this.startPoint, pt, color, 3);
+        this.drawLine(this.startPoint, pt, color, 6);
       } else {
-        this.drawArrow(this.startPoint, pt, color, 3);
+        this.drawArrow(this.startPoint, pt, color, 6);
       }
     }
   }
@@ -186,7 +187,7 @@ class MapEngine {
         type: 'path',
         points: [...this.currentPath],
         colorHex: color,
-        width: 4
+        width: 8
       });
     } else if (this.currentTool === 'line') {
       this.drawings.push({
@@ -194,7 +195,7 @@ class MapEngine {
         start: this.startPoint,
         end: pt,
         colorHex: color,
-        width: 3
+        width: 6
       });
     } else if (this.currentTool === 'arrow') {
       this.drawings.push({
@@ -202,7 +203,7 @@ class MapEngine {
         start: this.startPoint,
         end: pt,
         colorHex: color,
-        width: 3
+        width: 6
       });
     }
 
@@ -239,22 +240,22 @@ class MapEngine {
   render() {
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
-    // 1. 公式日本語表記入り実物見取り図マップの背景描画
+    // 高品質アスペクト比維持背景描画
     this.drawRealBlueprintMapImage();
 
-    // 2. ユーザー描画線
+    // ユーザー描画線
     this.drawings.forEach(d => {
       if (d.type === 'path') this.drawPath(d.points, d.colorHex, d.width);
       else if (d.type === 'line') this.drawLine(d.start, d.end, d.colorHex, d.width);
       else if (d.type === 'arrow') this.drawArrow(d.start, d.end, d.colorHex, d.width);
     });
 
-    // 3. 移動可能半径サークル
+    // 移動可能半径サークル
     if (this.showRadiusOverlay && this.radiusCenter && this.radiusPx > 0) {
       this.drawRadiusCircle(this.radiusCenter, this.radiusPx);
     }
 
-    // 4. ピン＆プレイヤーコマ描画
+    // ピン＆プレイヤーコマ描画
     this.pins.forEach(pin => {
       if (pin.type === 'player') {
         this.drawPlayerPin(pin);
@@ -263,7 +264,7 @@ class MapEngine {
       }
     });
 
-    // 5. 停電サボタージュ視界・配電盤マーク
+    // 停電サボタージュ視界・配電盤マーク
     if (window.sabotageManager && window.sabotageManager.isLightsOutActive()) {
       this.drawLightsOutVisionOverlay();
     }
@@ -274,36 +275,54 @@ class MapEngine {
     const w = this.canvas.width;
     const h = this.canvas.height;
 
-    // 暗い宇宙背景
+    // 暗い背景
     ctx.fillStyle = '#090d16';
     ctx.fillRect(0, 0, w, h);
 
     const img = this.loadedImages[this.currentMapId];
 
     if (img && img.complete && img.naturalWidth !== 0) {
-      ctx.drawImage(img, 0, 0, w, h);
+      // 1920x1080 フルHD解像度対応アスペクト比調整 (Fit Contain)
+      const imgRatio = img.naturalWidth / img.naturalHeight;
+      const canvasRatio = w / h;
+      let drawW, drawH, drawX, drawY;
+
+      if (imgRatio > canvasRatio) {
+        drawW = w;
+        drawH = w / imgRatio;
+        drawX = 0;
+        drawY = (h - drawH) / 2;
+      } else {
+        drawH = h;
+        drawW = h * imgRatio;
+        drawX = (w - drawW) / 2;
+        drawY = 0;
+      }
+
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, drawX, drawY, drawW, drawH);
     } else {
-      // 読み込み待ち状態の表示
       ctx.fillStyle = '#1e293b';
-      ctx.fillRect(20, 20, w - 40, h - 40);
+      ctx.fillRect(40, 40, w - 80, h - 80);
       ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 18px system-ui';
+      ctx.font = 'bold 32px system-ui';
       ctx.textAlign = 'center';
-      ctx.fillText(`MAP: [${this.currentMapId.toUpperCase()}] 高解像度見取り図マップ読み込み中...`, w / 2, h / 2);
+      ctx.fillText(`MAP: [${this.currentMapId.toUpperCase()}] 高解像度マップ読み込み中...`, w / 2, h / 2);
     }
 
-    // マップ名ラベルヘッダー（公式日本語表示）
+    // 高精細ヘッダーラベル
     const mapNameText = MAP_DISPLAY_NAMES[this.currentMapId] || this.currentMapId.toUpperCase();
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.88)';
-    ctx.fillRect(w - 290, 10, 280, 34);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
+    ctx.fillRect(w - 580, 20, 560, 60);
     ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(w - 290, 10, 280, 34);
+    ctx.lineWidth = 3;
+    ctx.strokeRect(w - 580, 20, 560, 60);
 
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 13px system-ui';
+    ctx.font = 'bold 26px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText(`MAP: ${mapNameText}`, w - 150, 32);
+    ctx.fillText(`MAP: ${mapNameText}`, w - 300, 58);
   }
 
   drawPlayerPin(pin) {
@@ -311,31 +330,31 @@ class MapEngine {
     ctx.save();
 
     ctx.beginPath();
-    ctx.arc(pin.x, pin.y, 18, 0, Math.PI * 2);
+    ctx.arc(pin.x, pin.y, 36, 0, Math.PI * 2);
     ctx.fillStyle = pin.colorHex;
     ctx.fill();
     ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 6;
     ctx.stroke();
 
-    ctx.font = '14px serif';
+    ctx.font = '28px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('👤', pin.x, pin.y);
 
     if (pin.playerName) {
-      ctx.font = 'bold 11px system-ui';
+      ctx.font = 'bold 22px system-ui';
       const textWidth = ctx.measureText(pin.playerName).width;
 
-      ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
-      ctx.fillRect(pin.x - textWidth / 2 - 4, pin.y + 20, textWidth + 8, 16);
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
+      ctx.fillRect(pin.x - textWidth / 2 - 8, pin.y + 42, textWidth + 16, 32);
       ctx.strokeStyle = pin.colorHex;
-      ctx.lineWidth = 1;
-      ctx.strokeRect(pin.x - textWidth / 2 - 4, pin.y + 20, textWidth + 8, 16);
+      ctx.lineWidth = 2;
+      ctx.strokeRect(pin.x - textWidth / 2 - 8, pin.y + 42, textWidth + 16, 32);
 
       ctx.fillStyle = '#ffffff';
       ctx.textAlign = 'center';
-      ctx.fillText(pin.playerName, pin.x, pin.y + 32);
+      ctx.fillText(pin.playerName, pin.x, pin.y + 65);
     }
 
     ctx.restore();
@@ -345,14 +364,14 @@ class MapEngine {
     const ctx = this.ctx;
     ctx.save();
     ctx.beginPath();
-    ctx.arc(pin.x, pin.y, 16, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+    ctx.arc(pin.x, pin.y, 32, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.9)';
     ctx.fill();
     ctx.strokeStyle = pin.colorHex;
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 6;
     ctx.stroke();
 
-    ctx.font = '16px serif';
+    ctx.font = '30px serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(pin.symbol, pin.x, pin.y);
@@ -386,7 +405,7 @@ class MapEngine {
 
   drawArrow(start, end, colorHex, width) {
     this.drawLine(start, end, colorHex, width);
-    const headlen = 12;
+    const headlen = 24;
     const dx = end.x - start.x;
     const dy = end.y - start.y;
     const angle = Math.atan2(dy, dx);
@@ -409,13 +428,13 @@ class MapEngine {
     ctx.fillStyle = 'rgba(56, 189, 248, 0.12)';
     ctx.fill();
     ctx.strokeStyle = '#38bdf8';
-    ctx.lineWidth = 2;
-    ctx.setLineDash([6, 4]);
+    ctx.lineWidth = 4;
+    ctx.setLineDash([12, 8]);
     ctx.stroke();
 
     ctx.fillStyle = '#38bdf8';
-    ctx.font = 'bold 12px system-ui';
-    ctx.fillText(`最高到達可能範囲 (${Math.round(radius)}px)`, center.x - 50, center.y - radius - 8);
+    ctx.font = 'bold 24px system-ui';
+    ctx.fillText(`最高到達可能範囲 (${Math.round(radius)}px)`, center.x - 100, center.y - radius - 16);
     ctx.restore();
   }
 
@@ -434,16 +453,16 @@ class MapEngine {
     const electY = (h * lights.yPct) / 100;
 
     ctx.beginPath();
-    ctx.arc(electX, electY, 32, 0, Math.PI * 2);
+    ctx.arc(electX, electY, 64, 0, Math.PI * 2);
     ctx.strokeStyle = '#f59e0b';
-    ctx.lineWidth = 3;
-    ctx.setLineDash([4, 4]);
+    ctx.lineWidth = 6;
+    ctx.setLineDash([8, 8]);
     ctx.stroke();
 
     ctx.fillStyle = '#fbbf24';
-    ctx.font = 'bold 14px system-ui';
+    ctx.font = 'bold 28px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText(`💡 配電盤 (${lights.name})`, electX, electY - 40);
+    ctx.fillText(`💡 配電盤 (${lights.name})`, electX, electY - 80);
     ctx.restore();
   }
 }
