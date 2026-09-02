@@ -1716,7 +1716,8 @@ function renderSeats() {
     }
     const stackEl = el.querySelector('.seat-stack');
     if (stackEl) {
-      stackEl.textContent = `${formatAmount(seat.stack)} BB`;
+      const rawVal = formatAmount(seat.stack);
+      stackEl.textContent = rawVal.includes('BB') ? rawVal : `${rawVal} BB`;
       stackEl.style.color = '#f59e0b';
       stackEl.style.fontSize = '0.62rem';
       stackEl.style.marginTop = '1px';
