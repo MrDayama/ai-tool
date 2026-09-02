@@ -214,22 +214,14 @@ function startNewHand() {
   AppState.history = [];
   AppState.replayIndex = 0;
 
-  const { sb, bb, anteType, anteAmount } = AppState.blind;
+  AppState.blind = { sb: 0.5, bb: 1.0, anteType: 'none', anteAmount: 0, displayUnit: 'bb' };
+  const { sb, bb } = AppState.blind;
   const sbIdx = getSBIndex();
   const bbIdx = getBBIndex();
 
-  if (anteType === 'bb') {
-    const totalAnte = anteAmount * AppState.seatCount;
-    bet(bbIdx, totalAnte);
-  } else if (anteType === 'regular') {
-    AppState.seats.forEach((s, idx) => {
-      if (!s.isAway) bet(idx, anteAmount);
-    });
-  }
-
   bet(sbIdx, sb);
   bet(bbIdx, bb);
-  AppState.minRaise = bb; // 最小オープンレイズ/ベット額は 2.0 BB
+  AppState.minRaise = 2.0; // 最小オープンレイズ額は 2.0 BB
   AppState.currentSeatIndex = getPreflopFirstSeat();
 
   // 初期スナップショット (リプレイ再生の開始フレーム) を記録
