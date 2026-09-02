@@ -118,8 +118,7 @@ function isHeadsUp() {
 
 function getPositionName(seatIndex) {
   const positions = POSITIONS_BY_COUNT[AppState.seatCount] || [];
-  const relIndex = (seatIndex - AppState.dealerSeat + AppState.seatCount) % AppState.seatCount;
-  return positions[relIndex] || `Seat ${seatIndex + 1}`;
+  return positions[seatIndex] || `Seat ${seatIndex + 1}`;
 }
 
 function getSBIndex() {
