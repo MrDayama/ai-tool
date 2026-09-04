@@ -411,6 +411,11 @@ function confirmCustomRaise() {
   actionRaise(val);
   input.value = '';
 }
+window.confirmCustomRaise = confirmCustomRaise;
+window.toggleRaisePanel = toggleRaisePanel;
+window.actionFold = actionFold;
+window.actionCall = actionCall;
+window.actionRaise = actionRaise;
 
 function actionAllIn() {
   if (isProcessingAction) return;

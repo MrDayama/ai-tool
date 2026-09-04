@@ -119,8 +119,8 @@
         <div style="font-size:.72rem;color:var(--text-sub);margin-bottom:6px;font-weight:800;" id="min-raise-label">Min Bet: 2.0 BB</div>
         <div class="raise-presets" id="raise-presets-container" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;"></div>
         <div class="raise-custom" style="display:flex;gap:8px;">
-          <input type="number" id="raise-input" placeholder="ベット/レイズ額 (BB)" min="0" step="0.5" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.9rem;font-weight:800;">
-          <button id="btn-raise-confirm" onclick="confirmCustomRaise()" style="padding:8px 18px;background:var(--yellow);color:#000;border:none;border-radius:6px;font-weight:900;font-size:.88rem;cursor:pointer;">確定 ➔</button>
+          <input type="number" id="raise-input" placeholder="ベット/レイズ額 (BB)" min="0" step="0.5" onkeydown="if(event.key==='Enter') confirmCustomRaise()" style="flex:1;padding:8px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.9rem;font-weight:800;">
+          <button id="btn-raise-confirm" onclick="confirmCustomRaise()" style="padding:10px 20px;background:var(--yellow);color:#000;border:none;border-radius:6px;font-weight:900;font-size:.9rem;cursor:pointer;touch-action:manipulation;display:inline-block!important;visibility:visible!important;box-shadow:0 2px 6px rgba(0,0,0,0.4);">確定 ➔</button>
         </div>
       </div>
 
@@ -244,7 +244,7 @@
       👇 ポットを獲得するプレイヤーをタップして選択してください
     </p>
     <div id="winner-list"></div>
-    <button id="btn-confirm-winner" onclick="confirmWinner()" style="padding:12px;background:var(--green);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.95rem;cursor:pointer;">
+    <button id="btn-confirm-winner" onclick="confirmWinner()" style="width:100%;padding:12px;background:var(--green);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:.95rem;cursor:pointer;touch-action:manipulation;display:block!important;visibility:visible!important;box-shadow:0 2px 6px rgba(0,0,0,0.4);">
       確定して配当
     </button>
     <button onclick="document.getElementById('winner-modal').classList.add('hidden')"
