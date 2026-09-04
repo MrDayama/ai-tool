@@ -302,9 +302,6 @@ function actionCall() {
   advanceAction();
 }
 
-function actionRaise(totalAmount) {
-  if (isProcessingAction) return;
-  lockActionProcessing();
 function getCurrentMainPot() {
   const accumulated = AppState.pot ? (AppState.pot.main || 0) : 0;
   const currentBets = AppState.seats ? AppState.seats.reduce((sum, s) => sum + (s.betAmount || 0), 0) : 0;
@@ -2551,7 +2548,22 @@ async function exportTableVideo() {
   }, 1000);
 }
 
-// 🚀 DOMロード時・即時レンダリング自動実行（「プレイヤー＆Hero位置指定」フォーム消滅完全防止）
+window.openManualModal = typeof openManualModal !== 'undefined' ? openManualModal : null;
+window.closeManualModal = typeof closeManualModal !== 'undefined' ? closeManualModal : null;
+window.selectHeroSeat = typeof selectHeroSeat !== 'undefined' ? selectHeroSeat : null;
+window.toggleAwaySeat = typeof toggleAwaySeat !== 'undefined' ? toggleAwaySeat : null;
+window.startNewHand = typeof startNewHand !== 'undefined' ? startNewHand : null;
+window.switchToTableView = typeof switchToTableView !== 'undefined' ? switchToTableView : null;
+window.switchToInputView = typeof switchToInputView !== 'undefined' ? switchToInputView : null;
+window.confirmCustomRaise = typeof confirmCustomRaise !== 'undefined' ? confirmCustomRaise : null;
+window.confirmWinner = typeof confirmWinner !== 'undefined' ? confirmWinner : null;
+window.exportTableVideo = typeof exportTableVideo !== 'undefined' ? exportTableVideo : null;
+window.toggleRaisePanel = typeof toggleRaisePanel !== 'undefined' ? toggleRaisePanel : null;
+window.actionFold = typeof actionFold !== 'undefined' ? actionFold : null;
+window.actionCall = typeof actionCall !== 'undefined' ? actionCall : null;
+window.actionRaise = typeof actionRaise !== 'undefined' ? actionRaise : null;
+window.actionAllIn = typeof actionAllIn !== 'undefined' ? actionAllIn : null;
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     if (typeof initSeats === 'function') initSeats();
@@ -2561,10 +2573,4 @@ if (document.readyState === 'loading') {
   if (typeof initSeats === 'function') initSeats();
   renderAll();
 }
-
-window.exportTableVideo = exportTableVideo;
-window.toggleRaisePanel = toggleRaisePanel;
-window.setPotRaise = setPotRaise;
-
-window.addEventListener('DOMContentLoaded', init);
 
