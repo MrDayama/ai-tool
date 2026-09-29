@@ -479,13 +479,30 @@
 
     let state = JSON.parse(localStorage.getItem('mahjong_player_managed_state')) || DEFAULT_DATA;
 
-    // データマイグレーション/補完
-    if (!state.playersMaster) state.playersMaster = ['田中', '山田', '佐藤', '鈴木'];
+    // データマイグレーション/重複排除 (同名プレイヤーの重複を一意化)
+    if (!state.playersMaster || !Array.isArray(state.playersMaster)) {
+      state.playersMaster = ['田中', '山田', '佐藤', '鈴木'];
+    } else {
+      // 重複削除してユニーク化
+      state.playersMaster = Array.from(new Set(state.playersMaster.map(p => p.trim()).filter(Boolean)));
+    }
+
     if (!state.activeSeats) {
       state.activeSeats = {
         '4p': state.playersMaster.slice(0, 4),
         '3p': state.playersMaster.slice(0, 3)
       };
+    } else {
+      ['4p', '3p'].forEach(m => {
+        const required = m === '4p' ? 4 : 3;
+        // 座席数が足りない場合は補充
+        while (state.playersMaster.length < required) {
+          state.playersMaster.push(`P${state.playersMaster.length + 1}`);
+        }
+        if (!state.activeSeats[m] || state.activeSeats[m].length !== required) {
+          state.activeSeats[m] = state.playersMaster.slice(0, required);
+        }
+      });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -528,13 +545,16 @@
 
       state.activeSeats[mode][colIdx] = trimmed;
 
-      // マスター側も更新または追加
+      // マスター側を更新し、同名重複を完全に排除
       const mIdx = state.playersMaster.indexOf(oldPlayerName);
       if (mIdx !== -1) {
         state.playersMaster[mIdx] = trimmed;
       } else if (!state.playersMaster.includes(trimmed)) {
         state.playersMaster.push(trimmed);
       }
+
+      // 常にユニーク化
+      state.playersMaster = Array.from(new Set(state.playersMaster.map(p => p.trim()).filter(Boolean)));
 
       saveState();
       renderAll();
