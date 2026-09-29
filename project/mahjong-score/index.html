@@ -2,26 +2,22 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>麻雀スコアシート (プレイヤー名管理版)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>麻雀スコアシート</title>
   <style>
     :root {
-      --bg-color: #0c1311;
-      --panel-bg: #141f1b;
-      --card-bg: #101a17;
-      --grid-border: #23362f;
-      --grid-header-bg: #182621;
-      --cell-bg: #101916;
-      --cell-focus-bg: #1a2c25;
+      --bg: #090e0c;
+      --card-bg: #131c18;
+      --card-border: #1f3029;
       --accent: #10b981;
-      --accent-hover: #059669;
       --accent-gold: #f59e0b;
-      --text: #e5e7eb;
+      --text: #f3f4f6;
       --text-muted: #9ca3af;
       --danger: #ef4444;
-      --danger-bg: #3b1818;
+      --danger-bg: #351414;
       --success: #10b981;
-      --success-bg: #0e382d;
+      --success-bg: #0c3327;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     * {
@@ -31,441 +27,392 @@
       -webkit-tap-highlight-color: transparent;
     }
 
-    body {
-      background-color: var(--bg-color);
+    html, body {
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden; /* スマホで完全スクロールなし */
+      background-color: var(--bg);
       color: var(--text);
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      padding-bottom: 90px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
+    /* アプリ全体レイアウト */
+    .app-viewport {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 480px;
+      margin: 0 auto;
+      padding: 8px 10px calc(8px + var(--safe-bottom)) 10px;
+      justify-content: space-between;
+    }
+
+    /* 1. コンパクトヘッダー */
     header {
-      background-color: #080e0c;
-      border-bottom: 1px solid var(--grid-border);
-      padding: 12px 16px;
-      position: sticky;
-      top: 0;
-      z-index: 40;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 12px;
+      padding: 4px 2px;
+      flex-shrink: 0;
     }
 
-    .title-group {
+    .app-brand {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--accent-gold);
       display: flex;
       align-items: center;
-      gap: 8px;
-    }
-    .app-title {
-      font-size: 1.05rem;
-      font-weight: 700;
-      color: var(--accent-gold);
+      gap: 4px;
     }
 
-    .tab-group {
+    .tab-pills {
       display: flex;
-      background: #0d1714;
-      padding: 3px;
-      border-radius: 8px;
-      border: 1px solid var(--grid-border);
-    }
-    .tab-btn {
-      padding: 6px 14px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      border: none;
+      background: #111a17;
+      padding: 2px;
       border-radius: 6px;
+      border: 1px solid var(--card-border);
+    }
+    .tab-pill {
+      border: none;
       background: transparent;
       color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
       cursor: pointer;
-      transition: all 0.2s;
     }
-    .tab-btn.active {
+    .tab-pill.active {
       background: var(--accent);
       color: #fff;
     }
 
-    .main-container {
-      max-width: 1040px;
-      margin: 0 auto;
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-
-    /* プレイヤー別通算リーダーボードカード */
-    .leaderboard-card {
-      background: var(--card-bg);
-      border: 1px solid var(--grid-border);
-      border-radius: 10px;
-      padding: 14px;
-    }
-
-    .card-header {
+    /* 2. 半荘セレクターナビ */
+    .round-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
-    }
-    .card-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--accent-gold);
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      margin: 4px 0;
+      flex-shrink: 0;
     }
 
-    .player-pill-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    .round-nav-btn {
+      background: #1a2923;
+      border: 1px solid #283e35;
+      color: var(--text);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
     }
-    .player-pill {
-      background: #162420;
-      border: 1px solid #283e36;
-      border-radius: 8px;
-      padding: 8px 12px;
+    .round-nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .round-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+    }
+
+    /* 3. メイン入力エリア (4名または3名のカードが1画面にピッタリ収まる) */
+    .players-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      flex: 1;
+      margin: 4px 0;
+      align-content: stretch;
+    }
+    .grid-3p {
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(3, 1fr);
+    }
+
+    .player-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      min-width: 110px;
+      justify-content: space-between;
+      position: relative;
+      transition: border-color 0.2s;
     }
-    .pill-name {
-      font-size: 0.85rem;
-      font-weight: 700;
-      color: #f3f4f6;
-    }
-    .pill-score {
-      font-size: 1.1rem;
-      font-weight: 800;
-    }
-    .pill-sub {
-      font-size: 0.7rem;
-      color: var(--text-muted);
+    .player-card:focus-within {
+      border-color: var(--accent);
+      background: #16241f;
     }
 
-    /* プレイヤー管理ドロワー/トグル */
-    .player-tag {
-      background: #1c2b26;
-      border: 1px solid #2e443c;
-      border-radius: 6px;
-      padding: 3px 8px;
-      display: inline-flex;
+    .card-top-row {
+      display: flex;
+      justify-content: space-between;
       align-items: center;
-      gap: 6px;
-      font-size: 0.85rem;
+      gap: 4px;
     }
-    .btn-del-player {
+
+    .player-name-field {
       background: transparent;
       border: none;
-      color: #9ca3af;
-      cursor: pointer;
-      font-size: 0.85rem;
-      padding: 0 2px;
-      display: inline-flex;
+      border-bottom: 1px dashed #3a5449;
+      color: var(--accent-gold);
+      font-size: 0.95rem;
+      font-weight: 800;
+      width: 65%;
+      padding: 2px 0;
+    }
+    .player-name-field:focus {
+      outline: none;
+      border-bottom-color: var(--accent-gold);
+    }
+
+    .player-total-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    /* スコア入力フィールド (大きくタップしやすい) */
+    .score-input-wrap {
+      display: flex;
       align-items: center;
       justify-content: center;
-      transition: color 0.15s;
-    }
-    .btn-del-player:hover {
-      color: var(--danger);
-    }
-    .player-add-form {
-      display: flex;
-      gap: 6px;
-    }
-    .player-input {
-      background: #0a110f;
-      border: 1px solid var(--grid-border);
-      color: #fff;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      width: 140px;
-    }
-    .player-input:focus {
-      outline: none;
-      border-color: var(--accent);
+      margin: 4px 0;
     }
 
-    /* ツールバー */
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-
-    .btn {
-      padding: 8px 14px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      border-radius: 6px;
-      border: 1px solid var(--grid-border);
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: all 0.15s;
-    }
-    .btn-primary {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-    .btn-primary:hover {
-      background: var(--accent-hover);
-    }
-    .btn-secondary {
-      background: var(--panel-bg);
-      color: var(--text);
-    }
-    .btn-secondary:hover {
-      background: #1b2a24;
-    }
-
-    /* スプレッドシートテーブル */
-    .sheet-wrapper {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
+    .score-input-field {
+      width: 100%;
+      background: #0b1310;
+      border: 1px solid var(--card-border);
       border-radius: 8px;
-      border: 1px solid var(--grid-border);
-    }
-
-    .sheet-table {
-      width: 100%;
-      border-collapse: collapse;
-      background: var(--panel-bg);
-      font-size: 0.9rem;
-      table-layout: fixed;
-      min-width: 620px;
-    }
-
-    .sheet-table th, .sheet-table td {
-      border: 1px solid var(--grid-border);
-      padding: 0;
+      color: #fff;
+      font-size: 1.45rem;
+      font-weight: 800;
       text-align: center;
-      position: relative;
-    }
-
-    .sheet-table thead th {
-      background: var(--grid-header-bg);
-      color: var(--text-muted);
-      font-weight: 600;
-      font-size: 0.82rem;
-      padding: 8px 4px;
-      user-select: none;
-    }
-
-    .th-round { width: 50px; }
-    .th-player { width: 140px; }
-    .th-status { width: 150px; }
-    .th-action { width: 45px; }
-
-    /* プレイヤー選択セレクト */
-    .player-select-header {
-      background: #0d1714;
-      border: 1px solid #2e473e;
-      color: var(--accent-gold);
-      font-weight: 700;
-      font-size: 0.88rem;
-      border-radius: 6px;
-      padding: 4px 6px;
-      width: 95%;
-      cursor: pointer;
-      text-align: center;
-    }
-    .player-select-header:focus {
-      outline: none;
-      border-color: var(--accent-gold);
-    }
-
-    /* セル */
-    .cell-box {
-      padding: 8px 4px;
-      background: var(--cell-bg);
-      transition: background 0.15s;
-    }
-    .cell-box:focus-within {
-      background: var(--cell-focus-bg);
-      box-shadow: inset 0 0 0 2px var(--accent);
-    }
-
-    .score-cell-input {
-      background: transparent;
-      border: none;
-      font-size: 1.15rem;
-      font-weight: 700;
-      text-align: center;
-      width: 100%;
-      padding: 4px 0;
+      padding: 6px 2px;
       -moz-appearance: textfield;
     }
-    .score-cell-input::-webkit-outer-spin-button,
-    .score-cell-input::-webkit-inner-spin-button {
+    .score-input-field::-webkit-outer-spin-button,
+    .score-input-field::-webkit-inner-spin-button {
       -webkit-appearance: none;
       margin: 0;
     }
-    .score-cell-input:focus {
+    .score-input-field:focus {
       outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
     }
 
-    .val-plus { color: #34d399; }
-    .val-minus { color: #f87171; }
-    .val-zero { color: var(--text-muted); }
+    .val-plus { color: #34d399 !important; }
+    .val-minus { color: #f87171 !important; }
+    .val-zero { color: var(--text-muted) !important; }
 
-    .round-num-cell {
-      background: var(--grid-header-bg);
-      font-size: 0.85rem;
+    /* 4. リアルタイム合計0チェックインジケーター */
+    .status-banner {
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.88rem;
       font-weight: 700;
-      color: var(--text-muted);
-      user-select: none;
+      margin: 4px 0;
+      flex-shrink: 0;
     }
-
-    .status-cell {
-      padding: 8px 6px;
-      font-size: 0.82rem;
-      font-weight: 700;
-      line-height: 1.3;
-    }
-    .status-ok {
+    .status-banner-ok {
       background: var(--success-bg);
+      border: 1px solid var(--success);
       color: #a7f3d0;
     }
-    .status-error {
+    .status-banner-error {
       background: var(--danger-bg);
+      border: 1px solid var(--danger);
       color: #fecaca;
     }
-    .status-empty {
-      background: #101916;
-      color: #6b7280;
+    .status-banner-wait {
+      background: #131c19;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
     }
 
-    .btn-row-del {
-      background: transparent;
+    /* 5. ボトムアクションバー */
+    .bottom-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 4px;
+      flex-shrink: 0;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 11px 0;
+      font-size: 0.9rem;
+      font-weight: 800;
       border: none;
-      color: #6b7280;
-      font-size: 1rem;
+      border-radius: 8px;
       cursor: pointer;
-      width: 100%;
-      height: 100%;
-      padding: 12px 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 6px;
+      transition: all 0.15s;
     }
-    .btn-row-del:hover {
-      color: var(--danger);
-      background: rgba(239, 68, 68, 0.1);
+    .btn-next-round {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-next-round:disabled {
+      background: #1c2b25;
+      color: #52635c;
+      cursor: not-allowed;
+    }
+    .btn-sub {
+      flex: 0.6;
+      background: #141f1b;
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
     }
 
-    /* フッター合計行 */
-    .sheet-table tfoot tr {
-      background: #0f1c17;
-      border-top: 2px solid var(--accent);
+    /* 通算モーダル/オーバーレイ */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 99;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
     }
-    .sheet-table tfoot td {
-      padding: 12px 4px;
-      font-weight: 800;
-      font-size: 1.1rem;
+    .modal-overlay.open {
+      display: flex;
     }
-    .footer-label {
-      color: var(--accent-gold);
-      font-size: 0.85rem;
+    .modal-content {
+      background: #131f1a;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 420px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
     }
-    .footer-status {
-      font-size: 0.82rem;
-      color: var(--text-muted);
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-body {
+      padding: 14px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .leaderboard-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: #0d1613;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      border: 1px solid #1c2c25;
     }
   </style>
 </head>
 <body>
 
-  <header>
-    <div class="title-group">
-      <div class="app-title">📊 麻雀スコア管理 (プレイヤー制)</div>
-    </div>
-    <div class="tab-group">
-      <button class="tab-btn active" id="tab-4p" onclick="switchMode('4p')">四人麻雀 (4人)</button>
-      <button class="tab-btn" id="tab-3p" onclick="switchMode('3p')">三人麻雀 (3人)</button>
-    </div>
-  </header>
+  <div class="app-viewport">
 
-  <div class="main-container">
+    <!-- 1. ヘッダー -->
+    <header>
+      <div class="app-brand">🀄 麻雀スコア</div>
+      <div class="tab-pills">
+        <button class="tab-pill active" id="tab-4p" onclick="switchMode('4p')">四麻 (4人)</button>
+        <button class="tab-pill" id="tab-3p" onclick="switchMode('3p')">三麻 (3人)</button>
+      </div>
+    </header>
 
-    <!-- プレイヤー通算成績カード -->
-    <div class="leaderboard-card">
-      <div class="card-header">
-        <span class="card-title">🏆 プレイヤー別 通算スコア</span>
-        <span style="font-size: 0.75rem; color: var(--text-muted);" id="valid-match-count-badge">0 半荘記録</span>
-      </div>
-      <div class="player-pill-container" id="player-leaderboard-container">
-        <!-- 動的描画 -->
-      </div>
+    <!-- 2. 半荘切替ナビゲーション -->
+    <div class="round-bar">
+      <button class="round-nav-btn" id="btn-prev-round" onclick="navigateRound(-1)">◀ 前の半荘</button>
+      <div class="round-title" id="round-indicator">第 1 半荘</div>
+      <button class="round-nav-btn" id="btn-next-round-nav" onclick="navigateRound(1)">次の半荘 ▶</button>
     </div>
 
-    <!-- プレイヤーマスター管理フォーム -->
-    <div class="player-manage-box">
-      <div style="font-size: 0.85rem; color: var(--text-muted);">
-        👤 プレイヤー管理:
-        <span id="registered-players-list" style="color: #fff; font-weight: 600; margin-left: 6px;"></span>
-      </div>
-      <div class="player-add-form">
-        <input type="text" id="new-player-name-input" class="player-input" placeholder="新プレイヤー名">
-        <button class="btn btn-secondary" onclick="addNewPlayer()">登録</button>
-      </div>
+    <!-- 3. スクロールなし・全プレイヤー入力カードグリッド -->
+    <div class="players-grid" id="players-grid-container">
+      <!-- 動的描画 (4人または3人のカード) -->
     </div>
 
-    <!-- ツールバー -->
-    <div class="toolbar">
-      <button class="btn btn-primary" onclick="addNewRow()">
-        ➕ 新しい半荘を追加
+    <!-- 4. リアルタイム合計0チェックインジケーター -->
+    <div class="status-banner status-banner-wait" id="status-banner">
+      <span id="status-message">全員のスコアを入力してください</span>
+      <span id="status-badge" style="font-size: 0.95rem;">計 0.0</span>
+    </div>
+
+    <!-- 5. ボトムアクションバー -->
+    <div class="bottom-bar">
+      <button class="action-btn btn-sub" onclick="openLeaderboard()">
+        🏆 通算成績
       </button>
-      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-        <button class="btn btn-secondary" onclick="exportSqlForDbBrowser()">
-          💾 DB Browser用SQL保存
-        </button>
-        <button class="btn btn-secondary" onclick="exportSpreadsheetText()">
-          📋 テキストコピー
-        </button>
-        <button class="btn btn-secondary" onclick="resetSpreadsheet()" style="color: #fca5a5;">
-          🗑️ シートクリア
-        </button>
-      </div>
-    </div>
-
-    <!-- スプレッドシート -->
-    <div class="sheet-wrapper">
-      <table class="sheet-table" id="sheet-table">
-        <thead>
-          <tr id="sheet-head-row">
-            <!-- 動的ヘッダー (プレイヤー選択プルダウン) -->
-          </tr>
-        </thead>
-        <tbody id="sheet-body">
-          <!-- スコア入力行 -->
-        </tbody>
-        <tfoot>
-          <tr id="sheet-foot-row">
-            <!-- 通算行 -->
-          </tr>
-        </tfoot>
-      </table>
+      <button class="action-btn btn-next-round" id="btn-complete-round" onclick="completeAndNextRound()">
+        次へ進む (＋半荘) ❯
+      </button>
     </div>
 
   </div>
 
+  <!-- 通算成績 & シート全体モーダル -->
+  <div class="modal-overlay" id="leaderboard-modal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="font-weight: 800; color: var(--accent-gold);">🏆 プレイヤー別 通算スコア</div>
+        <button onclick="closeLeaderboard()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="modal-leaderboard-list">
+          <!-- 通算ランキング -->
+        </div>
+
+        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <button class="action-btn btn-sub" style="width: 100%;" onclick="exportText()">
+            📋 成績をテキストコピー
+          </button>
+          <button class="action-btn btn-sub" style="width: 100%;" onclick="exportSql()">
+            💾 DB Browser用SQL保存
+          </button>
+          <button class="action-btn btn-sub" style="width: 100%; color:#f87171;" onclick="resetAllRounds()">
+            🗑️ 現在のモードを全クリア
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
-    // デフォルトマスターとシート構造
     const DEFAULT_DATA = {
       mode: '4p',
-      playersMaster: ['田中', '山田', '佐藤', '鈴木'], // 登録プレイヤー
+      playersMaster: ['東家', '南家', '西家', '北家'],
       activeSeats: {
-        '4p': ['田中', '山田', '佐藤', '鈴木'],
-        '3p': ['田中', '山田', '佐藤']
+        '4p': ['東家', '南家', '西家', '北家'],
+        '3p': ['東家', '南家', '西家']
+      },
+      currentRoundIdx: {
+        '4p': 0,
+        '3p': 0
       },
       sheets: {
         '4p': [
@@ -477,32 +424,15 @@
       }
     };
 
-    let state = JSON.parse(localStorage.getItem('mahjong_player_managed_state')) || DEFAULT_DATA;
+    let state = JSON.parse(localStorage.getItem('mahjong_mobile_fit_state')) || DEFAULT_DATA;
 
-    // データマイグレーション/重複排除 (同名プレイヤーの重複を一意化)
-    if (!state.playersMaster || !Array.isArray(state.playersMaster)) {
-      state.playersMaster = ['田中', '山田', '佐藤', '鈴木'];
-    } else {
-      // 重複削除してユニーク化
-      state.playersMaster = Array.from(new Set(state.playersMaster.map(p => p.trim()).filter(Boolean)));
-    }
-
-    if (!state.activeSeats) {
-      state.activeSeats = {
-        '4p': state.playersMaster.slice(0, 4),
-        '3p': state.playersMaster.slice(0, 3)
+    // データ初期補正
+    if (!state.currentRoundIdx) state.currentRoundIdx = { '4p': 0, '3p': 0 };
+    if (!state.sheets) {
+      state.sheets = {
+        '4p': [[null, null, null, null]],
+        '3p': [[null, null, null]]
       };
-    } else {
-      ['4p', '3p'].forEach(m => {
-        const required = m === '4p' ? 4 : 3;
-        // 座席数が足りない場合は補充
-        while (state.playersMaster.length < required) {
-          state.playersMaster.push(`P${state.playersMaster.length + 1}`);
-        }
-        if (!state.activeSeats[m] || state.activeSeats[m].length !== required) {
-          state.activeSeats[m] = state.playersMaster.slice(0, required);
-        }
-      });
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -510,7 +440,7 @@
     });
 
     function saveState() {
-      localStorage.setItem('mahjong_player_managed_state', JSON.stringify(state));
+      localStorage.setItem('mahjong_mobile_fit_state', JSON.stringify(state));
     }
 
     function switchMode(newMode) {
@@ -521,499 +451,335 @@
       renderAll();
     }
 
-    // プレイヤーマスター登録
-    function addNewPlayer() {
-      const input = document.getElementById('new-player-name-input');
-      const name = input.value.trim();
-      if (!name) return;
-      if (state.playersMaster.includes(name)) {
-        alert('そのプレイヤー名は既に登録されています');
-        return;
-      }
-      state.playersMaster.push(name);
-      input.value = '';
+    function getCurrentRoundIdx() {
+      return state.currentRoundIdx[state.mode] || 0;
+    }
+
+    function setCurrentRoundIdx(idx) {
+      state.currentRoundIdx[state.mode] = idx;
       saveState();
       renderAll();
     }
 
-    // ヘッダーのプレイヤー名直接変更
-    function handleHeaderPlayerNameChange(colIdx, newPlayerName) {
+    function navigateRound(delta) {
       const mode = state.mode;
-      const trimmed = newPlayerName.trim();
+      const current = getCurrentRoundIdx();
+      const total = state.sheets[mode].length;
+      const target = current + delta;
+
+      if (target >= 0 && target < total) {
+        setCurrentRoundIdx(target);
+      }
+    }
+
+    function handlePlayerNameChange(seatIdx, newName) {
+      const mode = state.mode;
+      const trimmed = newName.trim();
       if (!trimmed) return;
-      const oldPlayerName = state.activeSeats[mode][colIdx];
-
-      state.activeSeats[mode][colIdx] = trimmed;
-
-      // マスター側を更新し、同名重複を完全に排除
-      const mIdx = state.playersMaster.indexOf(oldPlayerName);
-      if (mIdx !== -1) {
-        state.playersMaster[mIdx] = trimmed;
-      } else if (!state.playersMaster.includes(trimmed)) {
+      state.activeSeats[mode][seatIdx] = trimmed;
+      if (!state.playersMaster.includes(trimmed)) {
         state.playersMaster.push(trimmed);
       }
-
-      // 常にユニーク化
-      state.playersMaster = Array.from(new Set(state.playersMaster.map(p => p.trim()).filter(Boolean)));
-
       saveState();
       renderAll();
     }
 
-    // 各列のプレイヤー割り当て変更
-    function handleSeatPlayerChange(colIdx, newPlayerName) {
-      state.activeSeats[state.mode][colIdx] = newPlayerName;
-      saveState();
-      renderAll();
-    }
-
-    function addNewRow() {
+    function handleScoreInput(seatIdx, rawVal) {
       const mode = state.mode;
-      const colCount = state.activeSeats[mode].length;
-      state.sheets[mode].push(new Array(colCount).fill(null));
-      saveState();
-      renderSheetTable();
-
-      setTimeout(() => {
-        const lastRowIdx = state.sheets[mode].length - 1;
-        const input = document.getElementById(`cell-${lastRowIdx}-0`);
-        if (input) input.focus();
-      }, 50);
-    }
-
-    function deleteRow(rowIdx) {
-      const mode = state.mode;
-      if (state.sheets[mode].length <= 1) {
-        state.sheets[mode][0] = new Array(state.activeSeats[mode].length).fill(null);
-      } else {
-        state.sheets[mode].splice(rowIdx, 1);
-      }
-      saveState();
-      renderAll();
-    }
-
-    function handleCellInput(rowIdx, colIdx, rawValue) {
-      const trimmed = rawValue.trim();
+      const rIdx = getCurrentRoundIdx();
+      const trimmed = rawVal.trim();
       const parsed = trimmed === '' ? null : parseFloat(trimmed);
-      state.sheets[state.mode][rowIdx][colIdx] = (parsed !== null && !isNaN(parsed)) ? parsed : null;
 
-      const input = document.getElementById(`cell-${rowIdx}-${colIdx}`);
+      state.sheets[mode][rIdx][seatIdx] = (parsed !== null && !isNaN(parsed)) ? parsed : null;
+
+      // 入力値の色付け
+      const input = document.getElementById(`score-input-${seatIdx}`);
       if (input) {
-        input.className = 'score-cell-input ' + getScoreColorClass(state.sheets[state.mode][rowIdx][colIdx]);
+        input.className = 'score-input-field ' + getColorClass(state.sheets[mode][rIdx][seatIdx]);
       }
 
       saveState();
-      updateRowCalculation(rowIdx);
-      updateLeaderboardAndFooter();
+      updateStatusBanner();
     }
 
-    function getScoreColorClass(val) {
+    function getColorClass(val) {
       if (val === null || isNaN(val)) return 'val-zero';
       if (val > 0) return 'val-plus';
       if (val < 0) return 'val-minus';
       return 'val-zero';
     }
 
-    function handleKeyDown(e, rowIdx, colIdx) {
+    function completeAndNextRound() {
       const mode = state.mode;
-      const totalRows = state.sheets[mode].length;
-      const totalCols = state.activeSeats[mode].length;
+      const current = getCurrentRoundIdx();
+      const seatsCount = state.activeSeats[mode].length;
 
-      let nextRow = rowIdx;
-      let nextCol = colIdx;
-
-      if (e.key === 'Enter' || e.key === 'ArrowDown') {
-        e.preventDefault();
-        nextRow = rowIdx + 1;
-        if (nextRow >= totalRows) {
-          addNewRow();
-          return;
-        }
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        nextRow = Math.max(0, rowIdx - 1);
-      } else if (e.key === 'Tab' || e.key === 'ArrowRight') {
-        if (e.key === 'ArrowRight' && e.target.selectionStart !== e.target.value.length) return;
-        if (colIdx < totalCols - 1) {
-          nextCol = colIdx + 1;
-        } else if (rowIdx < totalRows - 1) {
-          nextRow = rowIdx + 1;
-          nextCol = 0;
-        }
-      } else if (e.key === 'ArrowLeft') {
-        if (e.target.selectionStart !== 0) return;
-        if (colIdx > 0) {
-          nextCol = colIdx - 1;
-        } else if (rowIdx > 0) {
-          nextRow = rowIdx - 1;
-          nextCol = totalCols - 1;
-        }
+      // 最後の半荘にいる場合は新規作成
+      if (current === state.sheets[mode].length - 1) {
+        state.sheets[mode].push(new Array(seatsCount).fill(null));
+        setCurrentRoundIdx(current + 1);
+      } else {
+        // 次の半荘へ移動
+        setCurrentRoundIdx(current + 1);
       }
-
-      const targetInput = document.getElementById(`cell-${nextRow}-${nextCol}`);
-      if (targetInput) targetInput.focus();
     }
 
     function renderAll() {
-      renderMasterList();
-      renderSheetTable();
-      updateLeaderboardAndFooter();
+      renderRoundNav();
+      renderPlayerCards();
+      updateStatusBanner();
     }
 
-    function renderMasterList() {
-      const container = document.getElementById('registered-players-list');
+    function renderRoundNav() {
+      const mode = state.mode;
+      const current = getCurrentRoundIdx();
+      const total = state.sheets[mode].length;
+
+      document.getElementById('round-indicator').innerText = `第 ${current + 1} / ${total} 半荘`;
+      document.getElementById('btn-prev-round').disabled = (current === 0);
+      document.getElementById('btn-next-round-nav').disabled = (current === total - 1);
+    }
+
+    function renderPlayerCards() {
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const rIdx = getCurrentRoundIdx();
+      const currentScores = state.sheets[mode][rIdx] || new Array(seats.length).fill(null);
+
+      // プレイヤーごとの通算計算
+      const totalMap = {};
+      seats.forEach(s => totalMap[s] = 0);
+      state.sheets[mode].forEach(row => {
+        if (row.every(v => v !== null && !isNaN(v))) {
+          const sum = Math.round(row.reduce((a, b) => a + b, 0) * 10) / 10;
+          if (Math.abs(sum) < 0.001) {
+            row.forEach((pt, sIdx) => {
+              const pName = seats[sIdx];
+              totalMap[pName] = (totalMap[pName] || 0) + pt;
+            });
+          }
+        }
+      });
+
+      const container = document.getElementById('players-grid-container');
+      container.className = `players-grid ${mode === '3p' ? 'grid-3p' : ''}`;
       container.innerHTML = '';
 
-      state.playersMaster.forEach((pName, idx) => {
-        const tag = document.createElement('span');
-        tag.className = 'player-tag';
-        tag.innerHTML = `
-          <span>${pName}</span>
-          <button class="btn-del-player" onclick="deletePlayer('${pName.replace(/'/g, "\\'")}')" title="${pName}を削除">✕</button>
+      seats.forEach((pName, sIdx) => {
+        const val = currentScores[sIdx];
+        const colorClass = getColorClass(val);
+        const displayVal = (val !== null && !isNaN(val)) ? (val > 0 ? `+${val}` : val) : '';
+        const totalPt = (Math.round(totalMap[pName] * 10) / 10).toFixed(1);
+        const totalFormatted = totalPt > 0 ? `+${totalPt}` : totalPt;
+
+        const card = document.createElement('div');
+        card.className = 'player-card';
+        card.innerHTML = `
+          <div class="card-top-row">
+            <input type="text" class="player-name-field" value="${pName}"
+              onchange="handlePlayerNameChange(${sIdx}, this.value)"
+              placeholder="プレイヤー名">
+            <span class="player-total-badge">通算: ${totalFormatted}</span>
+          </div>
+          <div class="score-input-wrap">
+            <input type="number" step="0.1" inputmode="decimal"
+              class="score-input-field ${colorClass}"
+              id="score-input-${sIdx}"
+              value="${displayVal}"
+              placeholder="0"
+              oninput="handleScoreInput(${sIdx}, this.value)">
+          </div>
+          <div style="font-size: 0.68rem; color: var(--text-muted); text-align: center;">
+            スコア(pt)を直接入力
+          </div>
         `;
-        container.appendChild(tag);
+        container.appendChild(card);
       });
     }
 
-    function deletePlayer(targetName) {
-      // 最低限の人数チェック
-      const minRequired = state.mode === '4p' ? 4 : 3;
-      if (state.playersMaster.length <= minRequired) {
-        alert(`${state.mode === '4p' ? '四人' : '三人'}麻雀では最低${minRequired}名のプレイヤーが必要です。これ以上削除できません。`);
-        return;
-      }
-
-      if (confirm(`プレイヤー「${targetName}」をマスターから削除しますか？`)) {
-        // マスターから除外
-        state.playersMaster = state.playersMaster.filter(p => p !== targetName);
-
-        // 現在着席中の場合は別のプレイヤーまたはデフォルト名に置換
-        ['4p', '3p'].forEach(m => {
-          state.activeSeats[m] = state.activeSeats[m].map((seatedName, sIdx) => {
-            if (seatedName === targetName) {
-              const fallback = state.playersMaster.find(p => !state.activeSeats[m].includes(p)) || state.playersMaster[sIdx] || `P${sIdx+1}`;
-              return fallback;
-            }
-            return seatedName;
-          });
-        });
-
-        saveState();
-        renderAll();
-      }
-    }
-
-    function renderSheetTable() {
+    function updateStatusBanner() {
       const mode = state.mode;
       const seats = state.activeSeats[mode];
-      const rows = state.sheets[mode];
-
-      // 1. ヘッダー (プレイヤー名 直接入力可能なインプット)
-      const theadRow = document.getElementById('sheet-head-row');
-      let thHtml = `<th class="th-round">#</th>`;
-
-      seats.forEach((currentP, colIdx) => {
-        thHtml += `
-          <th class="th-player">
-            <input type="text" class="player-select-header" value="${currentP}"
-              placeholder="プレイヤー${colIdx+1}"
-              onchange="handleHeaderPlayerNameChange(${colIdx}, this.value)"
-              title="タップしてプレイヤー名を変更できます">
-          </th>
-        `;
-      });
-
-      thHtml += `<th class="th-status">合計0チェック</th><th class="th-action"></th>`;
-      theadRow.innerHTML = thHtml;
-
-      // 2. 行描画
-      const tbody = document.getElementById('sheet-body');
-      tbody.innerHTML = '';
-
-      rows.forEach((row, rowIdx) => {
-        const tr = document.createElement('tr');
-        tr.id = `row-${rowIdx}`;
-
-        let rowHtml = `<td class="round-num-cell">${rowIdx + 1}</td>`;
-
-        seats.forEach((_, colIdx) => {
-          const val = row[colIdx];
-          const colorClass = getScoreColorClass(val);
-
-          rowHtml += `
-            <td>
-              <div class="cell-box">
-                <input type="number" step="0.1" class="score-cell-input ${colorClass}"
-                  id="cell-${rowIdx}-${colIdx}"
-                  value="${val !== null ? val : ''}"
-                  placeholder="0"
-                  oninput="handleCellInput(${rowIdx}, ${colIdx}, this.value)"
-                  onkeydown="handleKeyDown(event, ${rowIdx}, ${colIdx})">
-              </div>
-            </td>
-          `;
-        });
-
-        rowHtml += `
-          <td id="status-${rowIdx}" class="status-cell status-empty">未入力</td>
-          <td>
-            <button class="btn-row-del" onclick="deleteRow(${rowIdx})" title="行削除">✕</button>
-          </td>
-        `;
-
-        tr.innerHTML = rowHtml;
-        tbody.appendChild(tr);
-
-        updateRowCalculation(rowIdx);
-      });
-    }
-
-    // 試合ごとの合計0チェック
-    function updateRowCalculation(rowIdx) {
-      const mode = state.mode;
-      const seats = state.activeSeats[mode];
-      const row = state.sheets[mode][rowIdx];
-      const statusCell = document.getElementById(`status-${rowIdx}`);
+      const rIdx = getCurrentRoundIdx();
+      const currentScores = state.sheets[mode][rIdx] || [];
 
       let sum = 0;
       let filledCount = 0;
 
-      row.forEach(v => {
+      currentScores.forEach(v => {
         if (v !== null && !isNaN(v)) {
           sum += v;
           filledCount++;
         }
       });
 
-      if (filledCount === 0) {
-        statusCell.className = 'status-cell status-empty';
-        statusCell.innerHTML = '未入力';
-        return;
-      }
+      const banner = document.getElementById('status-banner');
+      const msg = document.getElementById('status-message');
+      const badge = document.getElementById('status-badge');
+      const nextBtn = document.getElementById('btn-complete-round');
 
       const roundedSum = Math.round(sum * 10) / 10;
 
+      if (filledCount === 0) {
+        banner.className = 'status-banner status-banner-wait';
+        msg.innerText = 'スコアを入力してください';
+        badge.innerText = '計 0.0';
+        nextBtn.disabled = true;
+        return;
+      }
+
       if (filledCount === seats.length) {
         if (Math.abs(roundedSum) < 0.001) {
-          statusCell.className = 'status-cell status-ok';
-          statusCell.innerHTML = `✅ 合計 0.0 (OK)`;
+          // 合計 0 でOK！
+          banner.className = 'status-banner status-banner-ok';
+          msg.innerText = '✅ 合計 0.0 (整合性OK)';
+          badge.innerText = '±0 pt';
+          nextBtn.disabled = false;
         } else {
+          // 合計不整合
           const sign = roundedSum > 0 ? `+${roundedSum}` : `${roundedSum}`;
-          statusCell.className = 'status-cell status-error';
-          statusCell.innerHTML = `❌ 合計 ${sign} (不整合)`;
+          banner.className = 'status-banner status-banner-error';
+          msg.innerText = `❌ 合計が0ではありません (${sign})`;
+          badge.innerText = `${sign} pt`;
+          nextBtn.disabled = true;
         }
       } else {
-        statusCell.className = 'status-cell status-empty';
-        statusCell.innerHTML = `入力中 (${filledCount}/${seats.length})<br><span style="font-size: 0.7rem;">暫定計: ${roundedSum}</span>`;
+        // 入力中
+        banner.className = 'status-banner status-banner-wait';
+        msg.innerText = `入力中 (${filledCount}/${seats.length}名)`;
+        badge.innerText = `計 ${roundedSum > 0 ? '+' : ''}${roundedSum}`;
+        nextBtn.disabled = true;
       }
     }
 
-    // プレイヤー別通算リーダーボード & シート最下部SUM行
-    function updateLeaderboardAndFooter() {
+    // 通算リーダーボードモーダル
+    function openLeaderboard() {
       const mode = state.mode;
       const seats = state.activeSeats[mode];
-      const rows = state.sheets[mode];
+      const listEl = document.getElementById('modal-leaderboard-list');
 
-      // プレイヤーごとの集計マップ
-      const playerStats = {};
-      state.playersMaster.forEach(p => {
-        playerStats[p] = { total: 0, count: 0 };
-      });
+      const stats = {};
+      seats.forEach(s => stats[s] = { total: 0, count: 0 });
 
       let validMatches = 0;
-      const seatTotals = new Array(seats.length).fill(0);
-
-      rows.forEach(row => {
-        const isComplete = row.every(v => v !== null && !isNaN(v));
-        if (isComplete) {
+      state.sheets[mode].forEach(row => {
+        if (row.every(v => v !== null && !isNaN(v))) {
           const sum = Math.round(row.reduce((a, b) => a + b, 0) * 10) / 10;
           if (Math.abs(sum) < 0.001) {
             validMatches++;
             row.forEach((pt, idx) => {
-              const playerName = seats[idx];
-              if (playerStats[playerName]) {
-                playerStats[playerName].total += pt;
-                playerStats[playerName].count++;
+              const name = seats[idx];
+              if (stats[name]) {
+                stats[name].total += pt;
+                stats[name].count++;
               }
-              seatTotals[idx] += pt;
             });
           }
         }
       });
 
-      document.getElementById('valid-match-count-badge').innerText = `${validMatches} 半荘有効`;
+      const sorted = Object.keys(stats).sort((a, b) => stats[b].total - stats[a].total);
 
-      // 1. 通算リーダーボードカード描画
-      const container = document.getElementById('player-leaderboard-container');
-      container.innerHTML = '';
-
-      // スコア降順ソート
-      const sortedPlayers = [...state.playersMaster].sort((a, b) => {
-        return playerStats[b].total - playerStats[a].total;
-      });
-
-      sortedPlayers.forEach(pName => {
-        const stat = playerStats[pName];
-        const rounded = Math.round(stat.total * 10) / 10;
-        const colorClass = getScoreColorClass(rounded);
+      let html = `<div style="font-size:0.8rem; color:#9ca3af; margin-bottom:8px;">消化半荘: ${validMatches} 半荘</div>`;
+      sorted.forEach((name, rank) => {
+        const item = stats[name];
+        const rounded = Math.round(item.total * 10) / 10;
+        const color = rounded > 0 ? '#34d399' : (rounded < 0 ? '#f87171' : '#9ca3af');
         const formatted = rounded > 0 ? `+${rounded.toFixed(1)}` : rounded.toFixed(1);
-        const avg = stat.count > 0 ? (stat.total / stat.count).toFixed(2) : '0.00';
+        const avg = item.count > 0 ? (item.total / item.count).toFixed(1) : '0.0';
 
-        const pill = document.createElement('div');
-        pill.className = 'player-pill';
-        pill.innerHTML = `
-          <div class="pill-name">${pName}</div>
-          <div class="pill-score ${colorClass}">${formatted} <span style="font-size: 0.7rem;">pt</span></div>
-          <div class="pill-sub">${stat.count}半荘 (平均 ${avg > 0 ? '+' : ''}${avg})</div>
-        `;
-        container.appendChild(pill);
-      });
-
-      // 2. 最下行 (席ごとのSUM)
-      const footRow = document.getElementById('sheet-foot-row');
-      let footHtml = `<td class="footer-label">席通算</td>`;
-
-      seatTotals.forEach(pt => {
-        const rounded = Math.round(pt * 10) / 10;
-        const colorClass = getScoreColorClass(rounded);
-        const formatted = rounded > 0 ? `+${rounded.toFixed(1)}` : rounded.toFixed(1);
-        footHtml += `
-          <td>
-            <div class="${colorClass}">${formatted}</div>
-          </td>
+        html += `
+          <div class="leaderboard-row">
+            <div>
+              <span style="color:var(--accent-gold); font-weight:800; margin-right:6px;">${rank + 1}位</span>
+              <strong style="color:#fff;">${name}</strong>
+              <div style="font-size:0.7rem; color:#9ca3af;">${item.count}回 (平均 ${avg}pt)</div>
+            </div>
+            <div style="font-size:1.15rem; font-weight:800; color:${color};">${formatted} <span style="font-size:0.75rem;">pt</span></div>
+          </div>
         `;
       });
 
-      const totalSum = (Math.round(seatTotals.reduce((a, b) => a + b, 0) * 10) / 10).toFixed(1);
-      const sumColor = Math.abs(parseFloat(totalSum)) < 0.001 ? 'color: #34d399;' : 'color: #f87171;';
-
-      footHtml += `
-        <td class="footer-status" style="${sumColor}">
-          合計: <strong>${totalSum} pt</strong>
-        </td>
-        <td></td>
-      `;
-
-      footRow.innerHTML = footHtml;
+      listEl.innerHTML = html;
+      document.getElementById('leaderboard-modal').classList.add('open');
     }
 
-    // DB Browser for SQLite 用 SQL出力 (プレイヤー名マスター対応版)
-    function exportSqlForDbBrowser() {
+    function closeLeaderboard() {
+      document.getElementById('leaderboard-modal').classList.remove('open');
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target.id === 'leaderboard-modal') closeLeaderboard();
+    }
+
+    function exportText() {
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const rows = state.sheets[mode];
+
+      let text = `【麻雀スコア (${mode === '4p' ? '四麻' : '三麻'})】\n`;
+      let valid = 0;
+      rows.forEach((row, idx) => {
+        if (row.every(v => v !== null && !isNaN(v)) && Math.abs(row.reduce((a,b)=>a+b,0)) < 0.001) {
+          valid++;
+          const rowStr = row.map((p, sIdx) => `${seats[sIdx]}:${p > 0 ? '+' : ''}${p}`).join('  ');
+          text += `#${idx + 1}: ${rowStr}\n`;
+        }
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('クリップボードにコピーしました！');
+      }).catch(() => {
+        prompt('コピーしてください:', text);
+      });
+    }
+
+    function exportSql() {
       const mode = state.mode;
       const seats = state.activeSeats[mode];
       const rows = state.sheets[mode];
       const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-      let sql = `-- ==========================================\n`;
-      sql += `-- 麻雀スコア DB Browser for SQLite インポート用SQL\n`;
-      sql += `-- 生成日時: ${now}\n`;
-      sql += `-- モード: ${mode === '4p' ? '四人麻雀' : '三人麻雀'}\n`;
-      sql += `-- ==========================================\n\n`;
+      let sql = `BEGIN TRANSACTION;\n`;
+      sql += `INSERT INTO sessions (session_name, rule_type, created_at) VALUES ('スマホ記録 (${mode})', '${mode}', '${now}');\n`;
+      sql += `DROP TABLE IF EXISTS _temp_s;\n`;
+      sql += `CREATE TEMP TABLE _temp_s AS SELECT last_insert_rowid() AS s_id;\n`;
 
-      sql += `BEGIN TRANSACTION;\n\n`;
-
-      // プレイヤーマスター登録 (重複無視)
-      sql += `-- プレイヤーマスター\n`;
-      state.playersMaster.forEach(p => {
+      seats.forEach(p => {
         sql += `INSERT OR IGNORE INTO players (name, created_at) VALUES ('${p.replace(/'/g, "''")}', '${now}');\n`;
       });
-      sql += `\n`;
 
-      sql += `INSERT INTO sessions (session_name, rule_type, created_at) VALUES ('セット (${mode})', '${mode}', '${now}');\n`;
-      sql += `DROP TABLE IF EXISTS _temp_s;\n`;
-      sql += `CREATE TEMP TABLE _temp_s AS SELECT last_insert_rowid() AS s_id;\n\n`;
-
-      let matchNum = 1;
+      let mNum = 1;
       rows.forEach(row => {
-        const isComplete = row.every(v => v !== null && !isNaN(v));
-        if (isComplete) {
+        if (row.every(v => v !== null && !isNaN(v))) {
           const sum = Math.round(row.reduce((a, b) => a + b, 0) * 10) / 10;
-          const isValidZero = Math.abs(sum) < 0.001 ? 1 : 0;
-
-          sql += `-- 第${matchNum}半荘 (合計: ${sum}pt / 整合: ${isValidZero ? 'OK' : 'ERROR'})\n`;
-          sql += `INSERT INTO matches (session_id, round_number, total_score_sum, is_valid_zero, recorded_at) `;
-          sql += `SELECT s_id, ${matchNum}, ${sum}, ${isValidZero}, '${now}' FROM _temp_s;\n`;
-          sql += `DROP TABLE IF EXISTS _temp_m;\n`;
-          sql += `CREATE TEMP TABLE _temp_m AS SELECT last_insert_rowid() AS m_id;\n`;
-
-          row.forEach((pt, pIdx) => {
-            const pName = seats[pIdx].replace(/'/g, "''");
-            sql += `INSERT INTO match_scores (match_id, player_id, score_point) `;
-            sql += `SELECT m.m_id, p.player_id, ${pt} FROM _temp_m m, players p WHERE p.name = '${pName}';\n`;
+          sql += `INSERT INTO matches (session_id, round_number, total_score_sum, is_valid_zero, recorded_at) SELECT s_id, ${mNum}, ${sum}, ${Math.abs(sum)<0.001?1:0}, '${now}' FROM _temp_s;\n`;
+          sql += `DROP TABLE IF EXISTS _temp_m; CREATE TEMP TABLE _temp_m AS SELECT last_insert_rowid() AS m_id;\n`;
+          row.forEach((pt, idx) => {
+            sql += `INSERT INTO match_scores (match_id, player_id, score_point) SELECT m.m_id, p.player_id, ${pt} FROM _temp_m m, players p WHERE p.name = '${seats[idx].replace(/'/g, "''")}';\n`;
           });
-          sql += `\n`;
-          matchNum++;
+          mNum++;
         }
       });
-
-      sql += `DROP TABLE IF EXISTS _temp_m;\n`;
-      sql += `DROP TABLE IF EXISTS _temp_s;\n`;
       sql += `COMMIT;\n`;
 
       const blob = new Blob([sql], { type: 'text/sql;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `mahjong_players_${mode}_${new Date().toISOString().slice(0,10)}.sql`;
+      a.download = `mahjong_score_${mode}.sql`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     }
 
-    function exportSpreadsheetText() {
-      const mode = state.mode;
-      const seats = state.activeSeats[mode];
-      const rows = state.sheets[mode];
-
-      let text = `【麻雀スコアシート (${mode === '4p' ? '四麻' : '三麻'})】\n`;
-      text += `座席: ${seats.join(' | ')}\n`;
-      text += `------------------------------------\n`;
-
-      let validCount = 0;
-      rows.forEach((row, idx) => {
-        const isComplete = row.every(v => v !== null && !isNaN(v));
-        if (isComplete) {
-          const sum = Math.round(row.reduce((a, b) => a + b, 0) * 10) / 10;
-          if (Math.abs(sum) < 0.001) {
-            validCount++;
-            const rowStr = row.map((p, pIdx) => `${seats[pIdx]}:${p > 0 ? '+' : ''}${p}`).join('  ');
-            text += `#${idx + 1}: ${rowStr}\n`;
-          }
-        }
-      });
-
-      text += `------------------------------------\n`;
-      text += `プレイヤー別通算スコア:\n`;
-      state.playersMaster.forEach(pName => {
-        let total = 0;
-        let count = 0;
-        rows.forEach(row => {
-          if (row.every(v => v !== null && !isNaN(v)) && Math.abs(row.reduce((a,b)=>a+b,0)) < 0.001) {
-            row.forEach((pt, idx) => {
-              if (seats[idx] === pName) {
-                total += pt;
-                count++;
-              }
-            });
-          }
-        });
-        const rounded = (Math.round(total * 10) / 10).toFixed(1);
-        text += `  ${pName}: ${rounded > 0 ? '+' : ''}${rounded} pt (${count}半荘)\n`;
-      });
-
-      navigator.clipboard.writeText(text).then(() => {
-        alert('クリップボードに結果をコピーしました！');
-      }).catch(() => {
-        prompt('以下のテキストをコピーしてください:', text);
-      });
-    }
-
-    function resetSpreadsheet() {
-      if (confirm('スコアシートをすべてクリアしますか？')) {
-        const colCount = state.activeSeats[state.mode].length;
-        state.sheets[state.mode] = [new Array(colCount).fill(null)];
+    function resetAllRounds() {
+      if (confirm('現在のモードの全半荘記録を初期化しますか？')) {
+        const mode = state.mode;
+        state.sheets[mode] = [new Array(state.activeSeats[mode].length).fill(null)];
+        state.currentRoundIdx[mode] = 0;
         saveState();
+        closeLeaderboard();
         renderAll();
       }
     }
