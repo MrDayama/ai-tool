@@ -3,14 +3,22 @@
  * 🀄 麻雀スコアシート × Googleスプレッドシート 自動同期スクリプト (GAS)
  * ========================================================
  * 
- * 【設定手順】
- * 1. Googleスプレッドシートを新規作成します。
- * 2. 画面上のメニュー「拡張機能」➜「Apps Script」をクリックします。
- * 3. 元からあるコードをすべて消して、このコードをそのまま貼り付けます。
+ * 【超かんたん 1分セットアップ手順】
+ * 
+ * 1. Googleドライブ (https://drive.google.com) を開き、
+ *    左上の「新規」➜「Googleスプレッドシート」をクリックして1つ作成します。
+ * 
+ * 2. 上部メニューの「拡張機能」➜「Apps Script」を開きます。
+ * 
+ * 3. 元から書いてあるコードをすべて消して、このコードをそのまま全選択貼り付けします。
+ * 
  * 4. 右上の「デプロイ」➜「新しいデプロイ」をクリックします。
- * 5. 種類の選択で「ウェブアプリ」を選びます。
- * 6. アクセスできるユーザーを「全員 (Anyone)」に設定して「デプロイ」を押します。
- * 7. 表示された「ウェブアプリのURL」をコピーして、麻雀アプリに貼り付ければ完了です！
+ *    ・ 歯車アイコン ➜「ウェブアプリ」を選択
+ *    ・ アクセスできるユーザー: 「全員」に設定
+ *    ・「デプロイ」ボタンをクリック！
+ * 
+ * 5. 発行された「ウェブアプリのURL」をコピーして、
+ *    麻雀アプリの「📊スプシ同期」画面に貼り付けて「保存」を押すだけ！
  */
 
 function doGet(e) {
@@ -45,17 +53,23 @@ function doPost(e) {
   }
 }
 
+// 初回ワンクリックでシート枠線を自動構築するヘルパー関数
+function setupSheet() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  sheet.getRange("A3").setValue("【麻雀スコアシート 自動同期連携中】").setFontWeight("bold").setFontSize(14).setFontColor("#10b981");
+  sheet.getRange("A4:F4").setValues([["半荘", "東家", "南家", "西家", "北家", "合計0チェック"]]).setBackground("#1b2a24").setFontColor("#ffffff").setFontWeight("bold");
+  SpreadsheetApp.getUi().alert("✅ 初期セットアップ完了！右上の「デプロイ」から「ウェブアプリ」として公開してください。");
+}
+
 // スプレッドシート上に見やすい一覧表を描画
 function renderHumanFriendlySheet(sheet, data) {
   var mode = data.mode || "4p";
   var seats = (data.activeSeats && data.activeSeats[mode]) ? data.activeSeats[mode] : ["東家", "南家", "西家", "北家"];
   var rows = (data.sheets && data.sheets[mode]) ? data.sheets[mode] : [];
 
-  // 3行目から表を描画
   sheet.getRange("A3").setValue("【麻雀スコア記録 (" + (mode === "4p" ? "四麻" : "三麻") + ")】");
-  sheet.getRange("A3").setFontWeight("bold");
+  sheet.getRange("A3").setFontWeight("bold").setFontSize(12);
 
-  // ヘッダー (半荘番号 + プレイヤー名 + 合計)
   var headers = ["半荘"];
   for (var i = 0; i < seats.length; i++) {
     headers.push(seats[i]);
@@ -65,7 +79,6 @@ function renderHumanFriendlySheet(sheet, data) {
   sheet.getRange(4, 1, 1, headers.length).setValues([headers]);
   sheet.getRange(4, 1, 1, headers.length).setBackground("#1b2a24").setFontColor("#ffffff").setFontWeight("bold");
 
-  // 各半荘のスコア行
   var outputRows = [];
   for (var r = 0; r < rows.length; r++) {
     var rowData = ["第" + (r + 1) + "半荘"];
