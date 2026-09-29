@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>麻雀スコアシート (リアルタイム同期版)</title>
-  <!-- PeerJS (WebRTC P2P通信用CDN) -->
-  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <title>麻雀スコアシート (スプレッドシート同期版)</title>
   <style>
     :root {
       --bg: #090e0c;
@@ -72,7 +70,7 @@
       gap: 5px;
     }
 
-    .btn-header-sync {
+    .btn-header-sheet {
       background: #14201c;
       border: 1px solid var(--card-border);
       color: var(--accent-gold);
@@ -85,7 +83,7 @@
       align-items: center;
       gap: 4px;
     }
-    .btn-header-sync.connected {
+    .btn-header-sheet.connected {
       border-color: var(--accent);
       color: #34d399;
       background: #0d2b20;
@@ -336,7 +334,7 @@
       border: 1px solid var(--card-border);
       border-radius: 12px;
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       max-height: 85vh;
       display: flex;
       flex-direction: column;
@@ -355,22 +353,12 @@
       flex: 1;
     }
 
-    /* 同期専用カード */
     .sync-card {
       background: #0d1613;
       border: 1px solid #23382f;
       border-radius: 8px;
       padding: 12px;
       margin-bottom: 12px;
-    }
-    .room-code-display {
-      font-size: 2.2rem;
-      font-weight: 900;
-      letter-spacing: 6px;
-      color: var(--accent-gold);
-      text-align: center;
-      padding: 10px 0;
-      font-family: monospace;
     }
 
     .form-inline {
@@ -431,6 +419,15 @@
       margin-bottom: 6px;
       border: 1px solid #1c2c25;
     }
+
+    .step-box {
+      background: #09130f;
+      border-left: 3px solid var(--accent);
+      padding: 8px 10px;
+      margin-bottom: 8px;
+      font-size: 0.78rem;
+      color: #d1d5db;
+    }
   </style>
 </head>
 <body>
@@ -441,9 +438,9 @@
     <header>
       <div class="app-brand">🀄 麻雀スコア</div>
       <div class="header-actions">
-        <!-- 4文字同期ボタン -->
-        <button class="btn-header-sync" id="btn-sync-status" onclick="openSyncModal()">
-          <span id="sync-dot">📡</span> <span id="sync-label">同期</span>
+        <!-- スプレッドシート同期ボタン -->
+        <button class="btn-header-sheet" id="btn-sheet-sync" onclick="openSheetModal()">
+          <span id="sheet-sync-icon">📊</span> <span id="sheet-sync-text">スプシ連携</span>
         </button>
         <button class="btn-header-manage" onclick="openPlayerModal()">👥 名簿</button>
         <div class="tab-pills">
@@ -483,51 +480,50 @@
 
   </div>
 
-  <!-- 4文字コード同期モーダル -->
-  <div class="modal-overlay" id="sync-modal" onclick="closeModalOnBackdrop(event)">
+  <!-- スプレッドシート同期モーダル -->
+  <div class="modal-overlay" id="sheet-modal" onclick="closeModalOnBackdrop(event)">
     <div class="modal-content">
       <div class="modal-header">
-        <div style="font-weight: 800; color: var(--accent-gold);">📡 4文字コード リアルタイム同期</div>
-        <button onclick="closeSyncModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
+        <div style="font-weight: 800; color: var(--accent-gold);">📊 スプレッドシート自動同期</div>
+        <button onclick="closeSheetModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
       </div>
       <div class="modal-body">
 
-        <!-- 状態表示 -->
-        <div id="sync-active-info" style="display:none;" class="sync-card">
-          <div style="font-size:0.8rem; color:#a7f3d0; text-align:center;">🟢 ルーム接続中</div>
-          <div class="room-code-display" id="active-room-code-text">----</div>
-          <div style="font-size:0.75rem; color:#9ca3af; text-align:center;">
-            この4文字を同卓者に伝えてください。<br>
-            誰かが入力すると全員の画面が瞬時に同期されます！
+        <div class="sync-card">
+          <div style="font-weight:700; color:#fff; font-size:0.88rem; margin-bottom:6px;">Google Apps Script (GAS) URL</div>
+          <div style="display:flex; gap:6px;">
+            <input type="url" id="gas-url-input" class="form-input" placeholder="https://script.google.com/macros/s/.../exec">
+            <button class="action-btn btn-next-round" style="flex:0.35;" onclick="saveGasUrl()">保存</button>
+          </div>
+          <div style="font-size:0.75rem; color:#9ca3af; margin-top:6px;" id="gas-status-text">
+            未設定 (URLを入力すると複数スマホと常時同期します)
           </div>
           <div style="margin-top:10px; display:flex; gap:6px;">
-            <button class="action-btn btn-sub" style="width:100%;" onclick="copyRoomCode()">📋 コードをコピー</button>
-            <button class="action-btn btn-sub" style="width:100%; color:#f87171;" onclick="disconnectRoom()">切断する</button>
+            <button class="action-btn btn-sub" style="width:100%;" onclick="pullFromSpreadsheet()">🔄 今すぐ最新を取得</button>
+            <button class="action-btn btn-sub" style="width:100%;" onclick="pushToSpreadsheet()">☁️ スプシへ即時送信</button>
           </div>
         </div>
 
-        <!-- ルーム作成 & 参加エリア -->
-        <div id="sync-connect-form">
-          <div class="sync-card">
-            <div style="font-weight:700; color:#fff; font-size:0.88rem; margin-bottom:4px;">1. 部屋を作る (ホスト)</div>
-            <div style="font-size:0.75rem; color:#9ca3af; margin-bottom:10px;">
-              あなたが代表で部屋を作成し、4文字コードを発行します。
-            </div>
-            <button class="action-btn btn-next-round" style="width:100%;" onclick="createRoom()">
-              ✨ 4文字コードを発行して部屋を作る
-            </button>
-          </div>
+        <div style="font-weight:700; color:var(--accent-gold); font-size:0.85rem; margin-bottom:6px;">
+          📖 初回かんたん設定ガイド (1分):
+        </div>
 
-          <div class="sync-card">
-            <div style="font-weight:700; color:#fff; font-size:0.88rem; margin-bottom:4px;">2. 部屋に参加する (ゲスト)</div>
-            <div style="font-size:0.75rem; color:#9ca3af; margin-bottom:10px;">
-              ホストから教えてもらった4文字コードを入力してください。
-            </div>
-            <div class="form-inline">
-              <input type="text" id="join-room-code-input" class="form-input" placeholder="4文字 (例: 7K9A)" maxlength="4" style="text-transform:uppercase; text-align:center; font-size:1.1rem; letter-spacing:3px;">
-              <button class="action-btn btn-next-round" style="flex:0.5;" onclick="joinRoom()">参加</button>
-            </div>
-          </div>
+        <div class="step-box">
+          <strong>① スプレッドシートを1つ作成</strong><br>
+          Googleドライブで「空白のスプレッドシート」を新規作成します。
+        </div>
+
+        <div class="step-box">
+          <strong>② Apps Script を開いてコードを貼る</strong><br>
+          メニューの「拡張機能」➜「Apps Script」を開き、専用スクリプトを貼り付けます。<br>
+          <button onclick="copyGasScriptTemplate()" class="action-btn btn-sub" style="width:100%; margin-top:4px; padding:6px 0;">
+            📋 GASスクリプトコードをコピー
+          </button>
+        </div>
+
+        <div class="step-box">
+          <strong>③ ウェブアプリとして公開 (デプロイ)</strong><br>
+          右上の「デプロイ」➜「新しいデプロイ」➜ 種類「ウェブアプリ」➜ アクセス「全員」にして公開。発行されたURLを上の枠に貼るだけ！
         </div>
 
       </div>
@@ -606,7 +602,8 @@
       }
     };
 
-    let state = JSON.parse(localStorage.getItem('mahjong_mobile_sync_state')) || DEFAULT_DATA;
+    let state = JSON.parse(localStorage.getItem('mahjong_app_state_v3')) || DEFAULT_DATA;
+    let gasSyncUrl = localStorage.getItem('mahjong_gas_sync_url') || '';
 
     // 重複排除＆マイグレーション
     state.playersMaster = Array.from(new Set((state.playersMaster || ['東家', '南家', '西家', '北家']).map(p => p.trim()).filter(Boolean)));
@@ -628,182 +625,160 @@
     });
 
     /* ===================================================
-       🌐 4文字コード WebRTC リアルタイム同期ロジック
+       📊 Googleスプレッドシート (GAS) 自動同期エンジン
        =================================================== */
-    let peer = null;
-    let connections = []; // ホストの場合は複数クライアント、ゲストの場合はホスト1本
-    let currentRoomCode = null;
-    let isHost = false;
+    let isSyncing = false;
+    let autoSyncTimer = null;
 
-    // ランダム4文字コード生成 (アルファベット大文字+数字、見間違えやすいO,0,I,1を除外)
-    function generate4LetterCode() {
-      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-      let code = '';
-      for (let i = 0; i < 4; i++) {
-        code += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-      return code;
-    }
-
-    // ホストとしてルーム作成
-    function createRoom() {
-      const code = generate4LetterCode();
-      initPeer(code, true);
-    }
-
-    // ゲストとして参加
-    function joinRoom() {
-      const input = document.getElementById('join-room-code-input');
-      const code = input.value.trim().toUpperCase();
-      if (code.length !== 4) {
-        alert('4文字の英数字コードを入力してください');
-        return;
-      }
-      initPeer(null, false, code);
-    }
-
-    function initPeer(customCode, asHost, targetHostCode = null) {
-      if (peer) {
-        try { peer.destroy(); } catch(e){}
-      }
-
-      const peerPrefix = "mj-score-room-";
-      const peerId = asHost ? (peerPrefix + customCode) : undefined;
-
-      peer = new Peer(peerId, {
-        debug: 1
-      });
-
-      peer.on('open', (id) => {
-        if (asHost) {
-          isHost = true;
-          currentRoomCode = customCode;
-          updateSyncUI(true, customCode);
-          console.log("ホストルーム作成完了:", customCode);
-        } else if (targetHostCode) {
-          isHost = false;
-          currentRoomCode = targetHostCode;
-          const hostPeerId = peerPrefix + targetHostCode;
-          const conn = peer.connect(hostPeerId, { reliable: true });
-
-          setupConnection(conn);
-          updateSyncUI(true, targetHostCode);
-        }
-      });
-
-      // ホスト側: ゲストからの接続受付
-      peer.on('connection', (conn) => {
-        setupConnection(conn);
-        // 接続直後に現在のStateを送信
-        setTimeout(() => {
-          conn.send({ type: 'SYNC_STATE', payload: state });
-        }, 300);
-      });
-
-      peer.on('error', (err) => {
-        console.error("Peerエラー:", err);
-        if (err.type === 'unavailable-id') {
-          alert('このコードは既に使用されています。別のコードを発行します。');
-          if (asHost) createRoom();
-        } else if (err.type === 'peer-unavailable') {
-          alert('指定した4文字の部屋が見つかりませんでした。コードを確認してください。');
-          disconnectRoom();
-        } else {
-          alert('通信接続エラー: ' + err.type);
-        }
-      });
-    }
-
-    function setupConnection(conn) {
-      conn.on('open', () => {
-        connections.push(conn);
-        updateConnectedCountBadge();
-        console.log("接続確立:", conn.peer);
-      });
-
-      conn.on('data', (data) => {
-        if (data.type === 'SYNC_STATE') {
-          state = data.payload;
-          localStorage.setItem('mahjong_mobile_sync_state', JSON.stringify(state));
-          renderAll();
-
-          // ホストの場合、他のゲスト全員にも中継ブロードキャスト
-          if (isHost) {
-            connections.forEach(c => {
-              if (c !== conn && c.open) {
-                c.send(data);
-              }
-            });
-          }
-        }
-      });
-
-      conn.on('close', () => {
-        connections = connections.filter(c => c !== conn);
-        updateConnectedCountBadge();
-      });
-    }
-
-    // Stateが変更されたら全接続ピアにブロードキャスト
-    function broadcastState() {
-      saveState();
-      if (connections.length > 0) {
-        connections.forEach(conn => {
-          if (conn.open) {
-            conn.send({ type: 'SYNC_STATE', payload: state });
-          }
-        });
-      }
-    }
-
-    function updateSyncUI(connected, code) {
-      const activeCard = document.getElementById('sync-active-info');
-      const formCard = document.getElementById('sync-connect-form');
-      const codeText = document.getElementById('active-room-code-text');
-      const statusBtn = document.getElementById('btn-sync-status');
-      const dot = document.getElementById('sync-dot');
-      const label = document.getElementById('sync-label');
-
-      if (connected) {
-        activeCard.style.display = 'block';
-        formCard.style.display = 'none';
-        codeText.innerText = code;
-        statusBtn.classList.add('connected');
-        dot.innerText = '🟢';
-        label.innerText = code;
+    function saveGasUrl() {
+      const input = document.getElementById('gas-url-input');
+      gasSyncUrl = input.value.trim();
+      localStorage.setItem('mahjong_gas_sync_url', gasSyncUrl);
+      updateGasUIStatus();
+      if (gasSyncUrl) {
+        pullFromSpreadsheet();
+        startAutoSync();
+        alert('Googleスプレッドシート連携URLを保存しました！');
       } else {
-        activeCard.style.display = 'none';
-        formCard.style.display = 'block';
-        statusBtn.classList.remove('connected');
-        dot.innerText = '📡';
-        label.innerText = '同期';
+        stopAutoSync();
       }
     }
 
-    function updateConnectedCountBadge() {
-      const label = document.getElementById('sync-label');
-      if (currentRoomCode) {
-        label.innerText = `${currentRoomCode} (${connections.length + 1})`;
+    function updateGasUIStatus() {
+      const btn = document.getElementById('btn-sheet-sync');
+      const icon = document.getElementById('sheet-sync-icon');
+      const text = document.getElementById('sheet-sync-text');
+      const statusText = document.getElementById('gas-status-text');
+
+      if (gasSyncUrl) {
+        btn.classList.add('connected');
+        icon.innerText = '🟢';
+        text.innerText = 'スプシ同期中';
+        if (statusText) statusText.innerHTML = '<span style="color:#34d399;">🟢 スプレッドシート連携中 (自動送受信)</span>';
+      } else {
+        btn.classList.remove('connected');
+        icon.innerText = '📊';
+        text.innerText = 'スプシ連携';
+        if (statusText) statusText.innerHTML = '未設定 (URLを入力すると複数スマホと常時同期します)';
       }
     }
 
-    function disconnectRoom() {
-      if (peer) {
-        peer.destroy();
-        peer = null;
-      }
-      connections = [];
-      currentRoomCode = null;
-      isHost = false;
-      updateSyncUI(false, null);
+    // スプレッドシートへ最新データを送信 (Push)
+    function pushToSpreadsheet() {
+      if (!gasSyncUrl || isSyncing) return;
+      isSyncing = true;
+      const icon = document.getElementById('sheet-sync-icon');
+      if (icon) icon.innerText = '⏳';
+
+      fetch(gasSyncUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(state)
+      })
+      .then(res => res.json())
+      .then(res => {
+        console.log("スプレッドシート送信成功:", res);
+      })
+      .catch(err => {
+        console.error("スプレッドシート送信エラー:", err);
+      })
+      .finally(() => {
+        isSyncing = false;
+        updateGasUIStatus();
+      });
     }
 
-    function copyRoomCode() {
-      if (!currentRoomCode) return;
-      navigator.clipboard.writeText(currentRoomCode).then(() => {
-        alert(`4文字コード「${currentRoomCode}」をコピーしました！`);
+    // スプレッドシートから最新データを取得 (Pull)
+    function pullFromSpreadsheet() {
+      if (!gasSyncUrl || isSyncing) return;
+      isSyncing = true;
+      const icon = document.getElementById('sheet-sync-icon');
+      if (icon) icon.innerText = '⏳';
+
+      fetch(gasSyncUrl)
+      .then(res => res.json())
+      .then(remoteData => {
+        if (remoteData && !remoteData.empty && remoteData.sheets) {
+          state = remoteData;
+          saveState(false); // 送信ループ防止のためPushはスキップ
+          renderAll();
+          console.log("スプレッドシートから最新データを同期しました");
+        }
+      })
+      .catch(err => {
+        console.error("スプレッドシート取得エラー:", err);
+      })
+      .finally(() => {
+        isSyncing = false;
+        updateGasUIStatus();
+      });
+    }
+
+    // 10秒おきに自動チェック (他の同卓者が更新したデータを自動反映)
+    function startAutoSync() {
+      stopAutoSync();
+      autoSyncTimer = setInterval(() => {
+        if (gasSyncUrl && !isSyncing) {
+          pullFromSpreadsheet();
+        }
+      }, 10000);
+    }
+
+    function stopAutoSync() {
+      if (autoSyncTimer) clearInterval(autoSyncTimer);
+    }
+
+    // GASスクリプトのテンプレートをワンクリックコピー
+    function copyGasScriptTemplate() {
+      const gasCode = `function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var jsonCell = sheet.getRange("A1").getValue();
+  if (!jsonCell) jsonCell = JSON.stringify({ empty: true });
+  return ContentService.createTextOutput(jsonCell).setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    var rawData = e.postData.contents;
+    var data = JSON.parse(rawData);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    sheet.getRange("A1").setValue(rawData);
+    renderHumanFriendlySheet(sheet, data);
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" })).setMimeType(ContentService.MimeType.JSON);
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function renderHumanFriendlySheet(sheet, data) {
+  var mode = data.mode || "4p";
+  var seats = (data.activeSeats && data.activeSeats[mode]) ? data.activeSeats[mode] : ["東家", "南家", "西家", "北家"];
+  var rows = (data.sheets && data.sheets[mode]) ? data.sheets[mode] : [];
+  sheet.getRange("A3").setValue("【麻雀スコア記録 (" + (mode === "4p" ? "四麻" : "三麻") + ")】").setFontWeight("bold");
+  var headers = ["半荘"];
+  for (var i = 0; i < seats.length; i++) headers.push(seats[i]);
+  headers.push("合計チェック");
+  sheet.getRange(4, 1, 1, headers.length).setValues([headers]).setBackground("#1b2a24").setFontColor("#ffffff").setFontWeight("bold");
+  var outputRows = [];
+  for (var r = 0; r < rows.length; r++) {
+    var rowData = ["第" + (r + 1) + "半荘"];
+    var sum = 0, filled = true;
+    for (var c = 0; c < seats.length; c++) {
+      var val = rows[r][c];
+      if (val !== null && val !== undefined && val !== "") { rowData.push(Number(val)); sum += Number(val); }
+      else { rowData.push(""); filled = false; }
+    }
+    var roundedSum = Math.round(sum * 10) / 10;
+    rowData.push(filled ? (Math.abs(roundedSum) < 0.001 ? "OK (0.0)" : "ERROR (" + roundedSum + ")") : "入力中");
+    outputRows.push(rowData);
+  }
+  if (outputRows.length > 0) sheet.getRange(5, 1, outputRows.length, headers.length).setValues(outputRows);
+}`;
+
+      navigator.clipboard.writeText(gasCode).then(() => {
+        alert('GASコードをクリップボードにコピーしました！\nApps Scriptに貼り付けてデプロイしてください。');
       }).catch(() => {
-        prompt('コードをコピーしてください:', currentRoomCode);
+        prompt('コードをコピーしてください:', gasCode);
       });
     }
 
@@ -812,18 +787,27 @@
        =================================================== */
 
     document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('gas-url-input').value = gasSyncUrl;
+      updateGasUIStatus();
+      if (gasSyncUrl) {
+        pullFromSpreadsheet();
+        startAutoSync();
+      }
       renderAll();
     });
 
-    function saveState() {
-      localStorage.setItem('mahjong_mobile_sync_state', JSON.stringify(state));
+    function saveState(shouldPush = true) {
+      localStorage.setItem('mahjong_app_state_v3', JSON.stringify(state));
+      if (shouldPush && gasSyncUrl) {
+        pushToSpreadsheet();
+      }
     }
 
     function switchMode(newMode) {
       state.mode = newMode;
       document.getElementById('tab-4p').classList.toggle('active', newMode === '4p');
       document.getElementById('tab-3p').classList.toggle('active', newMode === '3p');
-      broadcastState();
+      saveState(true);
       renderAll();
     }
 
@@ -833,7 +817,7 @@
 
     function setCurrentRoundIdx(idx) {
       state.currentRoundIdx[state.mode] = idx;
-      broadcastState();
+      saveState(true);
       renderAll();
     }
 
@@ -860,7 +844,7 @@
         input.className = 'score-input-field ' + getColorClass(state.sheets[mode][rIdx][seatIdx]);
       }
 
-      broadcastState();
+      saveState(true);
       updateStatusBanner();
     }
 
@@ -906,7 +890,6 @@
       const rIdx = getCurrentRoundIdx();
       const currentScores = state.sheets[mode][rIdx] || new Array(seats.length).fill(null);
 
-      // プレイヤーごとの通算計算
       const totalMap = {};
       seats.forEach(s => totalMap[s] = 0);
       state.sheets[mode].forEach(row => {
@@ -1010,11 +993,11 @@
     }
 
     /* モーダル共通操作 */
-    function openSyncModal() {
-      document.getElementById('sync-modal').classList.add('open');
+    function openSheetModal() {
+      document.getElementById('sheet-modal').classList.add('open');
     }
-    function closeSyncModal() {
-      document.getElementById('sync-modal').classList.remove('open');
+    function closeSheetModal() {
+      document.getElementById('sheet-modal').classList.remove('open');
     }
 
     function openPlayerModal() {
@@ -1037,7 +1020,7 @@
       }
       state.playersMaster.push(name);
       input.value = '';
-      broadcastState();
+      saveState(true);
       renderModalPlayerList();
       renderModalSeatSelectors();
     }
@@ -1058,7 +1041,7 @@
             return sName;
           });
         });
-        broadcastState();
+        saveState(true);
         renderModalPlayerList();
         renderModalSeatSelectors();
       }
@@ -1108,7 +1091,7 @@
 
     function changeSeatPlayer(seatIdx, newPlayerName) {
       state.activeSeats[state.mode][seatIdx] = newPlayerName;
-      broadcastState();
+      saveState(true);
     }
 
     function openLeaderboard() {
@@ -1167,7 +1150,7 @@
     }
 
     function closeModalOnBackdrop(e) {
-      if (e.target.id === 'sync-modal') closeSyncModal();
+      if (e.target.id === 'sheet-modal') closeSheetModal();
       if (e.target.id === 'player-modal') closePlayerModal();
       if (e.target.id === 'leaderboard-modal') closeLeaderboard();
     }
@@ -1238,7 +1221,7 @@
         const mode = state.mode;
         state.sheets[mode] = [new Array(state.activeSeats[mode].length).fill(null)];
         state.currentRoundIdx[mode] = 0;
-        broadcastState();
+        saveState(true);
         closeLeaderboard();
         renderAll();
       }
