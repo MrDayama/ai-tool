@@ -3,7 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>麻雀スコアシート</title>
+  <title>麻雀スコアシート (リアルタイム同期版)</title>
+  <!-- PeerJS (WebRTC P2P通信用CDN) -->
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <style>
     :root {
       --bg: #090e0c;
@@ -51,29 +53,51 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 4px 2px;
+      padding: 2px 0;
       flex-shrink: 0;
     }
 
     .app-brand {
-      font-size: 1rem;
+      font-size: 0.95rem;
       font-weight: 800;
       color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
+    }
+
+    .btn-header-sync {
+      background: #14201c;
+      border: 1px solid var(--card-border);
+      color: var(--accent-gold);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 7px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-header-sync.connected {
+      border-color: var(--accent);
+      color: #34d399;
+      background: #0d2b20;
     }
 
     .btn-header-manage {
       background: #14201c;
       border: 1px solid var(--card-border);
-      color: var(--accent-gold);
-      font-size: 0.78rem;
+      color: #d1d5db;
+      font-size: 0.75rem;
       font-weight: 700;
-      padding: 4px 8px;
+      padding: 4px 7px;
       border-radius: 6px;
       cursor: pointer;
     }
@@ -89,9 +113,9 @@
       border: none;
       background: transparent;
       color: var(--text-muted);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
       font-weight: 700;
-      padding: 4px 8px;
+      padding: 4px 7px;
       border-radius: 4px;
       cursor: pointer;
     }
@@ -109,7 +133,7 @@
       border: 1px solid var(--card-border);
       border-radius: 8px;
       padding: 6px 10px;
-      margin: 4px 0;
+      margin: 3px 0;
       flex-shrink: 0;
     }
 
@@ -235,7 +259,7 @@
       align-items: center;
       font-size: 0.88rem;
       font-weight: 700;
-      margin: 4px 0;
+      margin: 3px 0;
       flex-shrink: 0;
     }
     .status-banner-ok {
@@ -331,7 +355,43 @@
       flex: 1;
     }
 
-    /* プレイヤーマスター用タグ */
+    /* 同期専用カード */
+    .sync-card {
+      background: #0d1613;
+      border: 1px solid #23382f;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .room-code-display {
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: var(--accent-gold);
+      text-align: center;
+      padding: 10px 0;
+      font-family: monospace;
+    }
+
+    .form-inline {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .form-input {
+      flex: 1;
+      background: #09120f;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: #fff;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
     .player-tag-row {
       display: flex;
       flex-wrap: wrap;
@@ -361,25 +421,6 @@
       color: var(--danger);
     }
 
-    .form-inline {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 14px;
-    }
-    .form-input {
-      flex: 1;
-      background: #09120f;
-      border: 1px solid var(--card-border);
-      border-radius: 6px;
-      color: #fff;
-      padding: 8px 10px;
-      font-size: 0.9rem;
-    }
-    .form-input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
     .leaderboard-row {
       display: flex;
       justify-content: space-between;
@@ -400,7 +441,11 @@
     <header>
       <div class="app-brand">🀄 麻雀スコア</div>
       <div class="header-actions">
-        <button class="btn-header-manage" onclick="openPlayerModal()">👥 プレイヤー</button>
+        <!-- 4文字同期ボタン -->
+        <button class="btn-header-sync" id="btn-sync-status" onclick="openSyncModal()">
+          <span id="sync-dot">📡</span> <span id="sync-label">同期</span>
+        </button>
+        <button class="btn-header-manage" onclick="openPlayerModal()">👥 名簿</button>
         <div class="tab-pills">
           <button class="tab-pill active" id="tab-4p" onclick="switchMode('4p')">四麻</button>
           <button class="tab-pill" id="tab-3p" onclick="switchMode('3p')">三麻</button>
@@ -438,11 +483,62 @@
 
   </div>
 
+  <!-- 4文字コード同期モーダル -->
+  <div class="modal-overlay" id="sync-modal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="font-weight: 800; color: var(--accent-gold);">📡 4文字コード リアルタイム同期</div>
+        <button onclick="closeSyncModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body">
+
+        <!-- 状態表示 -->
+        <div id="sync-active-info" style="display:none;" class="sync-card">
+          <div style="font-size:0.8rem; color:#a7f3d0; text-align:center;">🟢 ルーム接続中</div>
+          <div class="room-code-display" id="active-room-code-text">----</div>
+          <div style="font-size:0.75rem; color:#9ca3af; text-align:center;">
+            この4文字を同卓者に伝えてください。<br>
+            誰かが入力すると全員の画面が瞬時に同期されます！
+          </div>
+          <div style="margin-top:10px; display:flex; gap:6px;">
+            <button class="action-btn btn-sub" style="width:100%;" onclick="copyRoomCode()">📋 コードをコピー</button>
+            <button class="action-btn btn-sub" style="width:100%; color:#f87171;" onclick="disconnectRoom()">切断する</button>
+          </div>
+        </div>
+
+        <!-- ルーム作成 & 参加エリア -->
+        <div id="sync-connect-form">
+          <div class="sync-card">
+            <div style="font-weight:700; color:#fff; font-size:0.88rem; margin-bottom:4px;">1. 部屋を作る (ホスト)</div>
+            <div style="font-size:0.75rem; color:#9ca3af; margin-bottom:10px;">
+              あなたが代表で部屋を作成し、4文字コードを発行します。
+            </div>
+            <button class="action-btn btn-next-round" style="width:100%;" onclick="createRoom()">
+              ✨ 4文字コードを発行して部屋を作る
+            </button>
+          </div>
+
+          <div class="sync-card">
+            <div style="font-weight:700; color:#fff; font-size:0.88rem; margin-bottom:4px;">2. 部屋に参加する (ゲスト)</div>
+            <div style="font-size:0.75rem; color:#9ca3af; margin-bottom:10px;">
+              ホストから教えてもらった4文字コードを入力してください。
+            </div>
+            <div class="form-inline">
+              <input type="text" id="join-room-code-input" class="form-input" placeholder="4文字 (例: 7K9A)" maxlength="4" style="text-transform:uppercase; text-align:center; font-size:1.1rem; letter-spacing:3px;">
+              <button class="action-btn btn-next-round" style="flex:0.5;" onclick="joinRoom()">参加</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
   <!-- プレイヤー管理モーダル -->
   <div class="modal-overlay" id="player-modal" onclick="closeModalOnBackdrop(event)">
     <div class="modal-content">
       <div class="modal-header">
-        <div style="font-weight: 800; color: var(--accent-gold);">👥 プレイヤーマスター管理</div>
+        <div style="font-weight: 800; color: var(--accent-gold);">👥 プレイヤー名簿</div>
         <button onclick="closePlayerModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
       </div>
       <div class="modal-body">
@@ -453,15 +549,11 @@
         </div>
 
         <div style="font-size:0.8rem; color:#9ca3af; margin-top:10px;">登録プレイヤー一覧 (✕で削除):</div>
-        <div class="player-tag-row" id="modal-player-tags">
-          <!-- タグと削除ボタン -->
-        </div>
+        <div class="player-tag-row" id="modal-player-tags"></div>
 
         <div style="margin-top:16px; border-top:1px solid var(--card-border); padding-top:12px;">
-          <div style="font-size:0.8rem; color:var(--accent-gold); font-weight:700; margin-bottom:6px;">現在の対局メンバー選択:</div>
-          <div id="modal-seat-selectors" style="display:flex; flex-direction:column; gap:8px;">
-            <!-- 各席のプレイヤー選択セレクト -->
-          </div>
+          <div style="font-size:0.8rem; color:var(--accent-gold); font-weight:700; margin-bottom:6px;">対局メンバー席替え:</div>
+          <div id="modal-seat-selectors" style="display:flex; flex-direction:column; gap:8px;"></div>
         </div>
       </div>
     </div>
@@ -475,9 +567,7 @@
         <button onclick="closeLeaderboard()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
       </div>
       <div class="modal-body">
-        <div id="modal-leaderboard-list">
-          <!-- 通算ランキング -->
-        </div>
+        <div id="modal-leaderboard-list"></div>
 
         <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
           <button class="action-btn btn-sub" style="width: 100%;" onclick="exportText()">
@@ -516,15 +606,15 @@
       }
     };
 
-    let state = JSON.parse(localStorage.getItem('mahjong_mobile_fit_state')) || DEFAULT_DATA;
+    let state = JSON.parse(localStorage.getItem('mahjong_mobile_sync_state')) || DEFAULT_DATA;
 
     // 重複排除＆マイグレーション
     state.playersMaster = Array.from(new Set((state.playersMaster || ['東家', '南家', '西家', '北家']).map(p => p.trim()).filter(Boolean)));
     if (!state.currentRoundIdx) state.currentRoundIdx = { '4p': 0, '3p': 0 };
-    if (!state.activeSeats) {
-      state.activeSeats = {
-        '4p': state.playersMaster.slice(0, 4),
-        '3p': state.playersMaster.slice(0, 3)
+    if (!state.sheets) {
+      state.sheets = {
+        '4p': [[null, null, null, null]],
+        '3p': [[null, null, null]]
       };
     }
     ['4p', '3p'].forEach(m => {
@@ -537,19 +627,203 @@
       }
     });
 
+    /* ===================================================
+       🌐 4文字コード WebRTC リアルタイム同期ロジック
+       =================================================== */
+    let peer = null;
+    let connections = []; // ホストの場合は複数クライアント、ゲストの場合はホスト1本
+    let currentRoomCode = null;
+    let isHost = false;
+
+    // ランダム4文字コード生成 (アルファベット大文字+数字、見間違えやすいO,0,I,1を除外)
+    function generate4LetterCode() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+      let code = '';
+      for (let i = 0; i < 4; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return code;
+    }
+
+    // ホストとしてルーム作成
+    function createRoom() {
+      const code = generate4LetterCode();
+      initPeer(code, true);
+    }
+
+    // ゲストとして参加
+    function joinRoom() {
+      const input = document.getElementById('join-room-code-input');
+      const code = input.value.trim().toUpperCase();
+      if (code.length !== 4) {
+        alert('4文字の英数字コードを入力してください');
+        return;
+      }
+      initPeer(null, false, code);
+    }
+
+    function initPeer(customCode, asHost, targetHostCode = null) {
+      if (peer) {
+        try { peer.destroy(); } catch(e){}
+      }
+
+      const peerPrefix = "mj-score-room-";
+      const peerId = asHost ? (peerPrefix + customCode) : undefined;
+
+      peer = new Peer(peerId, {
+        debug: 1
+      });
+
+      peer.on('open', (id) => {
+        if (asHost) {
+          isHost = true;
+          currentRoomCode = customCode;
+          updateSyncUI(true, customCode);
+          console.log("ホストルーム作成完了:", customCode);
+        } else if (targetHostCode) {
+          isHost = false;
+          currentRoomCode = targetHostCode;
+          const hostPeerId = peerPrefix + targetHostCode;
+          const conn = peer.connect(hostPeerId, { reliable: true });
+
+          setupConnection(conn);
+          updateSyncUI(true, targetHostCode);
+        }
+      });
+
+      // ホスト側: ゲストからの接続受付
+      peer.on('connection', (conn) => {
+        setupConnection(conn);
+        // 接続直後に現在のStateを送信
+        setTimeout(() => {
+          conn.send({ type: 'SYNC_STATE', payload: state });
+        }, 300);
+      });
+
+      peer.on('error', (err) => {
+        console.error("Peerエラー:", err);
+        if (err.type === 'unavailable-id') {
+          alert('このコードは既に使用されています。別のコードを発行します。');
+          if (asHost) createRoom();
+        } else if (err.type === 'peer-unavailable') {
+          alert('指定した4文字の部屋が見つかりませんでした。コードを確認してください。');
+          disconnectRoom();
+        } else {
+          alert('通信接続エラー: ' + err.type);
+        }
+      });
+    }
+
+    function setupConnection(conn) {
+      conn.on('open', () => {
+        connections.push(conn);
+        updateConnectedCountBadge();
+        console.log("接続確立:", conn.peer);
+      });
+
+      conn.on('data', (data) => {
+        if (data.type === 'SYNC_STATE') {
+          state = data.payload;
+          localStorage.setItem('mahjong_mobile_sync_state', JSON.stringify(state));
+          renderAll();
+
+          // ホストの場合、他のゲスト全員にも中継ブロードキャスト
+          if (isHost) {
+            connections.forEach(c => {
+              if (c !== conn && c.open) {
+                c.send(data);
+              }
+            });
+          }
+        }
+      });
+
+      conn.on('close', () => {
+        connections = connections.filter(c => c !== conn);
+        updateConnectedCountBadge();
+      });
+    }
+
+    // Stateが変更されたら全接続ピアにブロードキャスト
+    function broadcastState() {
+      saveState();
+      if (connections.length > 0) {
+        connections.forEach(conn => {
+          if (conn.open) {
+            conn.send({ type: 'SYNC_STATE', payload: state });
+          }
+        });
+      }
+    }
+
+    function updateSyncUI(connected, code) {
+      const activeCard = document.getElementById('sync-active-info');
+      const formCard = document.getElementById('sync-connect-form');
+      const codeText = document.getElementById('active-room-code-text');
+      const statusBtn = document.getElementById('btn-sync-status');
+      const dot = document.getElementById('sync-dot');
+      const label = document.getElementById('sync-label');
+
+      if (connected) {
+        activeCard.style.display = 'block';
+        formCard.style.display = 'none';
+        codeText.innerText = code;
+        statusBtn.classList.add('connected');
+        dot.innerText = '🟢';
+        label.innerText = code;
+      } else {
+        activeCard.style.display = 'none';
+        formCard.style.display = 'block';
+        statusBtn.classList.remove('connected');
+        dot.innerText = '📡';
+        label.innerText = '同期';
+      }
+    }
+
+    function updateConnectedCountBadge() {
+      const label = document.getElementById('sync-label');
+      if (currentRoomCode) {
+        label.innerText = `${currentRoomCode} (${connections.length + 1})`;
+      }
+    }
+
+    function disconnectRoom() {
+      if (peer) {
+        peer.destroy();
+        peer = null;
+      }
+      connections = [];
+      currentRoomCode = null;
+      isHost = false;
+      updateSyncUI(false, null);
+    }
+
+    function copyRoomCode() {
+      if (!currentRoomCode) return;
+      navigator.clipboard.writeText(currentRoomCode).then(() => {
+        alert(`4文字コード「${currentRoomCode}」をコピーしました！`);
+      }).catch(() => {
+        prompt('コードをコピーしてください:', currentRoomCode);
+      });
+    }
+
+    /* ===================================================
+       🀄 アプリメインロジック
+       =================================================== */
+
     document.addEventListener('DOMContentLoaded', () => {
       renderAll();
     });
 
     function saveState() {
-      localStorage.setItem('mahjong_mobile_fit_state', JSON.stringify(state));
+      localStorage.setItem('mahjong_mobile_sync_state', JSON.stringify(state));
     }
 
     function switchMode(newMode) {
       state.mode = newMode;
       document.getElementById('tab-4p').classList.toggle('active', newMode === '4p');
       document.getElementById('tab-3p').classList.toggle('active', newMode === '3p');
-      saveState();
+      broadcastState();
       renderAll();
     }
 
@@ -559,7 +833,7 @@
 
     function setCurrentRoundIdx(idx) {
       state.currentRoundIdx[state.mode] = idx;
-      saveState();
+      broadcastState();
       renderAll();
     }
 
@@ -586,7 +860,7 @@
         input.className = 'score-input-field ' + getColorClass(state.sheets[mode][rIdx][seatIdx]);
       }
 
-      saveState();
+      broadcastState();
       updateStatusBanner();
     }
 
@@ -735,13 +1009,19 @@
       }
     }
 
-    /* プレイヤー管理モーダル */
+    /* モーダル共通操作 */
+    function openSyncModal() {
+      document.getElementById('sync-modal').classList.add('open');
+    }
+    function closeSyncModal() {
+      document.getElementById('sync-modal').classList.remove('open');
+    }
+
     function openPlayerModal() {
       renderModalPlayerList();
       renderModalSeatSelectors();
       document.getElementById('player-modal').classList.add('open');
     }
-
     function closePlayerModal() {
       document.getElementById('player-modal').classList.remove('open');
       renderAll();
@@ -757,7 +1037,7 @@
       }
       state.playersMaster.push(name);
       input.value = '';
-      saveState();
+      broadcastState();
       renderModalPlayerList();
       renderModalSeatSelectors();
     }
@@ -770,8 +1050,6 @@
       }
       if (confirm(`プレイヤー「${targetName}」を削除しますか？`)) {
         state.playersMaster = state.playersMaster.filter(p => p !== targetName);
-
-        // 着席中の場合は置換
         ['4p', '3p'].forEach(m => {
           state.activeSeats[m] = state.activeSeats[m].map((sName, sIdx) => {
             if (sName === targetName) {
@@ -780,8 +1058,7 @@
             return sName;
           });
         });
-
-        saveState();
+        broadcastState();
         renderModalPlayerList();
         renderModalSeatSelectors();
       }
@@ -831,10 +1108,9 @@
 
     function changeSeatPlayer(seatIdx, newPlayerName) {
       state.activeSeats[state.mode][seatIdx] = newPlayerName;
-      saveState();
+      broadcastState();
     }
 
-    /* 通算リーダーボードモーダル */
     function openLeaderboard() {
       const mode = state.mode;
       const seats = state.activeSeats[mode];
@@ -891,6 +1167,7 @@
     }
 
     function closeModalOnBackdrop(e) {
+      if (e.target.id === 'sync-modal') closeSyncModal();
       if (e.target.id === 'player-modal') closePlayerModal();
       if (e.target.id === 'leaderboard-modal') closeLeaderboard();
     }
@@ -961,7 +1238,7 @@
         const mode = state.mode;
         state.sheets[mode] = [new Array(state.activeSeats[mode].length).fill(null)];
         state.currentRoundIdx[mode] = 0;
-        saveState();
+        broadcastState();
         closeLeaderboard();
         renderAll();
       }
