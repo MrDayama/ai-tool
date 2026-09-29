@@ -30,13 +30,12 @@
     html, body {
       width: 100%;
       height: 100dvh;
-      overflow: hidden; /* スマホで完全スクロールなし */
+      overflow: hidden;
       background-color: var(--bg);
       color: var(--text);
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
-    /* アプリ全体レイアウト */
     .app-viewport {
       display: flex;
       flex-direction: column;
@@ -47,7 +46,7 @@
       justify-content: space-between;
     }
 
-    /* 1. コンパクトヘッダー */
+    /* ヘッダー */
     header {
       display: flex;
       justify-content: space-between;
@@ -60,9 +59,23 @@
       font-size: 1rem;
       font-weight: 800;
       color: var(--accent-gold);
+    }
+
+    .header-actions {
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+    }
+
+    .btn-header-manage {
+      background: #14201c;
+      border: 1px solid var(--card-border);
+      color: var(--accent-gold);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      cursor: pointer;
     }
 
     .tab-pills {
@@ -78,7 +91,7 @@
       color: var(--text-muted);
       font-size: 0.78rem;
       font-weight: 700;
-      padding: 4px 10px;
+      padding: 4px 8px;
       border-radius: 4px;
       cursor: pointer;
     }
@@ -87,7 +100,7 @@
       color: #fff;
     }
 
-    /* 2. 半荘セレクターナビ */
+    /* 半荘セレクター */
     .round-bar {
       display: flex;
       justify-content: space-between;
@@ -121,7 +134,7 @@
       color: var(--accent-gold);
     }
 
-    /* 3. メイン入力エリア (4名または3名のカードが1画面にピッタリ収まる) */
+    /* プレイヤー入力カードグリッド */
     .players-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -144,7 +157,6 @@
       flex-direction: column;
       justify-content: space-between;
       position: relative;
-      transition: border-color 0.2s;
     }
     .player-card:focus-within {
       border-color: var(--accent);
@@ -158,19 +170,19 @@
       gap: 4px;
     }
 
-    .player-name-field {
-      background: transparent;
-      border: none;
-      border-bottom: 1px dashed #3a5449;
+    .player-select-btn {
+      background: #0d1613;
+      border: 1px solid #273d34;
       color: var(--accent-gold);
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 800;
-      width: 65%;
-      padding: 2px 0;
-    }
-    .player-name-field:focus {
-      outline: none;
-      border-bottom-color: var(--accent-gold);
+      border-radius: 6px;
+      padding: 3px 6px;
+      cursor: pointer;
+      max-width: 65%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .player-total-badge {
@@ -180,7 +192,6 @@
       white-space: nowrap;
     }
 
-    /* スコア入力フィールド (大きくタップしやすい) */
     .score-input-wrap {
       display: flex;
       align-items: center;
@@ -215,7 +226,7 @@
     .val-minus { color: #f87171 !important; }
     .val-zero { color: var(--text-muted) !important; }
 
-    /* 4. リアルタイム合計0チェックインジケーター */
+    /* 合計0判定バナー */
     .status-banner {
       border-radius: 8px;
       padding: 8px 12px;
@@ -243,7 +254,7 @@
       color: var(--text-muted);
     }
 
-    /* 5. ボトムアクションバー */
+    /* ボトムバー */
     .bottom-bar {
       display: flex;
       gap: 6px;
@@ -281,11 +292,11 @@
       border: 1px solid var(--card-border);
     }
 
-    /* 通算モーダル/オーバーレイ */
+    /* モーダル */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
+      background: rgba(0, 0, 0, 0.85);
       backdrop-filter: blur(4px);
       z-index: 99;
       display: none;
@@ -320,6 +331,55 @@
       flex: 1;
     }
 
+    /* プレイヤーマスター用タグ */
+    .player-tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0 14px 0;
+    }
+    .player-tag {
+      background: #182620;
+      border: 1px solid #293f35;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+    }
+    .btn-tag-del {
+      background: none;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0 2px;
+    }
+    .btn-tag-del:hover {
+      color: var(--danger);
+    }
+
+    .form-inline {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .form-input {
+      flex: 1;
+      background: #09120f;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: #fff;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
     .leaderboard-row {
       display: flex;
       justify-content: space-between;
@@ -339,31 +399,34 @@
     <!-- 1. ヘッダー -->
     <header>
       <div class="app-brand">🀄 麻雀スコア</div>
-      <div class="tab-pills">
-        <button class="tab-pill active" id="tab-4p" onclick="switchMode('4p')">四麻 (4人)</button>
-        <button class="tab-pill" id="tab-3p" onclick="switchMode('3p')">三麻 (3人)</button>
+      <div class="header-actions">
+        <button class="btn-header-manage" onclick="openPlayerModal()">👥 プレイヤー</button>
+        <div class="tab-pills">
+          <button class="tab-pill active" id="tab-4p" onclick="switchMode('4p')">四麻</button>
+          <button class="tab-pill" id="tab-3p" onclick="switchMode('3p')">三麻</button>
+        </div>
       </div>
     </header>
 
     <!-- 2. 半荘切替ナビゲーション -->
     <div class="round-bar">
-      <button class="round-nav-btn" id="btn-prev-round" onclick="navigateRound(-1)">◀ 前の半荘</button>
+      <button class="round-nav-btn" id="btn-prev-round" onclick="navigateRound(-1)">◀ 前</button>
       <div class="round-title" id="round-indicator">第 1 半荘</div>
-      <button class="round-nav-btn" id="btn-next-round-nav" onclick="navigateRound(1)">次の半荘 ▶</button>
+      <button class="round-nav-btn" id="btn-next-round-nav" onclick="navigateRound(1)">次 ▶</button>
     </div>
 
-    <!-- 3. スクロールなし・全プレイヤー入力カードグリッド -->
+    <!-- 3. 全プレイヤー入力カードグリッド (1画面収容) -->
     <div class="players-grid" id="players-grid-container">
-      <!-- 動的描画 (4人または3人のカード) -->
+      <!-- 4枚または3枚のカード -->
     </div>
 
-    <!-- 4. リアルタイム合計0チェックインジケーター -->
+    <!-- 4. リアルタイム合計0判定インジケーター -->
     <div class="status-banner status-banner-wait" id="status-banner">
       <span id="status-message">全員のスコアを入力してください</span>
       <span id="status-badge" style="font-size: 0.95rem;">計 0.0</span>
     </div>
 
-    <!-- 5. ボトムアクションバー -->
+    <!-- 5. ボトムバー -->
     <div class="bottom-bar">
       <button class="action-btn btn-sub" onclick="openLeaderboard()">
         🏆 通算成績
@@ -375,7 +438,36 @@
 
   </div>
 
-  <!-- 通算成績 & シート全体モーダル -->
+  <!-- プレイヤー管理モーダル -->
+  <div class="modal-overlay" id="player-modal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="font-weight: 800; color: var(--accent-gold);">👥 プレイヤーマスター管理</div>
+        <button onclick="closePlayerModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:0.8rem; color:#9ca3af;">新規プレイヤー追加:</div>
+        <div class="form-inline">
+          <input type="text" id="new-player-input" class="form-input" placeholder="例: 佐藤、プロA">
+          <button class="action-btn btn-next-round" style="flex:0.4; padding:8px 12px;" onclick="addPlayerFromModal()">追加</button>
+        </div>
+
+        <div style="font-size:0.8rem; color:#9ca3af; margin-top:10px;">登録プレイヤー一覧 (✕で削除):</div>
+        <div class="player-tag-row" id="modal-player-tags">
+          <!-- タグと削除ボタン -->
+        </div>
+
+        <div style="margin-top:16px; border-top:1px solid var(--card-border); padding-top:12px;">
+          <div style="font-size:0.8rem; color:var(--accent-gold); font-weight:700; margin-bottom:6px;">現在の対局メンバー選択:</div>
+          <div id="modal-seat-selectors" style="display:flex; flex-direction:column; gap:8px;">
+            <!-- 各席のプレイヤー選択セレクト -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通算成績モーダル -->
   <div class="modal-overlay" id="leaderboard-modal" onclick="closeModalOnBackdrop(event)">
     <div class="modal-content">
       <div class="modal-header">
@@ -426,14 +518,24 @@
 
     let state = JSON.parse(localStorage.getItem('mahjong_mobile_fit_state')) || DEFAULT_DATA;
 
-    // データ初期補正
+    // 重複排除＆マイグレーション
+    state.playersMaster = Array.from(new Set((state.playersMaster || ['東家', '南家', '西家', '北家']).map(p => p.trim()).filter(Boolean)));
     if (!state.currentRoundIdx) state.currentRoundIdx = { '4p': 0, '3p': 0 };
-    if (!state.sheets) {
-      state.sheets = {
-        '4p': [[null, null, null, null]],
-        '3p': [[null, null, null]]
+    if (!state.activeSeats) {
+      state.activeSeats = {
+        '4p': state.playersMaster.slice(0, 4),
+        '3p': state.playersMaster.slice(0, 3)
       };
     }
+    ['4p', '3p'].forEach(m => {
+      const req = m === '4p' ? 4 : 3;
+      while (state.playersMaster.length < req) {
+        state.playersMaster.push(`P${state.playersMaster.length + 1}`);
+      }
+      if (!state.activeSeats[m] || state.activeSeats[m].length !== req) {
+        state.activeSeats[m] = state.playersMaster.slice(0, req);
+      }
+    });
 
     document.addEventListener('DOMContentLoaded', () => {
       renderAll();
@@ -466,22 +568,9 @@
       const current = getCurrentRoundIdx();
       const total = state.sheets[mode].length;
       const target = current + delta;
-
       if (target >= 0 && target < total) {
         setCurrentRoundIdx(target);
       }
-    }
-
-    function handlePlayerNameChange(seatIdx, newName) {
-      const mode = state.mode;
-      const trimmed = newName.trim();
-      if (!trimmed) return;
-      state.activeSeats[mode][seatIdx] = trimmed;
-      if (!state.playersMaster.includes(trimmed)) {
-        state.playersMaster.push(trimmed);
-      }
-      saveState();
-      renderAll();
     }
 
     function handleScoreInput(seatIdx, rawVal) {
@@ -492,7 +581,6 @@
 
       state.sheets[mode][rIdx][seatIdx] = (parsed !== null && !isNaN(parsed)) ? parsed : null;
 
-      // 入力値の色付け
       const input = document.getElementById(`score-input-${seatIdx}`);
       if (input) {
         input.className = 'score-input-field ' + getColorClass(state.sheets[mode][rIdx][seatIdx]);
@@ -514,12 +602,10 @@
       const current = getCurrentRoundIdx();
       const seatsCount = state.activeSeats[mode].length;
 
-      // 最後の半荘にいる場合は新規作成
       if (current === state.sheets[mode].length - 1) {
         state.sheets[mode].push(new Array(seatsCount).fill(null));
         setCurrentRoundIdx(current + 1);
       } else {
-        // 次の半荘へ移動
         setCurrentRoundIdx(current + 1);
       }
     }
@@ -569,16 +655,16 @@
         const val = currentScores[sIdx];
         const colorClass = getColorClass(val);
         const displayVal = (val !== null && !isNaN(val)) ? (val > 0 ? `+${val}` : val) : '';
-        const totalPt = (Math.round(totalMap[pName] * 10) / 10).toFixed(1);
+        const totalPt = (Math.round((totalMap[pName] || 0) * 10) / 10).toFixed(1);
         const totalFormatted = totalPt > 0 ? `+${totalPt}` : totalPt;
 
         const card = document.createElement('div');
         card.className = 'player-card';
         card.innerHTML = `
           <div class="card-top-row">
-            <input type="text" class="player-name-field" value="${pName}"
-              onchange="handlePlayerNameChange(${sIdx}, this.value)"
-              placeholder="プレイヤー名">
+            <button class="player-select-btn" onclick="openPlayerModal()" title="タップしてプレイヤー変更">
+              ${pName} ▾
+            </button>
             <span class="player-total-badge">通算: ${totalFormatted}</span>
           </div>
           <div class="score-input-wrap">
@@ -630,13 +716,11 @@
 
       if (filledCount === seats.length) {
         if (Math.abs(roundedSum) < 0.001) {
-          // 合計 0 でOK！
           banner.className = 'status-banner status-banner-ok';
           msg.innerText = '✅ 合計 0.0 (整合性OK)';
           badge.innerText = '±0 pt';
           nextBtn.disabled = false;
         } else {
-          // 合計不整合
           const sign = roundedSum > 0 ? `+${roundedSum}` : `${roundedSum}`;
           banner.className = 'status-banner status-banner-error';
           msg.innerText = `❌ 合計が0ではありません (${sign})`;
@@ -644,7 +728,6 @@
           nextBtn.disabled = true;
         }
       } else {
-        // 入力中
         banner.className = 'status-banner status-banner-wait';
         msg.innerText = `入力中 (${filledCount}/${seats.length}名)`;
         badge.innerText = `計 ${roundedSum > 0 ? '+' : ''}${roundedSum}`;
@@ -652,14 +735,113 @@
       }
     }
 
-    // 通算リーダーボードモーダル
+    /* プレイヤー管理モーダル */
+    function openPlayerModal() {
+      renderModalPlayerList();
+      renderModalSeatSelectors();
+      document.getElementById('player-modal').classList.add('open');
+    }
+
+    function closePlayerModal() {
+      document.getElementById('player-modal').classList.remove('open');
+      renderAll();
+    }
+
+    function addPlayerFromModal() {
+      const input = document.getElementById('new-player-input');
+      const name = input.value.trim();
+      if (!name) return;
+      if (state.playersMaster.includes(name)) {
+        alert('そのプレイヤー名は既に登録されています');
+        return;
+      }
+      state.playersMaster.push(name);
+      input.value = '';
+      saveState();
+      renderModalPlayerList();
+      renderModalSeatSelectors();
+    }
+
+    function deletePlayerFromModal(targetName) {
+      const minRequired = state.mode === '4p' ? 4 : 3;
+      if (state.playersMaster.length <= minRequired) {
+        alert(`${state.mode === '4p' ? '四人' : '三人'}麻雀では最低${minRequired}名のプレイヤーが必要です`);
+        return;
+      }
+      if (confirm(`プレイヤー「${targetName}」を削除しますか？`)) {
+        state.playersMaster = state.playersMaster.filter(p => p !== targetName);
+
+        // 着席中の場合は置換
+        ['4p', '3p'].forEach(m => {
+          state.activeSeats[m] = state.activeSeats[m].map((sName, sIdx) => {
+            if (sName === targetName) {
+              return state.playersMaster.find(p => !state.activeSeats[m].includes(p)) || state.playersMaster[sIdx] || `P${sIdx+1}`;
+            }
+            return sName;
+          });
+        });
+
+        saveState();
+        renderModalPlayerList();
+        renderModalSeatSelectors();
+      }
+    }
+
+    function renderModalPlayerList() {
+      const container = document.getElementById('modal-player-tags');
+      container.innerHTML = '';
+      state.playersMaster.forEach(p => {
+        const tag = document.createElement('span');
+        tag.className = 'player-tag';
+        tag.innerHTML = `
+          <span>${p}</span>
+          <button class="btn-tag-del" onclick="deletePlayerFromModal('${p.replace(/'/g, "\\'")}')">✕</button>
+        `;
+        container.appendChild(tag);
+      });
+    }
+
+    function renderModalSeatSelectors() {
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const container = document.getElementById('modal-seat-selectors');
+      container.innerHTML = '';
+
+      seats.forEach((currentP, sIdx) => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.justifyContent = 'space-between';
+
+        let options = '';
+        state.playersMaster.forEach(p => {
+          options += `<option value="${p}" ${p === currentP ? 'selected' : ''}>${p}</option>`;
+        });
+
+        row.innerHTML = `
+          <span style="font-size:0.85rem; color:#9ca3af;">席 ${sIdx + 1}:</span>
+          <select style="background:#09120f; border:1px solid var(--card-border); color:var(--accent-gold); padding:6px; border-radius:6px; font-weight:700; width:70%;"
+            onchange="changeSeatPlayer(${sIdx}, this.value)">
+            ${options}
+          </select>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function changeSeatPlayer(seatIdx, newPlayerName) {
+      state.activeSeats[state.mode][seatIdx] = newPlayerName;
+      saveState();
+    }
+
+    /* 通算リーダーボードモーダル */
     function openLeaderboard() {
       const mode = state.mode;
       const seats = state.activeSeats[mode];
       const listEl = document.getElementById('modal-leaderboard-list');
 
       const stats = {};
-      seats.forEach(s => stats[s] = { total: 0, count: 0 });
+      state.playersMaster.forEach(p => stats[p] = { total: 0, count: 0 });
 
       let validMatches = 0;
       state.sheets[mode].forEach(row => {
@@ -680,7 +862,7 @@
 
       const sorted = Object.keys(stats).sort((a, b) => stats[b].total - stats[a].total);
 
-      let html = `<div style="font-size:0.8rem; color:#9ca3af; margin-bottom:8px;">消化半荘: ${validMatches} 半荘</div>`;
+      let html = `<div style="font-size:0.8rem; color:#9ca3af; margin-bottom:8px;">有効半荘: ${validMatches} 半荘</div>`;
       sorted.forEach((name, rank) => {
         const item = stats[name];
         const rounded = Math.round(item.total * 10) / 10;
@@ -709,6 +891,7 @@
     }
 
     function closeModalOnBackdrop(e) {
+      if (e.target.id === 'player-modal') closePlayerModal();
       if (e.target.id === 'leaderboard-modal') closeLeaderboard();
     }
 
