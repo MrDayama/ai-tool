@@ -1,32 +1,44 @@
 /**
  * ========================================================
- * 🀄 麻雀スコアシート × Googleスプレッドシート 自動同期スクリプト (GAS)
+ * 🀄 麻雀スコアシート × Googleスプレッドシート 自動同期スクリプト (GAS v2 - 完全CORS回避版)
  * ========================================================
- * 
- * 【超かんたん 1分セットアップ手順】
- * 
- * 1. Googleドライブ (https://drive.google.com) を開き、
- *    左上の「新規」➜「Googleスプレッドシート」をクリックして1つ作成します。
- * 
- * 2. 上部メニューの「拡張機能」➜「Apps Script」を開きます。
- * 
- * 3. 元から書いてあるコードをすべて消して、このコードをそのまま全選択貼り付けします。
- * 
- * 4. 右上の「デプロイ」➜「新しいデプロイ」をクリックします。
- *    ・ 歯車アイコン ➜「ウェブアプリ」を選択
- *    ・ アクセスできるユーザー: 「全員」に設定
- *    ・「デプロイ」ボタンをクリック！
- * 
- * 5. 発行された「ウェブアプリのURL」をコピーして、
- *    麻雀アプリの「📊スプシ同期」画面に貼り付けて「保存」を押すだけ！
  */
 
 function doGet(e) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  var jsonCell = sheet.getRange("A1").getValue();
   
+  // 1. データ書き込み (action = save)
+  if (e && e.parameter && e.parameter.action === "save" && e.parameter.data) {
+    try {
+      var rawData = e.parameter.data;
+      var data = JSON.parse(rawData);
+
+      // A1セルに最新JSONを保存
+      sheet.getRange("A1").setValue(rawData);
+
+      // 見やすい表形式を描画
+      renderHumanFriendlySheet(sheet, data);
+
+      var output = JSON.stringify({ status: "success", timestamp: new Date().getTime() });
+      return ContentService.createTextOutput(e.parameter.callback ? e.parameter.callback + "(" + output + ")" : output)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    } catch (err) {
+      var errOut = JSON.stringify({ status: "error", message: err.toString() });
+      return ContentService.createTextOutput(e.parameter.callback ? e.parameter.callback + "(" + errOut + ")" : errOut)
+        .setMimeType(ContentService.MimeType.JAVASCRIPT);
+    }
+  }
+
+  // 2. データ読み込み (action = load またはパラメータなし)
+  var jsonCell = sheet.getRange("A1").getValue();
   if (!jsonCell) {
     jsonCell = JSON.stringify({ empty: true });
+  }
+
+  // JSONPまたは標準JSONレスポンス
+  if (e && e.parameter && e.parameter.callback) {
+    return ContentService.createTextOutput(e.parameter.callback + "(" + jsonCell + ")")
+      .setMimeType(ContentService.MimeType.JAVASCRIPT);
   }
 
   return ContentService.createTextOutput(jsonCell)
@@ -34,31 +46,8 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  try {
-    var rawData = e.postData.contents;
-    var data = JSON.parse(rawData);
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-
-    // 1. バックアップ＆生データとして A1 に最新のJSON状態を保存
-    sheet.getRange("A1").setValue(rawData);
-
-    // 2. スプレッドシートの見た目も綺麗に整形（人間が見やすい表形式で展開）
-    renderHumanFriendlySheet(sheet, data);
-
-    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-// 初回ワンクリックでシート枠線を自動構築するヘルパー関数
-function setupSheet() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  sheet.getRange("A3").setValue("【麻雀スコアシート 自動同期連携中】").setFontWeight("bold").setFontSize(14).setFontColor("#10b981");
-  sheet.getRange("A4:F4").setValues([["半荘", "東家", "南家", "西家", "北家", "合計0チェック"]]).setBackground("#1b2a24").setFontColor("#ffffff").setFontWeight("bold");
-  SpreadsheetApp.getUi().alert("✅ 初期セットアップ完了！右上の「デプロイ」から「ウェブアプリ」として公開してください。");
+  // doGetへフォールバック
+  return doGet(e);
 }
 
 // スプレッドシート上に見やすい一覧表を描画
@@ -67,8 +56,7 @@ function renderHumanFriendlySheet(sheet, data) {
   var seats = (data.activeSeats && data.activeSeats[mode]) ? data.activeSeats[mode] : ["東家", "南家", "西家", "北家"];
   var rows = (data.sheets && data.sheets[mode]) ? data.sheets[mode] : [];
 
-  sheet.getRange("A3").setValue("【麻雀スコア記録 (" + (mode === "4p" ? "四麻" : "三麻") + ")】");
-  sheet.getRange("A3").setFontWeight("bold").setFontSize(12);
+  sheet.getRange("A3").setValue("【麻雀スコア記録 (" + (mode === "4p" ? "四麻" : "三麻") + ")】").setFontWeight("bold").setFontSize(12);
 
   var headers = ["半荘"];
   for (var i = 0; i < seats.length; i++) {
@@ -101,6 +89,12 @@ function renderHumanFriendlySheet(sheet, data) {
       rowData.push("入力中");
     }
     outputRows.push(rowData);
+  }
+
+  // 古いデータを一度クリア
+  var lastRow = sheet.getLastRow();
+  if (lastRow >= 5) {
+    sheet.getRange(5, 1, lastRow - 4, headers.length).clearContent();
   }
 
   if (outputRows.length > 0) {

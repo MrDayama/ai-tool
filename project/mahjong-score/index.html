@@ -625,10 +625,11 @@
     });
 
     /* ===================================================
-       📊 Googleスプレッドシート (GAS) 自動同期エンジン
+       📊 Googleスプレッドシート (GAS) CORS完全回避 同期エンジン
        =================================================== */
     let isSyncing = false;
     let autoSyncTimer = null;
+    let lastStateHash = "";
 
     function saveGasUrl() {
       const input = document.getElementById('gas-url-input');
@@ -636,9 +637,9 @@
       localStorage.setItem('mahjong_gas_sync_url', gasSyncUrl);
       updateGasUIStatus();
       if (gasSyncUrl) {
-        pullFromSpreadsheet();
+        pullFromSpreadsheet(true);
         startAutoSync();
-        alert('Googleスプレッドシート連携URLを保存しました！');
+        alert('スプレッドシート連携URLを保存しました！');
       } else {
         stopAutoSync();
       }
@@ -663,21 +664,49 @@
       }
     }
 
-    // スプレッドシートへ最新データを送信 (Push)
+    // JSONP通信 (CORSエラーを100%回避)
+    function sendJsonp(url, params) {
+      return new Promise((resolve, reject) => {
+        const cbName = 'gas_cb_' + Math.floor(Math.random() * 1000000);
+        window[cbName] = function(data) {
+          delete window[cbName];
+          if (script.parentNode) script.parentNode.removeChild(script);
+          resolve(data);
+        };
+
+        const queryParts = [`callback=${cbName}`];
+        for (let key in params) {
+          queryParts.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+        }
+
+        const script = document.createElement('script');
+        const sep = url.includes('?') ? '&' : '?';
+        script.src = url + sep + queryParts.join('&');
+        script.onerror = function() {
+          delete window[cbName];
+          if (script.parentNode) script.parentNode.removeChild(script);
+          reject(new Error('JSONP Request failed'));
+        };
+        document.body.appendChild(script);
+      });
+    }
+
+    // スプレッドシートへデータ送信 (Push)
     function pushToSpreadsheet() {
       if (!gasSyncUrl || isSyncing) return;
       isSyncing = true;
       const icon = document.getElementById('sheet-sync-icon');
       if (icon) icon.innerText = '⏳';
 
-      fetch(gasSyncUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(state)
+      const jsonStr = JSON.stringify(state);
+
+      sendJsonp(gasSyncUrl, {
+        action: 'save',
+        data: jsonStr
       })
-      .then(res => res.json())
       .then(res => {
         console.log("スプレッドシート送信成功:", res);
+        lastStateHash = jsonStr;
       })
       .catch(err => {
         console.error("スプレッドシート送信エラー:", err);
@@ -688,21 +717,24 @@
       });
     }
 
-    // スプレッドシートから最新データを取得 (Pull)
-    function pullFromSpreadsheet() {
+    // スプレッドシートから最新データ取得 (Pull)
+    function pullFromSpreadsheet(force = false) {
       if (!gasSyncUrl || isSyncing) return;
       isSyncing = true;
       const icon = document.getElementById('sheet-sync-icon');
       if (icon) icon.innerText = '⏳';
 
-      fetch(gasSyncUrl)
-      .then(res => res.json())
+      sendJsonp(gasSyncUrl, { action: 'load' })
       .then(remoteData => {
         if (remoteData && !remoteData.empty && remoteData.sheets) {
-          state = remoteData;
-          saveState(false); // 送信ループ防止のためPushはスキップ
-          renderAll();
-          console.log("スプレッドシートから最新データを同期しました");
+          const remoteJsonStr = JSON.stringify(remoteData);
+          if (remoteJsonStr !== lastStateHash || force) {
+            state = remoteData;
+            lastStateHash = remoteJsonStr;
+            localStorage.setItem('mahjong_app_state_v3', JSON.stringify(state));
+            renderAll();
+            console.log("スプレッドシートから最新データを同期しました");
+          }
         }
       })
       .catch(err => {
@@ -714,14 +746,13 @@
       });
     }
 
-    // 10秒おきに自動チェック (他の同卓者が更新したデータを自動反映)
     function startAutoSync() {
       stopAutoSync();
       autoSyncTimer = setInterval(() => {
         if (gasSyncUrl && !isSyncing) {
           pullFromSpreadsheet();
         }
-      }, 10000);
+      }, 5000);
     }
 
     function stopAutoSync() {
