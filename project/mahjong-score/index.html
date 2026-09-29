@@ -147,16 +147,30 @@
     }
 
     /* プレイヤー管理ドロワー/トグル */
-    .player-manage-box {
-      background: #121c19;
-      border: 1px dashed var(--grid-border);
-      border-radius: 8px;
-      padding: 10px 14px;
-      display: flex;
+    .player-tag {
+      background: #1c2b26;
+      border: 1px solid #2e443c;
+      border-radius: 6px;
+      padding: 3px 8px;
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
+      gap: 6px;
+      font-size: 0.85rem;
+    }
+    .btn-del-player {
+      background: transparent;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0 2px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s;
+    }
+    .btn-del-player:hover {
+      color: var(--danger);
     }
     .player-add-form {
       display: flex;
@@ -627,7 +641,46 @@
     }
 
     function renderMasterList() {
-      document.getElementById('registered-players-list').innerText = state.playersMaster.join(' / ');
+      const container = document.getElementById('registered-players-list');
+      container.innerHTML = '';
+
+      state.playersMaster.forEach((pName, idx) => {
+        const tag = document.createElement('span');
+        tag.className = 'player-tag';
+        tag.innerHTML = `
+          <span>${pName}</span>
+          <button class="btn-del-player" onclick="deletePlayer('${pName.replace(/'/g, "\\'")}')" title="${pName}を削除">✕</button>
+        `;
+        container.appendChild(tag);
+      });
+    }
+
+    function deletePlayer(targetName) {
+      // 最低限の人数チェック
+      const minRequired = state.mode === '4p' ? 4 : 3;
+      if (state.playersMaster.length <= minRequired) {
+        alert(`${state.mode === '4p' ? '四人' : '三人'}麻雀では最低${minRequired}名のプレイヤーが必要です。これ以上削除できません。`);
+        return;
+      }
+
+      if (confirm(`プレイヤー「${targetName}」をマスターから削除しますか？`)) {
+        // マスターから除外
+        state.playersMaster = state.playersMaster.filter(p => p !== targetName);
+
+        // 現在着席中の場合は別のプレイヤーまたはデフォルト名に置換
+        ['4p', '3p'].forEach(m => {
+          state.activeSeats[m] = state.activeSeats[m].map((seatedName, sIdx) => {
+            if (seatedName === targetName) {
+              const fallback = state.playersMaster.find(p => !state.activeSeats[m].includes(p)) || state.playersMaster[sIdx] || `P${sIdx+1}`;
+              return fallback;
+            }
+            return seatedName;
+          });
+        });
+
+        saveState();
+        renderAll();
+      }
     }
 
     function renderSheetTable() {
