@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LocalGTOWizardSchema",
+  "description": "Local GTO Wizard Data Architecture Single Schema",
+  "type": "object",
+  "properties": {
+    "GameFormat": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Format ID" },
+        "name": { "type": "string", "description": "Format Name" },
+        "rake_structure": { "type": "string", "description": "Rake Type" },
+        "default_stack_bb": { "type": "integer", "description": "Default Stack Size in BB" }
+      },
+      "required": ["id", "name", "rake_structure", "default_stack_bb"]
+    },
+    "Scenario": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Scenario Unique ID" },
+        "game_format_id": { "type": "string", "description": "Foreign Key to GameFormat" },
+        "hero_position": { "type": "string", "description": "Hero Position" },
+        "villain_position": { "type": "string", "description": "Villain Position" },
+        "action_sequence": { "type": "string", "description": "Action Sequence" },
+        "street": { "type": "string", "enum": ["PREFLOP", "FLOP", "TURN", "RIVER"] },
+        "board_cards": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Board Cards e.g. ['As', 'Kh', '2d']"
+        },
+        "pot_size_bb": { "type": "number", "description": "Pot Size in BB" }
+      },
+      "required": ["id", "game_format_id", "hero_position", "villain_position", "street", "pot_size_bb"]
+    },
+    "SolutionData": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Solution ID" },
+        "scenario_id": { "type": "string", "description": "Foreign Key to Scenario" },
+        "hand_combo": { "type": "string", "description": "Hand Combo (e.g. AhKh, 72o)" },
+        "action_frequencies": {
+          "type": "object",
+          "additionalProperties": { "type": "number" },
+          "description": "Frequencies map e.g. {'CHECK': 0.2, 'BET_33': 0.8}"
+        },
+        "ev": { "type": "number", "description": "Expected Value" },
+        "equity": { "type": "number", "description": "Equity percentage" }
+      },
+      "required": ["id", "scenario_id", "hand_combo", "action_frequencies", "ev"]
+    },
+    "QuizSession": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Session UUID" },
+        "created_at": { "type": "string", "format": "date-time" },
+        "mode": { "type": "string", "description": "Training Mode" },
+        "total_questions": { "type": "integer" },
+        "total_ev_loss": { "type": "number" }
+      },
+      "required": ["id", "created_at", "mode"]
+    },
+    "QuizQuestion": {
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Question UUID" },
+        "session_id": { "type": "string", "description": "Foreign Key to QuizSession" },
+        "scenario_id": { "type": "string", "description": "Foreign Key to Scenario" },
+        "hand_combo": { "type": "string" },
+        "user_action": { "type": "string" },
+        "optimal_action": { "type": "string" },
+        "ev_loss": { "type": "number" },
+        "is_correct": { "type": "boolean" }
+      },
+      "required": ["id", "session_id", "scenario_id", "hand_combo", "user_action", "optimal_action", "ev_loss", "is_correct"]
+    }
+  }
+}

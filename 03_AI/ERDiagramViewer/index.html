@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎨 統合アーキテクチャ & ER図・UIキャンバス (Unified Studio)</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <script src="./projects_catalog.js"></script>
+  <style>
+    :root {
+      --bg-primary: #0b0f19;
+      --bg-secondary: #111827;
+      --bg-card: #1f2937;
+      --bg-card-hover: #374151;
+      --accent: #38bdf8;
+      --accent-gradient: linear-gradient(135deg, #38bdf8 0%, #818cf8 100%);
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --border-color: #1f2937;
+      --badge-bg: #0284c7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ヘッダー */
+    header {
+      background-color: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 10px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: var(--accent-gradient);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      background: var(--accent-gradient);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .select-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    select {
+      background-color: #1f2937;
+      color: var(--text-main);
+      border: 1px solid #374151;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      outline: none;
+      cursor: pointer;
+      min-width: 280px;
+      transition: all 0.2s;
+    }
+
+    select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.3);
+    }
+
+    /* 統合ナビゲーションツールバー */
+    .nav-toolbar {
+      background-color: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      padding: 0 20px;
+      gap: 4px;
+    }
+
+    .nav-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 12px 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover {
+      color: var(--text-main);
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    .nav-btn.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      background-color: rgba(56, 189, 248, 0.08);
+    }
+
+    /* メインコンテナ */
+    .workspace {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* サイドバー */
+    aside {
+      width: 260px;
+      background-color: var(--bg-secondary);
+      border-right: 1px solid var(--border-color);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+    }
+
+    .sidebar-block h4 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+    }
+
+    .entity-item {
+      padding: 8px 12px;
+      background-color: #111827;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-bottom: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .badge {
+      background-color: var(--badge-bg);
+      color: #fff;
+      font-size: 0.7rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* メインキャンバス */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      overflow: auto;
+      position: relative;
+    }
+
+    .canvas-viewport {
+      width: 100%;
+      height: 100%;
+      background-color: #111827;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 24px;
+      overflow: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.5);
+    }
+
+    /* 🎨 UIデザインモック表現 */
+    .ui-prototype-container {
+      width: 100%;
+      max-width: 1100px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .mock-header {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mock-kanban {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+      width: 100%;
+    }
+
+    .kanban-col {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .col-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .task-card {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .task-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .card-tag {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      width: fit-content;
+      font-weight: 600;
+    }
+
+    .tag-high { background: #991b1b; color: #fca5a5; }
+    .tag-med { background: #92400e; color: #fde68a; }
+    .tag-low { background: #065f46; color: #a7f3d0; }
+
+    pre code {
+      color: #38bdf8;
+      font-family: monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <div class="brand-icon">🎨</div>
+      <div class="brand-title">Unified Architecture Studio</div>
+    </div>
+    <div class="select-wrapper">
+      <label for="project-select" style="font-size: 0.85rem; color: var(--text-muted);">プロジェクト選択:</label>
+      <select id="project-select">
+        <option value="">プロジェクト読込中...</option>
+      </select>
+    </div>
+  </header>
+
+  <!-- 統合ナビゲーションツールバー（参考投稿のメニュー行き来機能を完全再現） -->
+  <nav class="nav-toolbar">
+    <button class="nav-btn active" onclick="switchMode('ui', event)">🎨 UIデザインモック</button>
+    <button class="nav-btn" onclick="switchMode('er', event)">🗄️ ER図 (データ構造)</button>
+    <button class="nav-btn" onclick="switchMode('concept', event)">🏗️ 概念アーキテクチャ</button>
+    <button class="nav-btn" onclick="switchMode('workflow', event)">🔄 業務フロー</button>
+    <button class="nav-btn" onclick="switchMode('typescript', event)">💻 TypeScript型</button>
+  </nav>
+
+  <div class="workspace">
+    <aside>
+      <div class="sidebar-block">
+        <h4>選択中プロジェクト</h4>
+        <p id="info-name" style="font-weight: bold; font-size: 0.95rem; margin-bottom: 4px;">-</p>
+        <p id="info-desc" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px;">-</p>
+        <p id="info-ver" style="font-size: 0.75rem; color: var(--accent);">Ver: -</p>
+      </div>
+
+      <div class="sidebar-block">
+        <h4>データエンティティ (ER)</h4>
+        <div id="entity-list-div">
+          <div class="entity-item">選択なし</div>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="canvas-viewport">
+        <!-- UIモック表示コンテナ -->
+        <div id="ui-canvas" class="ui-prototype-container">
+          <!-- 動的プレビュー生成エリア -->
+        </div>
+
+        <!-- Diagram表示エリア (Mermaid) -->
+        <div id="diagram-canvas" style="display: none; width: 100%; justify-content: center;">
+          <div id="mermaid-render-area">図を生成中...</div>
+        </div>
+
+        <!-- コード表示エリア -->
+        <pre id="code-canvas" style="display: none; width: 100%;"><code id="code-block"></code></pre>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'dark',
+      securityLevel: 'loose',
+    });
+
+    let currentCatalog = [];
+    let currentProject = null;
+    let currentMode = 'ui';
+
+    function loadCatalog() {
+      if (window.PROJECTS_CATALOG && window.PROJECTS_CATALOG.projects) {
+        currentCatalog = window.PROJECTS_CATALOG.projects;
+        populateSelect();
+        return;
+      }
+
+      fetch('./projects_catalog.json')
+        .then(res => res.json())
+        .then(data => {
+          currentCatalog = data.projects || [];
+          populateSelect();
+        })
+        .catch(err => {
+          console.error("Catalog load error:", err);
+          useDefaultSample();
+        });
+    }
+
+    function populateSelect() {
+      const select = document.getElementById('project-select');
+      select.innerHTML = '';
+
+      if (currentCatalog.length === 0) {
+        useDefaultSample();
+        return;
+      }
+
+      currentCatalog.forEach((proj, idx) => {
+        const opt = document.createElement('option');
+        opt.value = idx;
+        opt.textContent = `${proj.name} (${proj.id})`;
+        select.appendChild(opt);
+      });
+
+      select.onchange = function(e) {
+        const idx = e.target.value;
+        if (idx !== '') selectProject(currentCatalog[idx]);
+      };
+
+      selectProject(currentCatalog[0]);
+    }
+
+    function useDefaultSample() {
+      const sample = {
+        name: "サンプル: AIタスク＆プロジェクト統合管理",
+        description: "1つのJSONから全生成するデモ",
+        schema: {
+          system_info: { name: "AIタスク＆プロジェクト統合管理", version: "1.2.0" },
+          entities: [
+            { name: "Project", fields: [{ name: "id", type: "string", primaryKey: true }, { name: "name", type: "string" }] },
+            { name: "Task", fields: [{ name: "id", type: "string", primaryKey: true }, { name: "title", type: "string" }] }
+          ],
+          ui_screens: [
+            {
+              name: "プロジェクトカンバンボード画面",
+              path: "/projects/1/kanban",
+              components: [
+                { name: "ProjectHeader", type: "Header", description: "プロジェクト名とプログレス表示" },
+                { name: "KanbanColumnList", type: "GridContainer", description: "5カラムのカンバン" }
+              ]
+            }
+          ]
+        }
+      };
+      currentCatalog = [sample];
+      populateSelect();
+    }
+
+    function selectProject(proj) {
+      currentProject = proj;
+      const schema = proj.schema || {};
+
+      document.getElementById('info-name').textContent = schema.system_info?.name || proj.name;
+      document.getElementById('info-desc').textContent = proj.description || '';
+      document.getElementById('info-ver').textContent = `Version: ${schema.system_info?.version || '1.0.0'}`;
+
+      // エンティティ一覧の更新
+      const entityDiv = document.getElementById('entity-list-div');
+      entityDiv.innerHTML = '';
+      (schema.entities || []).forEach(ent => {
+        const item = document.createElement('div');
+        item.className = 'entity-item';
+        item.innerHTML = `<span>${ent.name}</span> <span class="badge">${ent.fields?.length || 0}</span>`;
+        entityDiv.appendChild(item);
+      });
+
+      renderCurrentMode();
+    }
+
+    function switchMode(mode, evt) {
+      currentMode = mode;
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+      if (evt && evt.target) evt.target.classList.add('active');
+      renderCurrentMode();
+    }
+
+    function renderCurrentMode() {
+      if (!currentProject) return;
+      const schema = currentProject.schema || {};
+
+      const uiCanvas = document.getElementById('ui-canvas');
+      const diagCanvas = document.getElementById('diagram-canvas');
+      const codeCanvas = document.getElementById('code-canvas');
+
+      uiCanvas.style.display = 'none';
+      diagCanvas.style.display = 'none';
+      codeCanvas.style.display = 'none';
+
+      if (currentMode === 'ui') {
+        uiCanvas.style.display = 'flex';
+        renderUIMock(schema);
+      } else if (currentMode === 'typescript') {
+        codeCanvas.style.display = 'block';
+        document.getElementById('code-block').textContent = generateTypeScript(schema.entities || []);
+      } else {
+        diagCanvas.style.display = 'flex';
+        let code = "";
+        if (currentMode === 'er') code = buildErMermaid(schema.entities || []);
+        else if (currentMode === 'concept') code = buildConceptMermaid(schema.concepts || []);
+        else if (currentMode === 'workflow') code = buildWorkflowMermaid(schema.workflows || []);
+        renderMermaid(code);
+      }
+    }
+
+    /* 🎨 リアルUIデザインモックの動的レンダリング */
+    function renderUIMock(schema) {
+      const uiCanvas = document.getElementById('ui-canvas');
+      uiCanvas.innerHTML = '';
+
+      const screens = schema.ui_screens || [];
+      if (screens.length === 0) {
+        uiCanvas.innerHTML = '<div style="color: var(--text-muted);">画面定義 (ui_screens) がありません</div>';
+        return;
+      }
+
+      screens.forEach(screen => {
+        const screenBox = document.createElement('div');
+        screenBox.className = 'ui-prototype-container';
+
+        screenBox.innerHTML = `
+          <div class="mock-header">
+            <div>
+              <h3 style="font-size: 1.1rem; color: var(--accent);">${screen.name}</h3>
+              <p style="font-size: 0.8rem; color: var(--text-muted);">URL Path: <code>${screen.path || '/'}</code> | 使用Entity: ${screen.entities_used?.join(', ') || '全般'}</p>
+            </div>
+            <button style="background: var(--accent); color: #000; border: none; padding: 6px 14px; font-weight: bold; border-radius: 6px; cursor: pointer;">+ 新規追加</button>
+          </div>
+
+          <div class="mock-kanban">
+            <div class="kanban-col">
+              <div class="col-title"><span>📋 TODO</span> <span class="badge">2</span></div>
+              <div class="task-card">
+                <span class="card-tag tag-high">HIGH</span>
+                <p style="font-weight: bold; font-size: 0.9rem;">データベース構造 (ER図) の自動生成</p>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">担当: 山田太郎</p>
+              </div>
+              <div class="task-card">
+                <span class="card-tag tag-med">MEDIUM</span>
+                <p style="font-weight: bold; font-size: 0.9rem;">UI画面モックとキャンバス連動</p>
+                <p style="font-size: 0.75rem; color: var(--text-muted);">担当: 佐藤花子</p>
+              </div>
+            </div>
+
+            <div class="kanban-col">
+              <div class="col-title"><span>⚡ IN_PROGRESS</span> <span class="badge">1</span></div>
+              <div class="task-card" style="border-color: var(--accent);">
+                <span class="card-tag tag-high">URGENT</span>
+                <p style="font-weight: bold; font-size: 0.9rem;">単一JSONスキーマ連動の構築</p>
+                <p style="font-size: 0.75rem; color: var(--accent);">進行中・レビュー待ち</p>
+              </div>
+            </div>
+
+            <div class="kanban-col">
+              <div class="col-title"><span>✅ DONE</span> <span class="badge">3</span></div>
+              <div class="task-card" style="opacity: 0.7;">
+                <span class="card-tag tag-low">LOW</span>
+                <p style="font-weight: bold; font-size: 0.9rem; text-decoration: line-through;">要件のヒアリングと概念図作成</p>
+                <p style="font-size: 0.75rem; color: #10b981;">完了</p>
+              </div>
+            </div>
+          </div>
+        `;
+        uiCanvas.appendChild(screenBox);
+      });
+    }
+
+    function buildErMermaid(entities) {
+      let code = "erDiagram\n";
+      entities.forEach(ent => {
+        code += `  ${ent.name} {\n`;
+        (ent.fields || []).forEach(f => {
+          let pkfk = f.primaryKey ? " PK" : (f.foreignKey ? " FK" : "");
+          code += `    ${f.type || 'string'} ${f.name}${pkfk}\n`;
+        });
+        code += `  }\n`;
+      });
+      entities.forEach(ent => {
+        (ent.relations || []).forEach(rel => {
+          let card = rel.type === 'one_to_many' ? '||--|{' : (rel.type === 'many_to_many' ? '}|--|{' : '||--||');
+          code += `  ${ent.name} ${card} ${rel.target} : "${rel.label || ''}"\n`;
+        });
+      });
+      return code;
+    }
+
+    function buildConceptMermaid(concepts) {
+      let code = "graph TD\n";
+      concepts.forEach(c => {
+        code += `  node_${c.name}["${c.name}"]\n`;
+        (c.depends_on || []).forEach(dep => {
+          code += `  node_${c.name} --> node_${dep}\n`;
+        });
+      });
+      return code;
+    }
+
+    function buildWorkflowMermaid(workflows) {
+      let code = "flowchart TD\n";
+      workflows.forEach(wf => {
+        code += `  subgraph ${wf.id} ["${wf.name}"]\n`;
+        (wf.steps || []).forEach(s => {
+          code += `    ${s.id}["${s.action}"]\n`;
+          if (s.next && s.next !== 'end') code += `    ${s.id} --> ${s.next}\n`;
+        });
+        code += `  end\n`;
+      });
+      return code;
+    }
+
+    function generateTypeScript(entities) {
+      let code = "";
+      entities.forEach(ent => {
+        code += `export interface ${ent.name} {\n`;
+        (ent.fields || []).forEach(f => {
+          code += `  ${f.name}${f.required ? '' : '?'}: ${f.type === 'number' ? 'number' : 'string'};\n`;
+        });
+        code += `}\n\n`;
+      });
+      return code;
+    }
+
+    async function renderMermaid(code) {
+      const renderArea = document.getElementById('mermaid-render-area');
+      renderArea.innerHTML = '<div style="color: var(--text-muted);">図を描画中...</div>';
+
+      try {
+        const id = 'mermaid-svg-' + Date.now();
+        const { svg } = await mermaid.render(id, code);
+        renderArea.innerHTML = svg;
+      } catch (err) {
+        console.error("Mermaid Render Error:", err);
+        renderArea.innerHTML = `<div style="color: #ef4444;">Mermaid描画エラー</div>`;
+      }
+    }
+
+    window.onload = loadCatalog;
+  </script>
+</body>
+</html>

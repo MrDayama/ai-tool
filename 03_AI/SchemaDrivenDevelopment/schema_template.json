@@ -1,0 +1,73 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "system_info": {
+    "name": "システム名テンプレート",
+    "description": "システム概要説明",
+    "version": "1.0.0"
+  },
+  "entities": [
+    {
+      "name": "User",
+      "description": "ユーザー情報",
+      "fields": [
+        { "name": "id", "type": "string", "primaryKey": true, "description": "ユーザーID" },
+        { "name": "name", "type": "string", "required": true, "description": "氏名" },
+        { "name": "email", "type": "string", "required": true, "description": "メールアドレス" },
+        { "name": "created_at", "type": "datetime", "required": true, "description": "登録日時" }
+      ],
+      "relations": [
+        { "target": "Task", "type": "one_to_many", "foreignKey": "user_id", "label": "所有する" }
+      ]
+    },
+    {
+      "name": "Task",
+      "description": "タスク情報",
+      "fields": [
+        { "name": "id", "type": "string", "primaryKey": true, "description": "タスクID" },
+        { "name": "user_id", "type": "string", "foreignKey": true, "description": "担当ユーザーID" },
+        { "name": "title", "type": "string", "required": true, "description": "タスク名" },
+        { "name": "status", "type": "enum", "options": ["TODO", "IN_PROGRESS", "DONE"], "description": "進捗ステータス" },
+        { "name": "due_date", "type": "date", "description": "期日" }
+      ],
+      "relations": []
+    }
+  ],
+  "concepts": [
+    {
+      "name": "ユーザー管理コンポーネント",
+      "layer": "Domain Layer",
+      "depends_on": ["認証サービス", "User"]
+    },
+    {
+      "name": "タスク管理コンポーネント",
+      "layer": "Domain Layer",
+      "depends_on": ["Task", "ユーザー管理コンポーネント"]
+    }
+  ],
+  "workflows": [
+    {
+      "id": "workflow_create_task",
+      "name": "新規タスク作成フロー",
+      "actor": "ユーザー",
+      "steps": [
+        { "id": "step1", "action": "タスク作成ボタンを押す", "next": "step2" },
+        { "id": "step2", "action": "フォーム入力（タイトル・期日）", "next": "step3" },
+        { "id": "step3", "action": "入力内容のバリデーション", "condition": true, "on_success": "step4", "on_failure": "step2" },
+        { "id": "step4", "action": "Taskデータベースへ保存", "target_entity": "Task", "next": "end" }
+      ]
+    }
+  ],
+  "ui_screens": [
+    {
+      "id": "screen_task_list",
+      "name": "タスク一覧画面",
+      "path": "/tasks",
+      "entities_used": ["Task", "User"],
+      "components": [
+        { "name": "TaskHeader", "type": "Header", "description": "ユーザー情報と検索バー" },
+        { "name": "TaskListTable", "type": "Table", "description": "タスクカードの一覧表示" },
+        { "name": "CreateTaskModal", "type": "Modal", "description": "新規タスク入力ダイアログ" }
+      ]
+    }
+  ]
+}

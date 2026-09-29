@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GTO Wizard Solution Browser - UI & 画面構成完全再現版</title>
+  <style>
+    :root {
+      --bg-dark: #080d19;
+      --panel-bg: #111a2e;
+      --panel-bg-light: #1a2640;
+      --card-bg: #223254;
+      --border-color: #273754;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #00b0ff;
+      
+      /* GTO Wizard Official Exact Color Palette */
+      --gtow-fold:   #607d8b; /* Blue-Grey (Fold) */
+      --gtow-check:  #4caf50; /* Green (Check) */
+      --gtow-call:   #2196f3; /* Blue (Call) */
+      --gtow-betsm:  #ff9800; /* Orange (Bet 33%) */
+      --gtow-betmed: #e91e63; /* Magenta (Bet 75%) */
+      --gtow-raise:  #f44336; /* Bright Red (Raise 2.5x) */
+      --gtow-allin:  #9c27b0; /* Purple (All-in) */
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg-dark); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+
+    /* GTO Wizard Top Navbar */
+    header.gtow-navbar {
+      background-color: var(--panel-bg);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 48px;
+    }
+
+    .nav-left { display: flex; align-items: center; gap: 16px; }
+    .brand-logo { font-size: 1.1rem; font-weight: 900; color: #fff; letter-spacing: -0.03em; display: flex; align-items: center; gap: 6px; }
+    .brand-logo span.icon { color: var(--accent); }
+
+    .breadcrumbs { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: var(--text-muted); background-color: var(--bg-dark); padding: 4px 10px; border-radius: 6px; border: 1px solid var(--border-color); }
+    .breadcrumbs span.crumb { color: var(--text-main); font-weight: 600; }
+    .breadcrumbs span.sep { color: var(--border-color); }
+
+    .nav-right { display: flex; align-items: center; gap: 10px; }
+    .mode-pills { display: flex; background-color: var(--bg-dark); padding: 2px; border-radius: 6px; border: 1px solid var(--border-color); }
+    .mode-pill { background: none; border: none; color: var(--text-muted); padding: 4px 14px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; cursor: pointer; }
+    .mode-pill.active { background-color: var(--accent); color: #000; }
+
+    /* Aggregate Range Strategy Bar (GTO Wizard Style) */
+    .aggregate-container {
+      background-color: var(--panel-bg-light);
+      border-bottom: 1px solid var(--border-color);
+      padding: 8px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .aggregate-stats-row { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; }
+    .agg-legend-pills { display: flex; gap: 12px; font-weight: 700; }
+    .agg-pill { display: flex; align-items: center; gap: 5px; }
+    .agg-pill .dot { width: 10px; height: 10px; border-radius: 2px; }
+
+    .aggregate-bar { display: flex; height: 18px; border-radius: 4px; overflow: hidden; background-color: #000; border: 1px solid var(--border-color); }
+    .agg-segment { height: 100%; transition: width 0.3s; }
+
+    /* Main Container Layout (3 Columns: Left Nav, Center Matrix, Right Inspector) */
+    .app-body { display: flex; flex: 1; overflow: hidden; }
+
+    /* Left Sidebar Navigator */
+    .sidebar-nav {
+      width: 290px;
+      background-color: var(--panel-bg);
+      border-right: 1px solid var(--border-color);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      overflow-y: auto;
+    }
+
+    .sidebar-section-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); font-weight: 800; margin-top: 4px; }
+    select { background-color: var(--card-bg); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px; border-radius: 6px; font-size: 0.85rem; width: 100%; outline: none; }
+    select:focus { border-color: var(--accent); }
+
+    .tree-nodes-list { display: flex; flex-direction: column; gap: 4px; }
+    .tree-node-item { background-color: var(--card-bg); border: 1px solid transparent; padding: 8px 12px; border-radius: 6px; font-size: 0.82rem; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: all 0.15s; }
+    .tree-node-item:hover { border-color: var(--accent); }
+    .tree-node-item.active { background-color: rgba(0, 176, 255, 0.15); border-color: var(--accent); color: var(--accent); font-weight: bold; }
+    .badge { font-size: 0.7rem; padding: 2px 6px; border-radius: 4px; background-color: rgba(255,255,255,0.08); font-weight: 600; }
+
+    .board-card-picker { display: flex; gap: 6px; margin-top: 4px; }
+    .card-slot { width: 36px; height: 50px; border: 1px dashed var(--border-color); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.95rem; cursor: pointer; background-color: var(--bg-dark); }
+    .card-slot.filled { border-style: solid; background-color: #fff; color: #000; }
+    .card-slot.red { color: #dc2626; }
+
+    /* Center Matrix Container */
+    .center-content {
+      flex: 1;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .matrix-wrapper {
+      display: grid;
+      grid-template-columns: repeat(13, 1fr);
+      grid-template-rows: repeat(13, 1fr);
+      gap: 2px;
+      width: 100%;
+      max-width: 580px;
+      aspect-ratio: 1 / 1;
+      background-color: #000;
+      padding: 6px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .cell { position: relative; border-radius: 2px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; cursor: pointer; user-select: none; overflow: hidden; border: 1px solid rgba(0,0,0,0.5); transition: transform 0.1s, border-color 0.1s; }
+    .cell:hover { transform: scale(1.12); border-color: #ffffff; z-index: 30; box-shadow: 0 0 12px rgba(0,0,0,0.9); }
+    .cell .label { position: relative; z-index: 5; text-shadow: 0 1px 3px rgba(0,0,0,0.95), 0 0 2px rgba(0,0,0,0.8); color: #ffffff; letter-spacing: -0.02em; }
+    
+    .cell-bars { position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; z-index: 1; }
+
+    .seg-fold   { background-color: var(--gtow-fold); }
+    .seg-check  { background-color: var(--gtow-check); }
+    .seg-call   { background-color: var(--gtow-call); }
+    .seg-betsm  { background-color: var(--gtow-betsm); }
+    .seg-betmed { background-color: var(--gtow-betmed); }
+    .seg-raise  { background-color: var(--gtow-raise); }
+    .seg-allin  { background-color: var(--gtow-allin); }
+
+    /* Right Inspector Sidebar (GTO Wizard Right Panel) */
+    .right-inspector {
+      width: 280px;
+      background-color: var(--panel-bg);
+      border-left: 1px solid var(--border-color);
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      overflow-y: auto;
+    }
+
+    .inspector-title { font-size: 0.85rem; font-weight: 700; color: var(--accent); display: flex; justify-content: space-between; align-items: center; }
+    .hand-header { font-size: 1.5rem; font-weight: 900; color: #fff; margin-bottom: 4px; }
+    
+    .stat-cards-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .stat-card { background-color: var(--card-bg); padding: 8px 10px; border-radius: 6px; border: 1px solid var(--border-color); }
+    .stat-card .lbl { font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+    .stat-card .val { font-size: 1.1rem; font-weight: 800; color: #fff; margin-top: 2px; }
+
+    /* Action Breakdown Bar Charts */
+    .breakdown-list { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+    .breakdown-item { display: flex; flex-direction: column; gap: 3px; font-size: 0.78rem; }
+    .breakdown-row-label { display: flex; justify-content: space-between; font-weight: 700; }
+    .breakdown-progress-track { height: 8px; background-color: var(--bg-dark); border-radius: 4px; overflow: hidden; display: flex; }
+    .breakdown-progress-fill { height: 100%; border-radius: 4px; }
+
+    /* Bottom Action Legend Bar */
+    .legend-row { display: flex; gap: 10px; margin-top: 10px; font-size: 0.75rem; font-weight: 700; flex-wrap: wrap; justify-content: center; }
+    .legend-item { display: flex; align-items: center; gap: 5px; background-color: var(--panel-bg-light); padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color); }
+    .legend-item .dot { width: 10px; height: 10px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Navbar -->
+  <header class="gtow-navbar">
+    <div class="nav-left">
+      <div class="brand-logo"><span class="icon">⚡</span> GTO WIZARD</div>
+      <div class="breadcrumbs">
+        <span class="crumb" id="bcFormat">Cash 6-Max 100BB</span>
+        <span class="sep">/</span>
+        <span class="crumb" id="bcStreet">Preflop</span>
+        <span class="sep">/</span>
+        <span class="crumb" id="bcNode" style="color: var(--accent);">BTN RFI (Raise 2.5x)</span>
+      </div>
+    </div>
+    <div class="nav-right">
+      <div class="mode-pills">
+        <button class="mode-pill active" onclick="setMode('strategy')">Strategy</button>
+        <button class="mode-pill" onclick="setMode('ev')">EV</button>
+        <button class="mode-pill" onclick="setMode('equity')">Equity</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Aggregate Range Bar -->
+  <div class="aggregate-container">
+    <div class="aggregate-stats-row">
+      <span style="font-weight: 700;">Range Strategy Aggregate Distribution</span>
+      <div class="agg-legend-pills" id="aggPillSummary">
+        <!-- Live JS populated -->
+      </div>
+    </div>
+    <div class="aggregate-bar" id="aggregateBar"></div>
+  </div>
+
+  <!-- Main Body App -->
+  <div class="app-body">
+    <!-- Left Sidebar Navigator -->
+    <div class="sidebar-nav">
+      <div class="sidebar-section-title">1. ゲームフォーマット</div>
+      <select id="formatSelect" onchange="changeNode()">
+        <option value="cash100">Cash 6-Max 100BB (No Rake)</option>
+        <option value="mtt40">MTT 40BB (ICM Model)</option>
+        <option value="spin25">Spin & Go 25BB</option>
+      </select>
+
+      <div class="sidebar-section-title">2. ストリート選択</div>
+      <select id="streetSelect" onchange="changeNode()">
+        <option value="preflop">Preflop (プリフロップ)</option>
+        <option value="flop">Flop (フロップ)</option>
+      </select>
+
+      <div id="boardSection" style="display: none;">
+        <div class="sidebar-section-title">ボードカード (Flop Board)</div>
+        <div class="board-card-picker">
+          <div class="card-slot filled red">A♠</div>
+          <div class="card-slot filled red">K♥</div>
+          <div class="card-slot filled">2♦</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section-title">3. 局面・アクションツリー</div>
+      <div class="tree-nodes-list" id="treeList"></div>
+    </div>
+
+    <!-- Center 13x13 Grid Matrix -->
+    <div class="center-content">
+      <div class="matrix-wrapper" id="matrixGrid"></div>
+
+      <!-- Action Legend Pills -->
+      <div class="legend-row">
+        <div class="legend-item"><div class="dot seg-fold"></div> Fold</div>
+        <div class="legend-item"><div class="dot seg-check"></div> Check</div>
+        <div class="legend-item"><div class="dot seg-call"></div> Call</div>
+        <div class="legend-item"><div class="dot seg-betsm"></div> Bet 33%</div>
+        <div class="legend-item"><div class="dot seg-betmed"></div> Bet 75%</div>
+        <div class="legend-item"><div class="dot seg-raise"></div> Raise 2.5x</div>
+        <div class="legend-item"><div class="dot seg-allin"></div> All-in</div>
+      </div>
+    </div>
+
+    <!-- Right Hand Inspector Panel (GTO Wizard Hand Breakdown) -->
+    <div class="right-inspector">
+      <div class="inspector-title">
+        <span>HAND INSPECTOR</span>
+        <span id="insCombos" style="font-size: 0.75rem; color: var(--text-muted);">(6 Combos)</span>
+      </div>
+      <div>
+        <div class="hand-header" id="insHand">AA</div>
+        <div style="font-size: 0.75rem; color: var(--text-muted);" id="insHandType">Pocket Pair</div>
+      </div>
+
+      <div class="stat-cards-grid">
+        <div class="stat-card">
+          <div class="lbl">EV</div>
+          <div class="val" id="insEV" style="color: #22c55e;">+3.12 BB</div>
+        </div>
+        <div class="stat-card">
+          <div class="lbl">Equity</div>
+          <div class="val" id="insEQ" style="color: var(--accent);">85.4%</div>
+        </div>
+      </div>
+
+      <div style="font-size: 0.78rem; font-weight: 700; color: var(--text-muted); margin-top: 4px;">
+        Action Breakdown
+      </div>
+      <div class="breakdown-list" id="insBreakdown">
+        <!-- JS Populated Action Progress Bars -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const RANKS = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
+    let currentMode = 'strategy';
+    let currentNode = 'btn_rfi';
+
+    const NODES_DEF = {
+      preflop: [
+        { id: 'utg_rfi', name: 'UTG RFI (15.2%)', badge: '15.2%' },
+        { id: 'hj_rfi',  name: 'HJ RFI (19.8%)',  badge: '19.8%' },
+        { id: 'co_rfi',  name: 'CO RFI (27.4%)',  badge: '27.4%' },
+        { id: 'btn_rfi', name: 'BTN RFI (42.5%)', badge: '42.5%' },
+        { id: 'sb_rfi',  name: 'SB RFI (46.0%)',  badge: '46.0%' },
+        { id: 'bb_vs_btn', name: 'BB vs BTN Open', badge: 'Defend' }
+      ],
+      flop: [
+        { id: 'flop_ak2_ip',  name: 'Flop A♠K♥2♦ (BTN IP C-Bet)', badge: 'A-K-2' },
+        { id: 'flop_772_oop', name: 'Flop 7♠7♥2♣ (BB OOP Check)',badge: '7-7-2' },
+        { id: 'flop_jt9_ip',  name: 'Flop J♠T♠9♠ (BTN Monotone)', badge: 'J-T-9' }
+      ]
+    };
+
+    function getHandGTO(node, hand, r, c) {
+      const isPair = (r === c);
+      const isSuited = (r < c);
+      const isOffsuit = (r > c);
+
+      let fold = 0, check = 0, call = 0, betSm = 0, betMed = 0, raise = 0, allin = 0;
+      let ev = 0.0, eq = 50.0;
+
+      if (node === 'utg_rfi') {
+        if (isPair && r <= 6) { raise = 100; ev = 1.5 + (6-r)*0.4; eq = 68 + (6-r)*3; }
+        else if (isSuited && r <= 3 && c <= 6) { raise = 100; ev = 0.8 + (3-r)*0.3; eq = 60 + (3-r)*2; }
+        else if (isOffsuit && r === 0 && c <= 2) { raise = 100; ev = 0.6; eq = 62; }
+        else { fold = 100; ev = 0.0; eq = 30 + Math.max(12-r, 12-c)*2; }
+      }
+      else if (node === 'btn_rfi') {
+        if (isPair && r <= 9) { raise = 100; ev = 0.8 + (9-r)*0.3; eq = 58 + (9-r)*3; }
+        else if (isSuited && (r <= 7 || (r <= 9 && c <= 11))) { raise = 100; ev = 0.5 + (7-r)*0.2; eq = 54 + (7-r)*2; }
+        else if (isOffsuit && (r <= 4 && c <= 7)) { raise = 100; ev = 0.3; eq = 52; }
+        else if (isSuited && c - r === 1) { raise = 75; fold = 25; ev = 0.15; eq = 48; }
+        else { fold = 100; ev = 0.0; eq = 25 + Math.max(12-r, 12-c)*1.5; }
+      }
+      else if (node === 'bb_vs_btn') {
+        if (isPair && r <= 3) { raise = 100; ev = 2.1; eq = 75; }
+        else if (isPair && r <= 8) { call = 100; ev = 0.4; eq = 55; }
+        else if (isSuited && r <= 5) { call = 100; ev = 0.3; eq = 52; }
+        else if (isSuited && r <= 3 && c <= 5) { raise = 80; call = 20; ev = 0.7; eq = 60; }
+        else if (isOffsuit && r <= 3 && c <= 5) { call = 100; ev = 0.2; eq = 48; }
+        else { fold = 100; ev = 0.0; eq = 22; }
+      }
+      else if (node === 'flop_ak2_ip') {
+        if (hand.includes('A') || hand.includes('K')) { betSm = 85; check = 15; ev = 1.8; eq = 78; }
+        else if (isPair) { betSm = 60; check = 40; ev = 0.8; eq = 58; }
+        else if (isSuited && (hand.includes('Q') || hand.includes('J'))) { betSm = 90; ev = 0.5; eq = 42; }
+        else { check = 80; fold = 20; ev = 0.1; eq = 28; }
+      }
+      else {
+        if (r <= 3) { raise = 100; ev = 1.2; eq = 65; }
+        else { fold = 100; ev = 0.0; eq = 30; }
+      }
+
+      const combos = isPair ? 6 : isSuited ? 4 : 12;
+      return { fold, check, call, betSm, betMed, raise, allin, ev, eq, combos };
+    }
+
+    function initTree() {
+      const street = document.getElementById('streetSelect').value;
+      const list = document.getElementById('treeList');
+      const boardSec = document.getElementById('boardSection');
+      
+      boardSec.style.display = (street === 'flop') ? 'block' : 'none';
+      document.getElementById('bcStreet').innerText = street === 'flop' ? 'Flop' : 'Preflop';
+
+      const nodes = NODES_DEF[street] || NODES_DEF.preflop;
+      list.innerHTML = nodes.map(n => `
+        <div class="tree-node-item ${n.id === currentNode ? 'active' : ''}" onclick="selectNode('${n.id}', '${n.name}')">
+          <span>${n.name}</span>
+          <span class="badge">${n.badge}</span>
+        </div>
+      `).join('');
+    }
+
+    function selectNode(id, name) {
+      currentNode = id;
+      if (name) document.getElementById('bcNode').innerText = name;
+      initTree();
+      renderMatrix();
+    }
+
+    function changeNode() {
+      const street = document.getElementById('streetSelect').value;
+      const fmtSelect = document.getElementById('formatSelect');
+      document.getElementById('bcFormat').innerText = fmtSelect.options[fmtSelect.selectedIndex].text.split('(')[0];
+      
+      currentNode = NODES_DEF[street] ? NODES_DEF[street][0].id : 'btn_rfi';
+      document.getElementById('bcNode').innerText = NODES_DEF[street] ? NODES_DEF[street][0].name : 'BTN RFI';
+      initTree();
+      renderMatrix();
+    }
+
+    function createGrid() {
+      const grid = document.getElementById('matrixGrid');
+      grid.innerHTML = '';
+
+      for (let r = 0; r < 13; r++) {
+        for (let c = 0; c < 13; c++) {
+          let hand = (r === c) ? RANKS[r]+RANKS[c] : (r < c) ? RANKS[r]+RANKS[c]+'s' : RANKS[c]+RANKS[r]+'o';
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.hand = hand;
+
+          const bars = document.createElement('div');
+          bars.className = 'cell-bars';
+          bars.id = 'bars-' + hand;
+
+          const label = document.createElement('span');
+          label.className = 'label';
+          label.innerText = hand;
+
+          cell.appendChild(bars);
+          cell.appendChild(label);
+
+          cell.onmouseenter = () => updateInspector(hand, r, c);
+          grid.appendChild(cell);
+        }
+      }
+      renderMatrix();
+    }
+
+    function renderMatrix() {
+      let foldWeighted = 0, checkWeighted = 0, callWeighted = 0, betSmWeighted = 0, raiseWeighted = 0, totalCombos = 0;
+
+      for (let r = 0; r < 13; r++) {
+        for (let c = 0; c < 13; c++) {
+          let hand = (r === c) ? RANKS[r]+RANKS[c] : (r < c) ? RANKS[r]+RANKS[c]+'s' : RANKS[c]+RANKS[r]+'o';
+          const bars = document.getElementById('bars-' + hand);
+          if (!bars) continue;
+
+          const gto = getHandGTO(currentNode, hand, r, c);
+          const w = gto.combos;
+          totalCombos += w;
+
+          foldWeighted += gto.fold * w;
+          checkWeighted += gto.check * w;
+          callWeighted += gto.call * w;
+          betSmWeighted += (gto.betSm + gto.betMed) * w;
+          raiseWeighted += (gto.raise + gto.allin) * w;
+
+          if (currentMode === 'strategy') {
+            bars.innerHTML = `
+              <div class="seg-fold" style="width: ${gto.fold}%;"></div>
+              <div class="seg-check" style="width: ${gto.check}%;"></div>
+              <div class="seg-call" style="width: ${gto.call}%;"></div>
+              <div class="seg-betsm" style="width: ${gto.betSm}%;"></div>
+              <div class="seg-betmed" style="width: ${gto.betMed}%;"></div>
+              <div class="seg-raise" style="width: ${gto.raise}%;"></div>
+              <div class="seg-allin" style="width: ${gto.allin}%;"></div>
+            `;
+          } else if (currentMode === 'ev') {
+            const evAlpha = Math.min(1.0, gto.ev / 3.0);
+            bars.innerHTML = `<div style="width: 100%; background-color: rgba(76, 175, 80, ${evAlpha});"></div>`;
+          } else {
+            const eqAlpha = (gto.eq - 20) / 70;
+            bars.innerHTML = `<div style="width: 100%; background-color: rgba(33, 150, 243, ${eqAlpha});"></div>`;
+          }
+        }
+      }
+
+      const fPct = (foldWeighted / totalCombos).toFixed(1);
+      const chPct = (checkWeighted / totalCombos).toFixed(1);
+      const cPct = (callWeighted / totalCombos).toFixed(1);
+      const bPct = (betSmWeighted / totalCombos).toFixed(1);
+      const rPct = (raiseWeighted / totalCombos).toFixed(1);
+
+      document.getElementById('aggregateBar').innerHTML = `
+        <div class="agg-segment seg-fold" style="width: ${fPct}%;"></div>
+        <div class="agg-segment seg-check" style="width: ${chPct}%;"></div>
+        <div class="agg-segment seg-call" style="width: ${cPct}%;"></div>
+        <div class="agg-segment seg-betsm" style="width: ${bPct}%;"></div>
+        <div class="agg-segment seg-raise" style="width: ${rPct}%;"></div>
+      `;
+
+      document.getElementById('aggPillSummary').innerHTML = `
+        <div class="agg-pill" style="color: var(--gtow-fold);"><div class="dot seg-fold"></div> Fold ${fPct}%</div>
+        ${chPct > 0 ? `<div class="agg-pill" style="color: var(--gtow-check);"><div class="dot seg-check"></div> Check ${chPct}%</div>` : ''}
+        ${cPct > 0 ? `<div class="agg-pill" style="color: var(--gtow-call);"><div class="dot seg-call"></div> Call ${cPct}%</div>` : ''}
+        ${bPct > 0 ? `<div class="agg-pill" style="color: var(--gtow-betsm);"><div class="dot seg-betsm"></div> Bet ${bPct}%</div>` : ''}
+        <div class="agg-pill" style="color: var(--gtow-raise);"><div class="dot seg-raise"></div> Raise ${rPct}%</div>
+      `;
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-pill').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      renderMatrix();
+    }
+
+    function updateInspector(hand, r, c) {
+      if (r === undefined || c === undefined) {
+        for (let i = 0; i < 13; i++) {
+          for (let j = 0; j < 13; j++) {
+            let h = (i === j) ? RANKS[i]+RANKS[j] : (i < j) ? RANKS[i]+RANKS[j]+'s' : RANKS[j]+RANKS[i]+'o';
+            if (h === hand) { r = i; c = j; break; }
+          }
+        }
+      }
+
+      document.getElementById('insHand').innerText = hand;
+      const isPair = (r === c);
+      const isSuited = (r < c);
+      document.getElementById('insHandType').innerText = isPair ? 'Pocket Pair' : isSuited ? 'Suited Hand' : 'Offsuit Hand';
+
+      const gto = getHandGTO(currentNode, hand, r || 0, c || 0);
+      document.getElementById('insCombos').innerText = `(${gto.combos} Combos)`;
+      document.getElementById('insEV').innerText = gto.ev > 0 ? `+${gto.ev.toFixed(2)} BB` : '0.00 BB';
+      document.getElementById('insEQ').innerText = `${gto.eq.toFixed(1)}%`;
+
+      // Render Action Breakdown Bar Charts inside Right Sidebar
+      const acts = [
+        { label: 'Raise 2.5x', pct: gto.raise, color: 'var(--gtow-raise)' },
+        { label: 'Bet 33%',   pct: gto.betSm, color: 'var(--gtow-betsm)' },
+        { label: 'Call',       pct: gto.call,  color: 'var(--gtow-call)' },
+        { label: 'Check',      pct: gto.check, color: 'var(--gtow-check)' },
+        { label: 'Fold',       pct: gto.fold,  color: 'var(--gtow-fold)' }
+      ].filter(a => a.pct > 0);
+
+      document.getElementById('insBreakdown').innerHTML = acts.map(a => `
+        <div class="breakdown-item">
+          <div class="breakdown-row-label">
+            <span style="color: ${a.color};">${a.label}</span>
+            <span>${a.pct.toFixed(1)}%</span>
+          </div>
+          <div class="breakdown-progress-track">
+            <div class="breakdown-progress-fill" style="width: ${a.pct}%; background-color: ${a.color};"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    window.onload = () => {
+      initTree();
+      createGrid();
+      updateInspector('AA', 0, 0);
+    };
+  </script>
+</body>
+</html>

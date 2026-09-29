@@ -19,3 +19,10 @@
 ## 5. Obsidian Vault 運用権限 (Obsidian Authority Rules)
 - `01_Imo/` (思考メモ) および `02_Read-only/` (静的ツール) は **読込専用 (保護)** とし、上書き・削除を行わないでください。
 - AIの出力物や作業ログは `03_AI/` または各開発プロジェクトフォルダ (`ai-agent/`, `timebomb-game/`, `icm-calculator/` 等) に保存・更新してください。
+
+## 6. 単一スキーマ駆動開発の標準適用 (Schema-Driven Development Rule)
+- ユーザーからシステム・アプリ・ツールの設計・開発・機能追加・**ER図作成**の依頼を受けた際は、必ず `03_AI/SchemaDrivenDevelopment/` の単一スキーマ手法を標準プロセスとして適用してください。
+- 最初に `schema.json`（または `schema_template.json`）を作成し、`generate_diagrams.py` を実行して ER図・概念図・業務フロー・UI構造・TypeScript型定義を一括自動生成・検証した上で開発を進めてください。
+- **ER図・スキーマを作成した際は、必ず `c:\work\ai\ai-tool\03_AI\ERDiagramViewer\scan_projects.py` を自動実行し、作成したプロジェクトがER図ビューアの対象として即座にカタログ登録・同期されるようにしてください。**
+
+
