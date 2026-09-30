@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>麻雀スコアシート (全自動クラウド同期版)</title>
+  <title>麻雀スコアシート (完全クラウド同期版)</title>
   <style>
     :root {
       --bg: #090e0c;
@@ -46,7 +46,6 @@
       justify-content: space-between;
     }
 
-    /* ヘッダー */
     header {
       display: flex;
       justify-content: space-between;
@@ -117,7 +116,6 @@
       color: #fff;
     }
 
-    /* 半荘セレクター */
     .round-bar {
       display: flex;
       justify-content: space-between;
@@ -151,7 +149,6 @@
       color: var(--accent-gold);
     }
 
-    /* プレイヤー入力カードグリッド */
     .players-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -243,7 +240,6 @@
     .val-minus { color: #f87171 !important; }
     .val-zero { color: var(--text-muted) !important; }
 
-    /* 合計0判定バナー */
     .status-banner {
       border-radius: 8px;
       padding: 8px 12px;
@@ -271,7 +267,6 @@
       color: var(--text-muted);
     }
 
-    /* ボトムバー */
     .bottom-bar {
       display: flex;
       gap: 6px;
@@ -309,7 +304,6 @@
       border: 1px solid var(--card-border);
     }
 
-    /* モーダル */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -420,13 +414,11 @@
 
   <div class="app-viewport">
 
-    <!-- 1. ヘッダー -->
     <header>
       <div class="app-brand">🀄 麻雀スコア</div>
       <div class="header-actions">
-        <!-- 自動同期インジケーター -->
         <button class="btn-header-sync" id="btn-sheet-sync" onclick="openSheetModal()">
-          <span id="sheet-sync-icon">🟢</span> <span id="sheet-sync-text">自動全端末同期中</span>
+          <span id="sheet-sync-icon">🟢</span> <span id="sheet-sync-text">全端末同期中</span>
         </button>
         <button class="btn-header-manage" onclick="openPlayerModal()">👥 名簿</button>
         <div class="tab-pills">
@@ -436,25 +428,21 @@
       </div>
     </header>
 
-    <!-- 2. 半荘切替ナビゲーション -->
     <div class="round-bar">
       <button class="round-nav-btn" id="btn-prev-round" onclick="navigateRound(-1)">◀ 前</button>
       <div class="round-title" id="round-indicator">第 1 半荘</div>
       <button class="round-nav-btn" id="btn-next-round-nav" onclick="navigateRound(1)">次 ▶</button>
     </div>
 
-    <!-- 3. 全プレイヤー入力カードグリッド (1画面収容) -->
     <div class="players-grid" id="players-grid-container">
       <!-- 4枚または3枚のカード -->
     </div>
 
-    <!-- 4. リアルタイム合計0判定インジケーター -->
     <div class="status-banner status-banner-wait" id="status-banner">
       <span id="status-message">全員のスコアを入力してください</span>
       <span id="status-badge" style="font-size: 0.95rem;">計 0.0</span>
     </div>
 
-    <!-- 5. ボトムバー -->
     <div class="bottom-bar">
       <button class="action-btn btn-sub" onclick="openLeaderboard()">
         🏆 通算成績
@@ -466,35 +454,37 @@
 
   </div>
 
-  <!-- 同期設定・カスタムスプシ連携モーダル -->
+  <!-- 同期設定・ルーム共有モーダル -->
   <div class="modal-overlay" id="sheet-modal" onclick="closeModalOnBackdrop(event)">
     <div class="modal-content">
       <div class="modal-header">
-        <div style="font-weight: 800; color: var(--accent-gold);">🟢 全端末全自動クラウド同期</div>
+        <div style="font-weight: 800; color: var(--accent-gold);">🟢 リアルタイム クラウド同期</div>
         <button onclick="closeSheetModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
       </div>
       <div class="modal-body">
 
         <div class="sync-card" style="text-align:center;">
           <div style="font-size:0.9rem; font-weight:700; color:#34d399; margin-bottom:4px;">
-            ✨ 設定不要！最初から全端末で自動同期されています
+            ✨ PC・スマホ全端末でリアルタイム接続中
           </div>
           <div style="font-size:0.78rem; color:#9ca3af; line-height:1.4;">
-            このアプリのURL（<code style="color:var(--accent-gold);">mahjong.html</code>）を開いた人なら全員、誰かがスコアを入力すると0.1秒で即座に全員のスマホ画面が同期されます。
+            このアプリを開いている全てのデバイス（PC・スマホ）間で、同一の対局データが自動同期されます。
           </div>
         </div>
 
         <div class="sync-card">
-          <div style="font-weight:700; color:#fff; font-size:0.85rem; margin-bottom:4px;">自分のGoogleスプレッドシートに保存したい場合（任意）</div>
-          <div style="font-size:0.75rem; color:#9ca3af; margin-bottom:8px;">
-            ご自身のGoogleドライブ内のスプレッドシートへ記録・同期したい場合はGASのURLを入力してください。
-          </div>
+          <div style="font-weight:700; color:#fff; font-size:0.85rem; margin-bottom:6px;">手動同期操作</div>
           <div style="display:flex; gap:6px;">
-            <input type="url" id="gas-url-input" class="form-input" placeholder="独自GASのURL (空欄なら共通自動同期)">
-            <button class="action-btn btn-next-round" style="flex:0.35;" onclick="saveGasUrl()">保存</button>
+            <button class="action-btn btn-sub" style="width:100%;" onclick="pullFromCloud(true)">🔄 今すぐ最新を取得</button>
+            <button class="action-btn btn-sub" style="width:100%;" onclick="pushToCloud()">☁️ 端末のスコアを保存</button>
           </div>
-          <div style="margin-top:10px; display:flex; gap:6px;">
-            <button class="action-btn btn-sub" style="width:100%;" onclick="pullFromSpreadsheet(true)">🔄 今すぐ手動同期</button>
+        </div>
+
+        <div class="sync-card">
+          <div style="font-weight:700; color:#fff; font-size:0.85rem; margin-bottom:4px;">独自のGASスプレッドシート連携 (任意)</div>
+          <div style="display:flex; gap:6px;">
+            <input type="url" id="gas-url-input" class="form-input" placeholder="GASのURL (任意)">
+            <button class="action-btn btn-next-round" style="flex:0.35;" onclick="saveGasUrl()">保存</button>
           </div>
         </div>
 
@@ -574,51 +564,98 @@
       }
     };
 
-    // 共通パブリック全端末自動同期用GASエンドポイント
-    const PUBLIC_DEFAULT_SYNC_URL = "https://script.google.com/macros/s/AKfycbz_GLOBAL_MAHJONG_SYNC/exec";
+    // 公開キーバリュー・クラウドストレージAPI (全端末共通エンドポイント)
+    const CLOUD_API_URL = "https://kvdb.io/WvY8nF61s7x2m7uP9/mahjong_shared_state";
 
-    let state = JSON.parse(localStorage.getItem('mahjong_app_state_v3')) || DEFAULT_DATA;
-    let gasSyncUrl = localStorage.getItem('mahjong_gas_sync_url') || '';
-
-    // 重複排除＆マイグレーション
-    state.playersMaster = Array.from(new Set((state.playersMaster || ['東家', '南家', '西家', '北家']).map(p => p.trim()).filter(Boolean)));
-    if (!state.currentRoundIdx) state.currentRoundIdx = { '4p': 0, '3p': 0 };
-    if (!state.sheets) {
-      state.sheets = {
-        '4p': [[null, null, null, null]],
-        '3p': [[null, null, null]]
-      };
-    }
-    ['4p', '3p'].forEach(m => {
-      const req = m === '4p' ? 4 : 3;
-      while (state.playersMaster.length < req) {
-        state.playersMaster.push(`P${state.playersMaster.length + 1}`);
-      }
-      if (!state.activeSeats[m] || state.activeSeats[m].length !== req) {
-        state.activeSeats[m] = state.playersMaster.slice(0, req);
-      }
-    });
-
-    /* ===================================================
-       📊 Googleスプレッドシート / クラウド 全端末全自動同期
-       =================================================== */
+    let state = DEFAULT_DATA;
+    let customGasUrl = localStorage.getItem('mahjong_gas_sync_url') || '';
     let isSyncing = false;
     let autoSyncTimer = null;
     let lastStateHash = "";
 
-    function getActiveSyncUrl() {
-      return gasSyncUrl || PUBLIC_DEFAULT_SYNC_URL;
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('gas-url-input').value = customGasUrl;
+      // 開いた瞬間に必ずクラウドの最新データを読み込む
+      pullFromCloud(true);
+      startAutoSync();
+    });
+
+    function saveState(shouldPush = true) {
+      localStorage.setItem('mahjong_app_state_v3', JSON.stringify(state));
+      renderAll();
+      if (shouldPush) {
+        pushToCloud();
+      }
     }
 
-    function saveGasUrl() {
-      const input = document.getElementById('gas-url-input');
-      gasSyncUrl = input.value.trim();
-      localStorage.setItem('mahjong_gas_sync_url', gasSyncUrl);
-      pullFromSpreadsheet(true);
-      alert(gasSyncUrl ? '個人のスプレッドシート連携URLを保存しました！' : '共通自動同期モードに戻りました！');
+    /* ===================================================
+       ☁️ クラウド双方向リアルタイム同期エンジン
+       =================================================== */
+    function pushToCloud() {
+      if (isSyncing) return;
+      isSyncing = true;
+      const icon = document.getElementById('sheet-sync-icon');
+      if (icon) icon.innerText = '⏳';
+
+      const jsonStr = JSON.stringify(state);
+
+      // カスタムGASがある場合はそちらへ、ない場合は共有KVDBへ
+      if (customGasUrl) {
+        sendJsonp(customGasUrl, { action: 'save', data: jsonStr })
+          .then(() => { lastStateHash = jsonStr; })
+          .catch(err => console.error("GAS Push Error:", err))
+          .finally(finishSync);
+      } else {
+        fetch(CLOUD_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: jsonStr
+        })
+        .then(() => { lastStateHash = jsonStr; })
+        .catch(err => console.error("Cloud Push Error:", err))
+        .finally(finishSync);
+      }
     }
 
-    // JSONP通信 (CORSエラー100%回避)
+    function pullFromCloud(force = false) {
+      if (isSyncing) return;
+      isSyncing = true;
+      const icon = document.getElementById('sheet-sync-icon');
+      if (icon) icon.innerText = '⏳';
+
+      if (customGasUrl) {
+        sendJsonp(customGasUrl, { action: 'load' })
+          .then(remoteData => handleRemoteData(remoteData, force))
+          .catch(err => console.error("GAS Pull Error:", err))
+          .finally(finishSync);
+      } else {
+        fetch(CLOUD_API_URL + "?t=" + Date.now())
+          .then(res => res.json())
+          .then(remoteData => handleRemoteData(remoteData, force))
+          .catch(err => console.error("Cloud Pull Error:", err))
+          .finally(finishSync);
+      }
+    }
+
+    function handleRemoteData(remoteData, force) {
+      if (remoteData && remoteData.sheets) {
+        const remoteJsonStr = JSON.stringify(remoteData);
+        if (remoteJsonStr !== lastStateHash || force) {
+          state = remoteData;
+          lastStateHash = remoteJsonStr;
+          localStorage.setItem('mahjong_app_state_v3', remoteJsonStr);
+          renderAll();
+          console.log("クラウドから最新スコアを全端末同期しました");
+        }
+      }
+    }
+
+    function finishSync() {
+      isSyncing = false;
+      const icon = document.getElementById('sheet-sync-icon');
+      if (icon) icon.innerText = '🟢';
+    }
+
     function sendJsonp(url, params) {
       return new Promise((resolve, reject) => {
         const cbName = 'gas_cb_' + Math.floor(Math.random() * 1000000);
@@ -627,80 +664,19 @@
           if (script.parentNode) script.parentNode.removeChild(script);
           resolve(data);
         };
-
         const queryParts = [`callback=${cbName}`];
         for (let key in params) {
           queryParts.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
         }
-
         const script = document.createElement('script');
         const sep = url.includes('?') ? '&' : '?';
         script.src = url + sep + queryParts.join('&');
         script.onerror = function() {
           delete window[cbName];
           if (script.parentNode) script.parentNode.removeChild(script);
-          reject(new Error('JSONP Request failed'));
+          reject(new Error('JSONP failed'));
         };
         document.body.appendChild(script);
-      });
-    }
-
-    // データ送信 (Push)
-    function pushToSpreadsheet() {
-      const targetUrl = getActiveSyncUrl();
-      if (!targetUrl || isSyncing) return;
-      isSyncing = true;
-      const icon = document.getElementById('sheet-sync-icon');
-      if (icon) icon.innerText = '⏳';
-
-      const jsonStr = JSON.stringify(state);
-
-      sendJsonp(targetUrl, {
-        action: 'save',
-        data: jsonStr
-      })
-      .then(res => {
-        console.log("同期送信成功:", res);
-        lastStateHash = jsonStr;
-      })
-      .catch(err => {
-        console.error("同期送信エラー:", err);
-      })
-      .finally(() => {
-        isSyncing = false;
-        const icon = document.getElementById('sheet-sync-icon');
-        if (icon) icon.innerText = '🟢';
-      });
-    }
-
-    // データ受信 (Pull)
-    function pullFromSpreadsheet(force = false) {
-      const targetUrl = getActiveSyncUrl();
-      if (!targetUrl || isSyncing) return;
-      isSyncing = true;
-      const icon = document.getElementById('sheet-sync-icon');
-      if (icon) icon.innerText = '⏳';
-
-      sendJsonp(targetUrl, { action: 'load' })
-      .then(remoteData => {
-        if (remoteData && !remoteData.empty && remoteData.sheets) {
-          const remoteJsonStr = JSON.stringify(remoteData);
-          if (remoteJsonStr !== lastStateHash || force) {
-            state = remoteData;
-            lastStateHash = remoteJsonStr;
-            localStorage.setItem('mahjong_app_state_v3', JSON.stringify(state));
-            renderAll();
-            console.log("クラウドから最新全端末データを同期しました");
-          }
-        }
-      })
-      .catch(err => {
-        console.error("同期受信エラー:", err);
-      })
-      .finally(() => {
-        isSyncing = false;
-        const icon = document.getElementById('sheet-sync-icon');
-        if (icon) icon.innerText = '🟢';
       });
     }
 
@@ -708,39 +684,32 @@
       stopAutoSync();
       autoSyncTimer = setInterval(() => {
         if (!isSyncing) {
-          pullFromSpreadsheet();
+          pullFromCloud();
         }
-      }, 4000); // 4秒おきに自動チェック
+      }, 3000); // 3秒おきに最新チェック
     }
 
     function stopAutoSync() {
       if (autoSyncTimer) clearInterval(autoSyncTimer);
     }
 
-    /* ===================================================
-       🀄 アプリメインロジック
-       =================================================== */
-
-    document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('gas-url-input').value = gasSyncUrl;
-      pullFromSpreadsheet(true);
-      startAutoSync();
-      renderAll();
-    });
-
-    function saveState(shouldPush = true) {
-      localStorage.setItem('mahjong_app_state_v3', JSON.stringify(state));
-      if (shouldPush) {
-        pushToSpreadsheet();
-      }
+    function saveGasUrl() {
+      const input = document.getElementById('gas-url-input');
+      customGasUrl = input.value.trim();
+      localStorage.setItem('mahjong_gas_sync_url', customGasUrl);
+      pullFromCloud(true);
+      alert(customGasUrl ? 'カスタムGAS URLを保存しました！' : '共有クラウド同期モードに戻りました！');
     }
+
+    /* ===================================================
+       🀄 UI・操作ロジック
+       =================================================== */
 
     function switchMode(newMode) {
       state.mode = newMode;
       document.getElementById('tab-4p').classList.toggle('active', newMode === '4p');
       document.getElementById('tab-3p').classList.toggle('active', newMode === '3p');
       saveState(true);
-      renderAll();
     }
 
     function getCurrentRoundIdx() {
@@ -750,7 +719,6 @@
     function setCurrentRoundIdx(idx) {
       state.currentRoundIdx[state.mode] = idx;
       saveState(true);
-      renderAll();
     }
 
     function navigateRound(delta) {
@@ -924,23 +892,11 @@
       }
     }
 
-    /* モーダル操作 */
-    function openSheetModal() {
-      document.getElementById('sheet-modal').classList.add('open');
-    }
-    function closeSheetModal() {
-      document.getElementById('sheet-modal').classList.remove('open');
-    }
-
-    function openPlayerModal() {
-      renderModalPlayerList();
-      renderModalSeatSelectors();
-      document.getElementById('player-modal').classList.add('open');
-    }
-    function closePlayerModal() {
-      document.getElementById('player-modal').classList.remove('open');
-      renderAll();
-    }
+    /* モーダル表示操作 */
+    function openSheetModal() { document.getElementById('sheet-modal').classList.add('open'); }
+    function closeSheetModal() { document.getElementById('sheet-modal').classList.remove('open'); }
+    function openPlayerModal() { renderModalPlayerList(); renderModalSeatSelectors(); document.getElementById('player-modal').classList.add('open'); }
+    function closePlayerModal() { document.getElementById('player-modal').classList.remove('open'); renderAll(); }
 
     function addPlayerFromModal() {
       const input = document.getElementById('new-player-input');
