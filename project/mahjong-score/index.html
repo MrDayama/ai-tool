@@ -904,6 +904,15 @@
       const rIdx = getCurrentRoundIdx();
       const currentScores = state.sheets[mode][rIdx] || new Array(seats.length).fill(null);
 
+      // 入力中のエレメントとその文字（- 等の途中入力）を退避
+      const activeEl = document.activeElement;
+      let activeInputId = null;
+      let activeInputValue = null;
+      if (activeEl && activeEl.id && activeEl.id.startsWith('score-input-')) {
+        activeInputId = activeEl.id;
+        activeInputValue = activeEl.value;
+      }
+
       const totalMap = {};
       seats.forEach(s => totalMap[s] = 0);
       state.sheets[mode].forEach(row => {
@@ -953,6 +962,15 @@
         `;
         container.appendChild(card);
       });
+
+      // 入力中のフォーカスと途中の入力文字（-15.5等）を元通り復元
+      if (activeInputId) {
+        const restoredInput = document.getElementById(activeInputId);
+        if (restoredInput && activeInputValue !== null) {
+          restoredInput.value = activeInputValue;
+          restoredInput.focus();
+        }
+      }
     }
 
     function updateStatusBanner() {

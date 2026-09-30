@@ -1,60 +1,58 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "project": "mahjong-score",
-  "title": "麻雀スコア管理システム スキーマ定義 (プレイヤー名管理版)",
-  "description": "プレイヤー名マスターを中心に、四麻・三麻の試合スコアをプレイヤー別に記録・集計し、各試合の合計スコアが0であることを検証するSQLite向けスキーマ定義",
-  "version": "1.1.0",
-  "entities": {
-    "players": {
-      "tableName": "players",
-      "description": "登録プレイヤーマスター",
-      "columns": {
-        "player_id": { "type": "INTEGER", "primaryKey": true, "autoIncrement": true, "description": "プレイヤーID" },
-        "name": { "type": "TEXT", "notNull": true, "unique": true, "description": "プレイヤー名（一意）" },
-        "created_at": { "type": "TEXT", "notNull": true, "description": "登録日時" }
-      }
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MahjongScoreApp",
+  "description": "麻雀スコア管理アプリ（四麻/三麻・リアルタイムルーム同期）データ構造定義",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": ["4p", "3p"],
+      "description": "対局モード (4人麻雀 / 3人麻雀)"
     },
-    "sessions": {
-      "tableName": "sessions",
-      "description": "対局セッション",
-      "columns": {
-        "session_id": { "type": "INTEGER", "primaryKey": true, "autoIncrement": true, "description": "セッションID" },
-        "session_name": { "type": "TEXT", "notNull": true, "description": "セッション名" },
-        "rule_type": { "type": "TEXT", "notNull": true, "description": "'4p' (四麻) または '3p' (三麻)" },
-        "created_at": { "type": "TEXT", "notNull": true, "description": "作成日時" }
-      }
+    "playersMaster": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "登録済み全プレイヤー名簿リスト"
     },
-    "matches": {
-      "tableName": "matches",
-      "description": "各半荘（1試合）",
-      "columns": {
-        "match_id": { "type": "INTEGER", "primaryKey": true, "autoIncrement": true, "description": "試合ID" },
-        "session_id": { "type": "INTEGER", "notNull": true, "foreignKey": "sessions.session_id", "description": "所属セッションID" },
-        "round_number": { "type": "INTEGER", "notNull": true, "description": "半荘番号" },
-        "total_score_sum": { "type": "REAL", "notNull": true, "description": "全参加者のスコア合計（厳密に0.0であることを検証）" },
-        "is_valid_zero": { "type": "INTEGER", "notNull": true, "description": "合計が0なら1、不整合なら0" },
-        "recorded_at": { "type": "TEXT", "notNull": true, "description": "記録日時" }
-      }
+    "activeSeats": {
+      "type": "object",
+      "properties": {
+        "4p": { "type": "array", "items": { "type": "string" }, "minItems": 4, "maxItems": 4 },
+        "3p": { "type": "array", "items": { "type": "string" }, "minItems": 3, "maxItems": 3 }
+      },
+      "required": ["4p", "3p"],
+      "description": "現在席に着いているプレイヤー名"
     },
-    "match_scores": {
-      "tableName": "match_scores",
-      "description": "各試合におけるプレイヤー別の獲得スコア(pt)",
-      "columns": {
-        "score_id": { "type": "INTEGER", "primaryKey": true, "autoIncrement": true, "description": "スコアレコードID" },
-        "match_id": { "type": "INTEGER", "notNull": true, "foreignKey": "matches.match_id", "description": "対象試合ID" },
-        "player_id": { "type": "INTEGER", "notNull": true, "foreignKey": "players.player_id", "description": "対象プレイヤーID" },
-        "score_point": { "type": "REAL", "notNull": true, "description": "獲得スコア(pt)（例: +45.0, -15.0）" }
-      }
+    "currentRoundIdx": {
+      "type": "object",
+      "properties": {
+        "4p": { "type": "integer", "minimum": 0 },
+        "3p": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["4p", "3p"],
+      "description": "現在選択されている半荘のインデックス"
+    },
+    "sheets": {
+      "type": "object",
+      "properties": {
+        "4p": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": ["number", "null"] }
+          }
+        },
+        "3p": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": ["number", "null"] }
+          }
+        }
+      },
+      "required": ["4p", "3p"],
+      "description": "各半荘ごとの各プレイヤーのスコア記録 (pt)"
     }
   },
-  "views": {
-    "v_player_leaderboard": {
-      "description": "プレイヤー別の通算成績リーダーボード（対局数、通算スコア、平均スコア）",
-      "query": "SELECT p.player_id, p.name AS player_name, COUNT(ms.match_id) AS total_matches, ROUND(SUM(ms.score_point), 1) AS total_score_pt, ROUND(AVG(ms.score_point), 2) AS avg_score_pt FROM players p LEFT JOIN match_scores ms ON p.player_id = ms.player_id GROUP BY p.player_id ORDER BY total_score_pt DESC"
-    },
-    "v_match_details": {
-      "description": "各半荘の対局明細（プレイヤー名付きスコア一覧と合計0チェック）",
-      "query": "SELECT m.match_id, m.round_number, p.name AS player_name, ms.score_point, m.total_score_sum, CASE WHEN m.is_valid_zero = 1 THEN 'OK' ELSE 'ERROR' END AS zero_check FROM matches m JOIN match_scores ms ON m.match_id = ms.match_id JOIN players p ON ms.player_id = p.player_id ORDER BY m.match_id, ms.score_point DESC"
-    }
-  }
+  "required": ["mode", "playersMaster", "activeSeats", "currentRoundIdx", "sheets"]
 }
