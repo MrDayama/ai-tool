@@ -417,8 +417,8 @@
     <header>
       <div class="app-brand">🀄 麻雀スコア</div>
       <div class="header-actions">
-        <button class="btn-header-sync" id="btn-sheet-sync" onclick="openSheetModal()">
-          <span id="sheet-sync-icon">🟢</span> <span id="sheet-sync-text">同期</span>
+        <button class="btn-header-sync" id="btn-room-sync" onclick="openRoomModal()">
+          <span id="room-sync-icon">🔗</span> <span id="room-sync-text">部屋未接続</span>
         </button>
         <button class="btn-header-manage" onclick="openPlayerModal()">👥 名簿</button>
         <div class="tab-pills">
@@ -454,36 +454,32 @@
 
   </div>
 
-  <!-- 同期設定・クラウド同期モーダル -->
-  <div class="modal-overlay" id="sheet-modal" onclick="closeModalOnBackdrop(event)">
+  <!-- 部屋共有（合言葉）モーダル -->
+  <div class="modal-overlay" id="room-modal" onclick="closeModalOnBackdrop(event)">
     <div class="modal-content">
       <div class="modal-header">
-        <div style="font-weight: 800; color: var(--accent-gold);">🟢 同期 & スプレッドシート設定</div>
-        <button onclick="closeSheetModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
+        <div style="font-weight: 800; color: var(--accent-gold);">🔗 ルーム共有（合言葉でリアルタイム同期）</div>
+        <button onclick="closeRoomModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
       </div>
       <div class="modal-body">
 
         <div class="sync-card">
-          <div style="font-weight:700; color:#fff; font-size:0.85rem; margin-bottom:6px;">手動同期</div>
+          <div style="font-weight:700; color:#fff; font-size:0.85rem; margin-bottom:6px;">部屋の合言葉（ルームID）</div>
           <div style="display:flex; gap:6px;">
-            <button class="action-btn btn-sub" style="width:100%;" onclick="pullFromCloud(true, true)">🔄 最新データを取得</button>
-            <button class="action-btn btn-sub" style="width:100%;" onclick="pushToCloud(true)">☁️ データを保存</button>
+            <input type="text" id="room-id-input" class="form-input" placeholder="例: 1234 や taku1">
+            <button class="action-btn btn-next-round" style="flex:0.4;" onclick="connectRoom()">接続</button>
+          </div>
+          <div style="font-size:0.75rem; color:#9ca3af; margin-top:8px; line-height:1.4;">
+            💡 **設定不要！** 同じ合言葉（例: 1234）を入力した全員のスマホ・PC間でスコアが自動同期されます。スプレッドシートやGASの設定は一切不要です。
           </div>
         </div>
 
-        <div class="sync-card">
-          <div style="font-weight:700; color:#fff; font-size:0.85rem; margin-bottom:4px;">独自GASスプレッドシート連携 (任意)</div>
-          <div style="display:flex; gap:6px;">
-            <input type="url" id="gas-url-input" class="form-input" placeholder="GASのURL (https://script.google.com/...)">
-            <button class="action-btn btn-next-round" style="flex:0.35;" onclick="saveGasUrl()">保存</button>
-          </div>
-        </div>
-
-        <div class="sync-card">
-          <div style="font-weight:700; color:#fff; font-size:0.85rem; margin-bottom:6px;">GASコード（スプレッドシート用）</div>
-          <button class="action-btn btn-sub" style="width:100%; font-size:0.8rem;" onclick="copyGasCode()">📋 GASスクリプトコードをコピー</button>
-          <div style="font-size:0.73rem; color:#9ca3af; margin-top:6px; line-height:1.3;">
-            ※スプレッドシートの「拡張機能」➜「Apps Script」に貼り付け、「Webアプリとしてデプロイ（アクセスできるユーザー：全員）」してください。
+        <div class="sync-card" id="room-status-card" style="display:none; margin-top:10px;">
+          <div style="font-weight:700; color:var(--accent-gold); font-size:0.85rem; margin-bottom:6px;">現在の接続状態</div>
+          <div style="font-size:0.85rem; color:#fff; font-weight:bold;" id="current-room-text">接続中: なし</div>
+          <div style="display:flex; gap:6px; margin-top:10px;">
+            <button class="action-btn btn-sub" style="width:100%;" onclick="pullFromRoom(true)">🔄 手動で最新取得</button>
+            <button class="action-btn btn-sub" style="width:100%; color:#f87171;" onclick="disconnectRoom()">❌ 切断する</button>
           </div>
         </div>
 
@@ -565,23 +561,27 @@
 
     // ローカルストレージ最優先（入力阻害ゼロの超安定構成）
     let state = JSON.parse(localStorage.getItem('mahjong_app_state_v4')) || DEFAULT_DATA;
-    let customGasUrl = localStorage.getItem('mahjong_gas_sync_url') || '';
+    let currentRoomId = localStorage.getItem('mahjong_room_id') || '';
     let isSyncing = false;
     let lastStateHash = "";
+    let roomSyncTimer = null;
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.getElementById('gas-url-input').value = customGasUrl;
       renderAll();
-      if (customGasUrl) {
-        pullFromCloud(true);
+      if (currentRoomId) {
+        updateRoomUI(true);
+        pullFromRoom(true);
+        startRoomPolling();
+      } else {
+        updateRoomUI(false);
       }
     });
 
     function saveState(shouldPush = true) {
       localStorage.setItem('mahjong_app_state_v4', JSON.stringify(state));
       renderUIWithoutInputs(); // 入力中のフォーカスを壊さずにUI更新
-      if (shouldPush && customGasUrl) {
-        pushToCloud();
+      if (shouldPush && currentRoomId) {
+        pushToRoom();
       }
     }
 
@@ -591,133 +591,126 @@
       return activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'SELECT' || activeEl.tagName === 'TEXTAREA');
     }
 
-    /* クラウド同期 (ユーザー入力中はスキップ) */
-    function pushToCloud(isManual = false) {
-      if (!customGasUrl) {
-        if (isManual) alert('GASのURLが設定されていません。下の入力枠にURLを貼って「保存」を押してください。');
+    /* ルームUIの更新 */
+    function updateRoomUI(isConnected) {
+      const icon = document.getElementById('room-sync-icon');
+      const text = document.getElementById('room-sync-text');
+      const input = document.getElementById('room-id-input');
+      const statusCard = document.getElementById('room-status-card');
+      const statusText = document.getElementById('current-room-text');
+
+      if (isConnected && currentRoomId) {
+        if (icon) icon.textContent = '🟢';
+        if (text) text.textContent = `部屋: ${currentRoomId}`;
+        if (input) input.value = currentRoomId;
+        if (statusCard) statusCard.style.display = 'block';
+        if (statusText) statusText.textContent = `接続中: 部屋 [ ${currentRoomId} ]`;
+      } else {
+        if (icon) icon.textContent = '🔗';
+        if (text) text.textContent = '部屋未接続';
+        if (input) input.value = '';
+        if (statusCard) statusCard.style.display = 'none';
+      }
+    }
+
+    function openRoomModal() {
+      document.getElementById('room-modal').classList.add('open');
+    }
+    function closeRoomModal() {
+      document.getElementById('room-modal').classList.remove('open');
+    }
+
+    function connectRoom() {
+      const input = document.getElementById('room-id-input');
+      const rawId = input ? input.value.trim() : '';
+      if (!rawId) {
+        alert('合言葉（ルームID）を入力してください。');
         return;
       }
-      if (isSyncing) return;
+      currentRoomId = rawId;
+      localStorage.setItem('mahjong_room_id', currentRoomId);
+      updateRoomUI(true);
+      pullFromRoom(true);
+      startRoomPolling();
+      alert(`部屋「${currentRoomId}」に接続しました！\n同じ合言葉を入れた全員の端末でリアルタイム同期されます。`);
+      closeRoomModal();
+    }
+
+    function disconnectRoom() {
+      currentRoomId = '';
+      localStorage.removeItem('mahjong_room_id');
+      if (roomSyncTimer) clearInterval(roomSyncTimer);
+      updateRoomUI(false);
+      alert('部屋から切断しました。（スマホ本体の保存モードに戻りました）');
+    }
+
+    function startRoomPolling() {
+      if (roomSyncTimer) clearInterval(roomSyncTimer);
+      roomSyncTimer = setInterval(() => {
+        if (currentRoomId && !isSyncing && !isUserTyping()) {
+          pullFromRoom(false);
+        }
+      }, 4000);
+    }
+
+    const KV_ENDPOINT = 'https://kvdb.io/8D9aLz4eX9k2P1M3/mahjong_room_';
+
+    function pushToRoom(isManual = false) {
+      if (!currentRoomId || isSyncing) return;
       isSyncing = true;
       const jsonStr = JSON.stringify(state);
 
-      sendJsonp(customGasUrl, { action: 'save', data: jsonStr })
-        .then(() => {
+      fetch(KV_ENDPOINT + encodeURIComponent(currentRoomId), {
+        method: 'POST',
+        body: jsonStr
+      })
+      .then(res => {
+        if (res.ok) {
           lastStateHash = jsonStr;
-          if (isManual) alert('🟢 スプレッドシートへの保存に成功しました！');
-        })
-        .catch(err => {
-          console.error("GAS Push Error:", err);
-          if (isManual) alert('❌ 保存に失敗しました。\n・URLが正しいか確認してください\n・GASのデプロイ時「アクセスできるユーザー」が「全員」になっているか確認してください。');
-        })
-        .finally(() => { isSyncing = false; });
+          if (isManual) alert('🟢 部屋へ最新スコアを同期・保存しました！');
+        } else {
+          if (isManual) alert('❌ 通信エラーが発生しました。');
+        }
+      })
+      .catch(err => {
+        console.error("Room Push Error:", err);
+        if (isManual) alert('❌ 同期エラーが発生しました。');
+      })
+      .finally(() => { isSyncing = false; });
     }
 
-    function pullFromCloud(force = false, isManual = false) {
-      if (!customGasUrl) {
-        if (isManual) alert('GASのURLが設定されていません。下の入力枠にURLを貼って「保存」を押してください。');
-        return;
-      }
-      if (isSyncing || (!force && isUserTyping())) return;
+    function pullFromRoom(isManual = false) {
+      if (!currentRoomId || isSyncing) return;
+      if (!isManual && isUserTyping()) return;
       isSyncing = true;
 
-      sendJsonp(customGasUrl, { action: 'load' })
-        .then(remoteData => {
-          if (remoteData && remoteData.sheets) {
-            const remoteJsonStr = JSON.stringify(remoteData);
-            if (remoteJsonStr !== lastStateHash || force) {
-              state = remoteData;
-              lastStateHash = remoteJsonStr;
-              localStorage.setItem('mahjong_app_state_v4', remoteJsonStr);
-              renderAll();
-            }
-            if (isManual) alert('🟢 スプレッドシートから最新データを取得しました！');
-          } else {
-            if (isManual) alert('⚠️ スプレッドシートのデータが空、または形式が無効です。');
-          }
-        })
-        .catch(err => {
-          console.error("GAS Pull Error:", err);
-          if (isManual) alert('❌ データ取得に失敗しました。\n・URLが正しいか確認してください\n・GASのデプロイ時「アクセスできるユーザー」が「全員」になっているか確認してください。');
-        })
-        .finally(() => { isSyncing = false; });
-    }
-
-    function copyGasCode() {
-      const gasCode = `function doGet(e) {
-  var params = e.parameter;
-  var callback = params.callback;
-  var action = params.action;
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sheet = ss.getSheetByName("Data") || ss.insertSheet("Data");
-
-  var result = { status: "error" };
-
-  if (action === "save") {
-    var dataStr = params.data;
-    sheet.getRange("A1").setValue(dataStr);
-    result = { status: "success" };
-  } else if (action === "load") {
-    var val = sheet.getRange("A1").getValue();
-    if (val) {
-      try {
-        result = JSON.parse(val);
-      } catch(err) {
-        result = { status: "json_parse_error" };
-      }
-    } else {
-      result = { status: "empty" };
-    }
-  }
-
-  var output = callback + "(" + JSON.stringify(result) + ")";
-  return ContentService.createTextOutput(output).setMimeType(ContentService.MimeType.JAVASCRIPT);
-}`;
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(gasCode).then(() => {
-          alert('📋 GASコードをコピーしました！\nGoogleスプレッドシートの「拡張機能」➜「Apps Script」に貼り付けて保存し、ウェブアプリとしてデプロイ（アクセス：全員）してください。');
-        }).catch(() => {
-          prompt('以下のコードをコピーしてください:', gasCode);
-        });
-      } else {
-        prompt('以下のコードをコピーしてください:', gasCode);
-      }
-    }
-
-    function sendJsonp(url, params) {
-      return new Promise((resolve, reject) => {
-        const cbName = 'gas_cb_' + Math.floor(Math.random() * 1000000);
-        window[cbName] = function(data) {
-          delete window[cbName];
-          if (script.parentNode) script.parentNode.removeChild(script);
-          resolve(data);
-        };
-        const queryParts = [`callback=${cbName}`];
-        for (let key in params) {
-          queryParts.push(`${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`);
+      fetch(KV_ENDPOINT + encodeURIComponent(currentRoomId) + '?t=' + Date.now())
+      .then(res => {
+        if (res.status === 404) {
+          isSyncing = false;
+          pushToRoom(false);
+          return null;
         }
-        const script = document.createElement('script');
-        const sep = url.includes('?') ? '&' : '?';
-        script.src = url + sep + queryParts.join('&');
-        script.onerror = function() {
-          delete window[cbName];
-          if (script.parentNode) script.parentNode.removeChild(script);
-          reject(new Error('JSONP failed'));
-        };
-        document.body.appendChild(script);
-      });
-    }
-
-    function saveGasUrl() {
-      const input = document.getElementById('gas-url-input');
-      customGasUrl = input.value.trim();
-      localStorage.setItem('mahjong_gas_sync_url', customGasUrl);
-      if (customGasUrl) {
-        pullFromCloud(true);
-        alert('スプレッドシート連携URLを保存しました！');
-      } else {
-        alert('カスタムURLをクリアしました。');
-      }
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
+      })
+      .then(remoteData => {
+        if (remoteData && remoteData.sheets) {
+          const remoteJsonStr = JSON.stringify(remoteData);
+          if (remoteJsonStr !== lastStateHash) {
+            state = remoteData;
+            lastStateHash = remoteJsonStr;
+            localStorage.setItem('mahjong_app_state_v4', remoteJsonStr);
+            renderAll();
+          }
+          if (isManual) alert('🟢 部屋から最新スコアを取得しました！');
+        }
+      })
+      .catch(err => {
+        console.error("Room Pull Error:", err);
+        if (isManual) alert('❌ データ取得に失敗しました。');
+      })
+      .finally(() => { isSyncing = false; });
     }
 
     /* ===================================================
