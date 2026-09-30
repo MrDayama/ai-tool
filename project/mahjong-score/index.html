@@ -240,6 +240,23 @@
     .val-minus { color: #f87171 !important; }
     .val-zero { color: var(--text-muted) !important; }
 
+    .btn-toggle-sign {
+      background: #1c2b24;
+      border: 1px solid var(--card-border);
+      color: var(--accent-gold);
+      font-size: 1.1rem;
+      font-weight: 800;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      touch-action: manipulation;
+      flex-shrink: 0;
+    }
+    .btn-toggle-sign:active {
+      background: var(--accent);
+      color: #fff;
+    }
+
     .status-banner {
       border-radius: 8px;
       padding: 8px 12px;
@@ -653,6 +670,33 @@
       }, 4000);
     }
 
+    function toggleSign(seatIdx) {
+      const input = document.getElementById(`score-input-${seatIdx}`);
+      if (!input) return;
+      let valStr = input.value.trim();
+
+      if (!valStr || valStr === '0') {
+        valStr = '-';
+      } else if (valStr.startsWith('-')) {
+        valStr = valStr.substring(1);
+      } else if (valStr.startsWith('+')) {
+        valStr = '-' + valStr.substring(1);
+      } else {
+        valStr = '-' + valStr;
+      }
+      input.value = valStr;
+      handleScoreInput(seatIdx, valStr);
+    }
+
+    function updateSyncTimeBadge() {
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0];
+      const textEl = document.getElementById('room-sync-text');
+      if (textEl && currentRoomId) {
+        textEl.textContent = `部屋:${currentRoomId} (${timeStr.substring(0,5)})`;
+      }
+    }
+
     const SYNC_ENDPOINT = 'https://ntfy.sh/mahjong_room_';
 
     function pushToRoom(isManual = false) {
@@ -662,11 +706,13 @@
 
       fetch(SYNC_ENDPOINT + encodeURIComponent(currentRoomId), {
         method: 'POST',
+        mode: 'cors',
         body: jsonStr
       })
       .then(res => {
         if (res.ok) {
           lastStateHash = jsonStr;
+          updateSyncTimeBadge();
           if (isManual) alert(`🟢 部屋「${currentRoomId}」へ最新スコアを送信・同期しました！`);
         } else {
           if (isManual) alert(`❌ 同期通信エラー (HTTP ${res.status})`);
@@ -684,7 +730,9 @@
       if (!isManual && isUserTyping()) return;
       isSyncing = true;
 
-      fetch(SYNC_ENDPOINT + encodeURIComponent(currentRoomId) + '/json?poll=1&t=' + Date.now())
+      fetch(SYNC_ENDPOINT + encodeURIComponent(currentRoomId) + '/json?poll=1&t=' + Date.now(), {
+        mode: 'cors'
+      })
       .then(res => {
         if (!res.ok) throw new Error('HTTP status ' + res.status);
         return res.text();
@@ -716,6 +764,7 @@
               localStorage.setItem('mahjong_app_state_v4', remoteJsonStr);
               renderAll();
             }
+            updateSyncTimeBadge();
             if (isManual) alert(`🟢 部屋「${currentRoomId}」から最新スコアを受信しました！`);
           }
         }
@@ -889,7 +938,8 @@
             </button>
             <span class="player-total-badge" id="total-badge-${sIdx}">通算: ${totalFormatted}</span>
           </div>
-          <div class="score-input-wrap">
+          <div class="score-input-wrap" style="display:flex; gap:4px; align-items:center;">
+            <button type="button" class="btn-toggle-sign" onclick="toggleSign(${sIdx})" title="符号反転 (＋/－)">±</button>
             <input type="text" inputmode="decimal"
               class="score-input-field ${colorClass}"
               id="score-input-${sIdx}"
