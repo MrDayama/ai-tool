@@ -576,12 +576,42 @@
       }
     };
 
+    // 端末識別子（deviceId）の発行
+    let deviceId = localStorage.getItem('mahjong_device_id');
+    if (!deviceId) {
+      deviceId = 'dev_' + Math.random().toString(36).substring(2, 10);
+      localStorage.setItem('mahjong_device_id', deviceId);
+    }
+
     // ローカルストレージ最優先（入力阻害ゼロの超安定構成）
     let state = JSON.parse(localStorage.getItem('mahjong_app_state_v4')) || DEFAULT_DATA;
     let currentRoomId = localStorage.getItem('mahjong_room_id') || '';
     let isSyncing = false;
     let lastStateHash = "";
     let roomSyncTimer = null;
+
+    function getActivePresenceCount() {
+      if (!state.presence) return 1;
+      const now = Date.now();
+      let count = 0;
+      for (const id in state.presence) {
+        if (now - state.presence[id] < 25000) {
+          count++;
+        }
+      }
+      return Math.max(1, count);
+    }
+
+    function updatePresence() {
+      if (!state.presence) state.presence = {};
+      state.presence[deviceId] = Date.now();
+      const now = Date.now();
+      for (const id in state.presence) {
+        if (now - state.presence[id] > 60000) {
+          delete state.presence[id];
+        }
+      }
+    }
 
     document.addEventListener('DOMContentLoaded', () => {
       renderAll();
@@ -595,6 +625,7 @@
     });
 
     function saveState(shouldPush = true) {
+      updatePresence();
       localStorage.setItem('mahjong_app_state_v4', JSON.stringify(state));
       renderUIWithoutInputs(); // 入力中のフォーカスを壊さずにUI更新
       if (shouldPush && currentRoomId) {
@@ -617,11 +648,12 @@
       const statusText = document.getElementById('current-room-text');
 
       if (isConnected && currentRoomId) {
+        const count = getActivePresenceCount();
         if (icon) icon.textContent = '🟢';
-        if (text) text.textContent = `部屋: ${currentRoomId}`;
+        if (text) text.textContent = `部屋:${currentRoomId} (${count}人)`;
         if (input) input.value = currentRoomId;
         if (statusCard) statusCard.style.display = 'block';
-        if (statusText) statusText.textContent = `接続中: 部屋 [ ${currentRoomId} ]`;
+        if (statusText) statusText.textContent = `接続中: 部屋 [ ${currentRoomId} ] (現在 ${count}台の端末が参加中)`;
       } else {
         if (icon) icon.textContent = '🔗';
         if (text) text.textContent = '部屋未接続';
@@ -689,11 +721,14 @@
     }
 
     function updateSyncTimeBadge() {
-      const now = new Date();
-      const timeStr = now.toTimeString().split(' ')[0];
       const textEl = document.getElementById('room-sync-text');
+      const statusText = document.getElementById('current-room-text');
       if (textEl && currentRoomId) {
-        textEl.textContent = `部屋:${currentRoomId} (${timeStr.substring(0,5)})`;
+        const count = getActivePresenceCount();
+        textEl.textContent = `部屋:${currentRoomId} (${count}人)`;
+        if (statusText) {
+          statusText.textContent = `接続中: 部屋 [ ${currentRoomId} ] (現在 ${count}台の端末が参加中)`;
+        }
       }
     }
 
