@@ -683,16 +683,23 @@
       }
     }
 
-    // スコアの入力受け付け (絶対に固まらない・受入拒否しない)
+    // スコアの入力受け付け (マイナス入力途中 "-" をそのまま許容)
     function handleScoreInput(seatIdx, rawVal) {
       const mode = state.mode;
       const rIdx = getCurrentRoundIdx();
       const trimmed = rawVal.trim();
+
+      // "-" や "-." の入力途中は入力を消去せずに文字としてそのまま維持
+      if (trimmed === '-' || trimmed === '-.' || trimmed === '.') {
+        const input = document.getElementById(`score-input-${seatIdx}`);
+        if (input) input.className = 'score-input-field val-minus';
+        return;
+      }
+
       const parsed = trimmed === '' ? null : parseFloat(trimmed);
 
       state.sheets[mode][rIdx][seatIdx] = (parsed !== null && !isNaN(parsed)) ? parsed : null;
 
-      // 入力フィールドの色変更のみ直接実行 (描画クリアを回避して超高速動作)
       const input = document.getElementById(`score-input-${seatIdx}`);
       if (input) {
         input.className = 'score-input-field ' + getColorClass(state.sheets[mode][rIdx][seatIdx]);
@@ -807,7 +814,7 @@
             <span class="player-total-badge" id="total-badge-${sIdx}">通算: ${totalFormatted}</span>
           </div>
           <div class="score-input-wrap">
-            <input type="number" step="0.1" inputmode="decimal"
+            <input type="text" inputmode="decimal"
               class="score-input-field ${colorClass}"
               id="score-input-${sIdx}"
               value="${displayVal}"
