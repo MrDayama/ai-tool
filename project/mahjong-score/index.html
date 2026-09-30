@@ -662,19 +662,20 @@
 
       fetch(KV_ENDPOINT + encodeURIComponent(currentRoomId), {
         method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
         body: jsonStr
       })
       .then(res => {
         if (res.ok) {
           lastStateHash = jsonStr;
-          if (isManual) alert('🟢 部屋へ最新スコアを同期・保存しました！');
+          if (isManual) alert(`🟢 部屋「${currentRoomId}」へ最新スコアを保存・同期しました！`);
         } else {
-          if (isManual) alert('❌ 通信エラーが発生しました。');
+          if (isManual) alert(`❌ 保存エラー (HTTP status: ${res.status})`);
         }
       })
       .catch(err => {
         console.error("Room Push Error:", err);
-        if (isManual) alert('❌ 同期エラーが発生しました。');
+        if (isManual) alert('❌ 同期エラー: ' + err.message);
       })
       .finally(() => { isSyncing = false; });
     }
@@ -692,9 +693,19 @@
           return null;
         }
         if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res.json();
+        return res.text();
       })
-      .then(remoteData => {
+      .then(text => {
+        if (!text) return;
+        let remoteData = null;
+        try {
+          remoteData = JSON.parse(text);
+        } catch (e) {
+          console.error("JSON Parse Error:", e, text);
+          if (isManual) alert('❌ クラウドデータの解析に失敗しました。');
+          return;
+        }
+
         if (remoteData && remoteData.sheets) {
           const remoteJsonStr = JSON.stringify(remoteData);
           if (remoteJsonStr !== lastStateHash) {
@@ -703,12 +714,12 @@
             localStorage.setItem('mahjong_app_state_v4', remoteJsonStr);
             renderAll();
           }
-          if (isManual) alert('🟢 部屋から最新スコアを取得しました！');
+          if (isManual) alert(`🟢 部屋「${currentRoomId}」から最新スコアを取得しました！`);
         }
       })
       .catch(err => {
         console.error("Room Pull Error:", err);
-        if (isManual) alert('❌ データ取得に失敗しました。');
+        if (isManual) alert('❌ データ取得エラー: ' + err.message);
       })
       .finally(() => { isSyncing = false; });
     }
