@@ -944,8 +944,6 @@
     }
 
     /* モーダル表示操作 */
-    function openSheetModal() { document.getElementById('sheet-modal').classList.add('open'); }
-    function closeSheetModal() { document.getElementById('sheet-modal').classList.remove('open'); }
     function openPlayerModal() { renderModalPlayerList(); renderModalSeatSelectors(); document.getElementById('player-modal').classList.add('open'); }
     function closePlayerModal() { document.getElementById('player-modal').classList.remove('open'); renderAll(); }
 
@@ -1089,7 +1087,7 @@
     }
 
     function closeModalOnBackdrop(e) {
-      if (e.target.id === 'sheet-modal') closeSheetModal();
+      if (e.target.id === 'room-modal') closeRoomModal();
       if (e.target.id === 'player-modal') closePlayerModal();
       if (e.target.id === 'leaderboard-modal') closeLeaderboard();
     }
