@@ -85,12 +85,12 @@
       color: #34d399;
       font-size: 0.72rem;
       font-weight: 700;
-      padding: 4px 6px;
+      padding: 4px 7px;
       border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 3px;
+      gap: 4px;
     }
 
     .btn-header-manage {
@@ -600,11 +600,12 @@
 
     <header>
       <div class="app-brand">
-        🀄 麻雀スコア <span class="brand-sub">共有版</span>
+        🀄 麻雀スコア <span class="brand-sub">リアルタイム同期</span>
       </div>
       <div class="header-actions">
-        <button class="btn-header-sync" id="btn-room-sync" onclick="openRoomModal()">
-          <span id="room-sync-icon">🔗</span> <span id="room-sync-text">部屋未接続</span>
+        <!-- 開いた瞬間から自動同期 (合言葉入力不要) -->
+        <button class="btn-header-sync" id="btn-room-sync" onclick="openSyncInfoModal()">
+          <span id="room-sync-icon">🟢</span> <span id="room-sync-text">同期中</span>
         </button>
         <button class="btn-header-manage" onclick="openPlayerModal()">👥 名簿</button>
         <div class="tab-pills">
@@ -676,36 +677,27 @@
 
   </div>
 
-  <!-- 部屋共有（合言葉）モーダル -->
-  <div class="modal-overlay" id="room-modal" onclick="closeModalOnBackdrop(event)">
+  <!-- 同期ステータス・手動再取得モーダル -->
+  <div class="modal-overlay" id="sync-info-modal" onclick="closeModalOnBackdrop(event)">
     <div class="modal-content">
       <div class="modal-header">
-        <div style="font-weight: 800; color: var(--accent-gold);">🔗 リアルタイム共同編集ルーム</div>
-        <button onclick="closeRoomModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
+        <div style="font-weight: 800; color: var(--accent-gold);">📡 リアルタイム同期ステータス</div>
+        <button onclick="closeSyncInfoModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
       </div>
       <div class="modal-body">
-
         <div class="sync-card">
-          <div style="font-weight:700; color:#fff; font-size:0.85rem; margin-bottom:6px;">部屋の合言葉（ルームID）</div>
-          <div style="display:flex; gap:6px;">
-            <input type="text" id="room-id-input" class="form-input" placeholder="例: taku777 や 1234">
-            <button class="action-btn btn-next-round" style="flex:0.4;" onclick="connectRoom()">接続</button>
+          <div style="font-size:0.9rem; color:#fff; font-weight:bold; margin-bottom:6px;" id="sync-modal-status-text">
+            🟢 全自動リアルタイム同期中
           </div>
-          <div style="font-size:0.75rem; color:#9ca3af; margin-top:8px; line-height:1.4;">
-            💡 **設定不要！** 同じ合言葉を入力した全員のスマホでミリ秒単位でスコアが即時同期されます。<br>
-            各自が自分のスマホから打つことも、代表者がまとめて他人の分を打つことも可能です。同時入力による消去は発生しません。
+          <div style="font-size:0.78rem; color:#9ca3af; line-height:1.5;">
+            合言葉の入力は不要です！このページを開いている全員のスマホ・PC間で、スコアがミリ秒単位で常時自動同期されています。
           </div>
-        </div>
-
-        <div class="sync-card" id="room-status-card" style="display:none; margin-top:10px;">
-          <div style="font-weight:700; color:var(--accent-gold); font-size:0.85rem; margin-bottom:6px;">現在の接続状態</div>
-          <div style="font-size:0.85rem; color:#fff; font-weight:bold;" id="current-room-text">接続中: なし</div>
-          <div style="display:flex; gap:6px; margin-top:10px;">
-            <button class="action-btn btn-sub" style="width:100%;" onclick="requestFullSyncFromPeers(true)">🔄 最新データを再取得</button>
-            <button class="action-btn btn-sub" style="width:100%; color:#f87171;" onclick="disconnectRoom()">❌ 切断する</button>
+          <div style="margin-top:12px; display:flex; gap:6px;">
+            <button class="action-btn btn-next-round" style="width:100%;" onclick="fetchLatestCloudState(true)">
+              🔄 クラウドから最新スコアを再取得
+            </button>
           </div>
         </div>
-
       </div>
     </div>
   </div>
@@ -743,7 +735,6 @@
         <button onclick="closeLeaderboard()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
       </div>
       <div class="modal-body">
-        <!-- モーダル内でも一覧表を開けるタブ -->
         <div style="display:flex; gap:6px; margin-bottom:12px;">
           <button class="action-btn btn-next-round" style="flex:1; padding:7px 0; font-size:0.8rem;" onclick="closeLeaderboard(); switchMainView('table');">
             📊 スコア一覧表を開く
@@ -769,11 +760,14 @@
 
   <script>
     /* ===================================================
-       🀄 複数人共有版 データ構造 ＆ 完全独立ストレージキー
+       🀄 全自動リアルタイム同期仕様 (合言葉不要・開くだけで即同期)
        =================================================== */
     const STORAGE_KEY_STATE = 'mahjong_multi_state_v1';
-    const STORAGE_KEY_ROOM  = 'mahjong_multi_room_id';
     const STORAGE_KEY_DEV   = 'mahjong_multi_device_id';
+
+    // デフォルト共通ルーム (URLクエリ ?room=... があれば優先)
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentRoomId = urlParams.get('room') || 'mahjong_multi_shared_room_dayama';
 
     const DEFAULT_DATA = {
       mode: '4p',
@@ -803,8 +797,7 @@
     }
 
     let state = JSON.parse(localStorage.getItem(STORAGE_KEY_STATE)) || DEFAULT_DATA;
-    let currentRoomId = localStorage.getItem(STORAGE_KEY_ROOM) || '';
-    let currentMainView = 'input'; // 'input' または 'table'
+    let currentMainView = 'input';
     
     let sseSource = null;
     let presenceTimer = null;
@@ -817,13 +810,14 @@
        📡 リアルタイム SSE ストリーミング ＆ 差分同期エンジン
        =================================================== */
 
+    // 差分イベント送信 (同時に直近ステートスナップショットもクラウドへ通知)
     function emitSyncEvent(type, payload = {}) {
-      if (!currentRoomId) return;
       const eventObj = {
         type: type,
         senderId: deviceId,
         timestamp: Date.now(),
-        payload: payload
+        payload: payload,
+        fullSnapshot: state // 後から入室した端末が即座に復元できるようスナップショットを同封
       };
 
       fetch(SYNC_ENDPOINT + encodeURIComponent(currentRoomId), {
@@ -834,19 +828,49 @@
       }).catch(err => console.error("Event Push Error:", err));
     }
 
+    // ページ起動時：クラウド上の最新メッセージを取得して初期同期
+    function fetchLatestCloudState(isManual = false) {
+      fetch(SYNC_ENDPOINT + encodeURIComponent(currentRoomId) + '/json?poll=1', {
+        mode: 'cors'
+      })
+      .then(res => res.text())
+      .then(text => {
+        if (!text || !text.trim()) return;
+        const lines = text.trim().split('\n');
+        // 直近のメッセージから最新の有効スナップショットを探す
+        for (let i = lines.length - 1; i >= 0; i--) {
+          try {
+            const raw = JSON.parse(lines[i]);
+            if (raw && raw.message) {
+              const eventObj = JSON.parse(raw.message);
+              if (eventObj && eventObj.fullSnapshot && eventObj.fullSnapshot.sheets) {
+                state = eventObj.fullSnapshot;
+                saveState(false);
+                renderAll();
+                if (isManual) alert('🟢 クラウドから最新スコアを取得しました！');
+                return;
+              }
+            }
+          } catch(e) {}
+        }
+      })
+      .catch(err => {
+        console.warn("Cloud poll error:", err);
+      });
+    }
+
+    // SSE常時接続ストリーミングの開始 (開いた瞬間に自動接続)
     function startRoomSSE() {
       if (sseSource) {
         sseSource.close();
         sseSource = null;
       }
-      if (!currentRoomId) return;
 
       const sseUrl = SYNC_ENDPOINT + encodeURIComponent(currentRoomId) + '/sse';
       sseSource = new EventSource(sseUrl);
 
       sseSource.onopen = () => {
         updateRoomUI(true);
-        emitSyncEvent('REQ_FULL_STATE');
       };
 
       sseSource.onmessage = (e) => {
@@ -863,13 +887,6 @@
       sseSource.onerror = (err) => {
         console.warn("SSE reconnecting...", err);
       };
-    }
-
-    function stopRoomSSE() {
-      if (sseSource) {
-        sseSource.close();
-        sseSource = null;
-      }
     }
 
     function handleRemoteSyncEvent(event) {
@@ -906,7 +923,6 @@
             renderUIWithoutInputs();
           }
 
-          // テーブル一覧表を開いている場合は即時再描画
           if (currentMainView === 'table') {
             renderScoreTable();
           }
@@ -982,28 +998,6 @@
           }
           break;
         }
-
-        case 'REQ_FULL_STATE': {
-          emitSyncEvent('RES_FULL_STATE', { fullState: state });
-          break;
-        }
-
-        case 'RES_FULL_STATE': {
-          if (p.fullState && p.fullState.sheets) {
-            state = p.fullState;
-            saveState(false);
-            renderAll();
-          }
-          break;
-        }
-      }
-    }
-
-    function requestFullSyncFromPeers(isManual = false) {
-      if (!currentRoomId) return;
-      emitSyncEvent('REQ_FULL_STATE');
-      if (isManual) {
-        alert(`🟢 部屋「${currentRoomId}」の参加端末へ最新同期をリクエストしました！`);
       }
     }
 
@@ -1016,13 +1010,7 @@
       presenceTimer = setInterval(sendPresenceHeartbeat, 5000);
     }
 
-    function stopPresenceHeartbeat() {
-      if (presenceTimer) clearInterval(presenceTimer);
-      activeDeviceCount = 1;
-    }
-
     function sendPresenceHeartbeat() {
-      if (!currentRoomId) return;
       const topicUrl = PRESENCE_ENDPOINT + encodeURIComponent(currentRoomId);
       
       fetch(topicUrl, {
@@ -1056,45 +1044,40 @@
        =================================================== */
     document.addEventListener('DOMContentLoaded', () => {
       renderAll();
-      if (currentRoomId) {
-        updateRoomUI(true);
-        startRoomSSE();
-        startPresenceHeartbeat();
-      } else {
-        updateRoomUI(false);
-      }
+      // 開いた瞬間から自動接続
+      updateRoomUI(true);
+      fetchLatestCloudState(false);
+      startRoomSSE();
+      startPresenceHeartbeat();
     });
 
-    function saveState(shouldEmitFull = false) {
+    function saveState(shouldEmit = false) {
       localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(state));
       renderUIWithoutInputs();
-      if (shouldEmitFull && currentRoomId) {
-        emitSyncEvent('RES_FULL_STATE', { fullState: state });
-      }
     }
 
     function updateRoomUI(isConnected) {
       const icon = document.getElementById('room-sync-icon');
       const text = document.getElementById('room-sync-text');
-      const input = document.getElementById('room-id-input');
-      const statusCard = document.getElementById('room-status-card');
-      const statusText = document.getElementById('current-room-text');
+      const modalText = document.getElementById('sync-modal-status-text');
 
-      if (isConnected && currentRoomId) {
+      if (isConnected) {
         if (icon) icon.textContent = '🟢';
-        if (text) text.textContent = `部屋:${currentRoomId} (${activeDeviceCount}人)`;
-        if (input) input.value = currentRoomId;
-        if (statusCard) statusCard.style.display = 'block';
-        if (statusText) statusText.textContent = `接続中: 部屋 [ ${currentRoomId} ] (現在 ${activeDeviceCount}台が共同編集中)`;
+        if (text) text.textContent = `同期中 (${activeDeviceCount}人)`;
+        if (modalText) modalText.textContent = `🟢 リアルタイム自動同期中 (${activeDeviceCount}台が接続中)`;
       } else {
-        if (icon) icon.textContent = '🔗';
-        if (text) text.textContent = '部屋未接続';
-        if (input) input.value = '';
-        if (statusCard) statusCard.style.display = 'none';
+        if (icon) icon.textContent = '🟡';
+        if (text) text.textContent = '接続中...';
       }
     }
 
-    /* メインビュー切り替え (入力 ⇄ 一覧表) */
+    function openSyncInfoModal() {
+      document.getElementById('sync-info-modal').classList.add('open');
+    }
+    function closeSyncInfoModal() {
+      document.getElementById('sync-info-modal').classList.remove('open');
+    }
+
     function switchMainView(view) {
       currentMainView = view;
       const inputView = document.getElementById('main-input-view');
@@ -1115,38 +1098,6 @@
         btnTable.classList.remove('active');
         renderAll();
       }
-    }
-
-    function openRoomModal() {
-      document.getElementById('room-modal').classList.add('open');
-    }
-    function closeRoomModal() {
-      document.getElementById('room-modal').classList.remove('open');
-    }
-
-    function connectRoom() {
-      const input = document.getElementById('room-id-input');
-      const rawId = input ? input.value.trim() : '';
-      if (!rawId) {
-        alert('合言葉（ルームID）を入力してください。');
-        return;
-      }
-      currentRoomId = rawId;
-      localStorage.setItem(STORAGE_KEY_ROOM, currentRoomId);
-      updateRoomUI(true);
-      startRoomSSE();
-      startPresenceHeartbeat();
-      alert(`部屋「${currentRoomId}」に接続しました！\n誰がどの席を入力してもミリ秒単位で全員のスマホにリアルタイム反映されます。`);
-      closeRoomModal();
-    }
-
-    function disconnectRoom() {
-      currentRoomId = '';
-      localStorage.removeItem(STORAGE_KEY_ROOM);
-      stopRoomSSE();
-      stopPresenceHeartbeat();
-      updateRoomUI(false);
-      alert('部屋から切断しました。（単体保存モードに戻りました）');
     }
 
     function toggleSign(seatIdx) {
@@ -1220,6 +1171,7 @@
       saveState(false);
       updateStatusBanner();
 
+      // ミリ秒差分イベントを発行（全端末へ即時同期）
       emitSyncEvent('SET_SCORE', {
         mode: mode,
         roundIdx: rIdx,
@@ -1434,7 +1386,6 @@
       const table = document.getElementById('score-matrix-table');
       if (!table) return;
 
-      // ヘッダー生成
       let html = `<thead><tr><th>半荘</th>`;
       seats.forEach((pName, sIdx) => {
         const windNames = ['東', '南', '西', '北'];
@@ -1443,10 +1394,8 @@
       });
       html += `<th>判定</th></tr></thead><tbody>`;
 
-      // 累計SUM用配列
       const seatTotals = new Array(seats.length).fill(0);
 
-      // 各半荘行の描画
       rows.forEach((row, rIdx) => {
         const isCurrent = (rIdx === curRound);
         let rowSum = 0;
@@ -1488,7 +1437,6 @@
         `;
       });
 
-      // 最下部 合計 (SUM) 行の描画
       let sumCells = '';
       let grandTotal = 0;
       seatTotals.forEach(tot => {
@@ -1515,13 +1463,11 @@
       table.innerHTML = html;
     }
 
-    /* 一覧表から指定の半荘入力へジャンプ */
     function jumpToRound(rIdx) {
       setCurrentRoundIdx(rIdx);
       switchMainView('input');
     }
 
-    /* モーダル表示操作 */
     function openPlayerModal() { renderModalPlayerList(); renderModalSeatSelectors(); document.getElementById('player-modal').classList.add('open'); }
     function closePlayerModal() { document.getElementById('player-modal').classList.remove('open'); renderAll(); }
 
@@ -1672,7 +1618,7 @@
     }
 
     function closeModalOnBackdrop(e) {
-      if (e.target.id === 'room-modal') closeRoomModal();
+      if (e.target.id === 'sync-info-modal') closeSyncInfoModal();
       if (e.target.id === 'player-modal') closePlayerModal();
       if (e.target.id === 'leaderboard-modal') closeLeaderboard();
     }
