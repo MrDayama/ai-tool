@@ -5,7 +5,7 @@
   "ai_model": "Claude Sonnet 4.6 Thinking",
   "phase": "Phase 4: 実装・検証完了",
   "started_at": "2026-09-29",
-  "last_updated": "2026-11-13 11:41",
+  "last_updated": "2026-11-13 12:07",
   "tasks": [
     {
       "title": "Phase1: HTML骨格・モバイルファーストCSS作成",
@@ -204,6 +204,10 @@
     {
       "timestamp": "2026-11-13 11:41",
       "message": "複数人リアルタイム共有版(mahjong-multi.html)の完全分離構築完了: 個人用URL・localStorageキーを完全保護し、セル単位差分更新＋SSEストリーミング即時同期を新設"
+    },
+    {
+      "timestamp": "2026-11-13 12:07",
+      "message": "スコアの合計と各試合のスコア一覧表の切り替え確認機能を実装・デプロイ完了"
     }
   ],
   "questions": [],
