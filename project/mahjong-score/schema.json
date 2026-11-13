@@ -54,5 +54,24 @@
       "description": "各半荘ごとの各プレイヤーのスコア記録 (pt)"
     }
   },
-  "required": ["mode", "playersMaster", "activeSeats", "currentRoundIdx", "sheets"]
+  "required": ["mode", "playersMaster", "activeSeats", "currentRoundIdx", "sheets"],
+  "definitions": {
+    "SyncEvent": {
+      "type": "object",
+      "description": "複数人リアルタイム共有用 差分同期イベント定義 (SSE/PubSub)",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["SET_SCORE", "NEXT_ROUND", "SET_SEAT_PLAYER", "ADD_PLAYER", "DEL_PLAYER", "SWITCH_MODE", "RESET_MODE", "REQ_FULL_STATE", "RES_FULL_STATE"]
+        },
+        "senderId": { "type": "string", "description": "送信元端末固有ID" },
+        "timestamp": { "type": "integer", "description": "イベント発行エポックミリ秒" },
+        "payload": {
+          "type": "object",
+          "description": "アクションに応じた差分データ（セル位置、スコア値、プレイヤー名等）"
+        }
+      },
+      "required": ["type", "senderId", "timestamp", "payload"]
+    }
+  }
 }
