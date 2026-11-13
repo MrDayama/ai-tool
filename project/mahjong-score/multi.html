@@ -40,9 +40,9 @@
       display: flex;
       flex-direction: column;
       height: 100dvh;
-      max-width: 480px;
+      max-width: 500px;
       margin: 0 auto;
-      padding: 8px 10px calc(8px + var(--safe-bottom)) 10px;
+      padding: 6px 10px calc(8px + var(--safe-bottom)) 10px;
       justify-content: space-between;
     }
 
@@ -83,23 +83,23 @@
       background: #0d2b20;
       border: 1px solid var(--accent);
       color: #34d399;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      padding: 4px 7px;
+      padding: 4px 6px;
       border-radius: 6px;
       cursor: pointer;
       display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 3px;
     }
 
     .btn-header-manage {
       background: #14201c;
       border: 1px solid var(--card-border);
       color: #d1d5db;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      padding: 4px 7px;
+      padding: 4px 6px;
       border-radius: 6px;
       cursor: pointer;
     }
@@ -115,15 +115,48 @@
       border: none;
       background: transparent;
       color: var(--text-muted);
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      padding: 4px 7px;
+      padding: 4px 6px;
       border-radius: 4px;
       cursor: pointer;
     }
     .tab-pill.active {
       background: var(--accent);
       color: #fff;
+    }
+
+    /* ビュー切り替えバー (入力 ⇄ 一覧表) */
+    .view-toggle-bar {
+      display: flex;
+      background: #0c1613;
+      border: 1px solid #1f332a;
+      border-radius: 8px;
+      padding: 3px;
+      margin: 2px 0 3px 0;
+      flex-shrink: 0;
+      gap: 4px;
+    }
+    .view-toggle-btn {
+      flex: 1;
+      padding: 6px 0;
+      font-size: 0.82rem;
+      font-weight: 800;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .view-toggle-btn.active {
+      background: #1b382d;
+      color: #34d399;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
     }
 
     .round-bar {
@@ -133,8 +166,8 @@
       background: var(--card-bg);
       border: 1px solid var(--card-border);
       border-radius: 8px;
-      padding: 6px 10px;
-      margin: 3px 0;
+      padding: 5px 10px;
+      margin: 2px 0;
       flex-shrink: 0;
     }
 
@@ -159,12 +192,21 @@
       color: var(--accent-gold);
     }
 
+    /* メイン入力コンテナ */
+    #main-input-view {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+      min-height: 0;
+    }
+
     .players-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
       flex: 1;
-      margin: 4px 0;
+      margin: 3px 0;
       align-content: stretch;
     }
     .grid-3p {
@@ -269,13 +311,13 @@
 
     .status-banner {
       border-radius: 8px;
-      padding: 8px 12px;
+      padding: 7px 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       font-weight: 700;
-      margin: 3px 0;
+      margin: 2px 0;
       flex-shrink: 0;
     }
     .status-banner-ok {
@@ -297,14 +339,14 @@
     .bottom-bar {
       display: flex;
       gap: 6px;
-      margin-top: 4px;
+      margin-top: 3px;
       flex-shrink: 0;
     }
 
     .action-btn {
       flex: 1;
-      padding: 11px 0;
-      font-size: 0.9rem;
+      padding: 10px 0;
+      font-size: 0.88rem;
       font-weight: 800;
       border: none;
       border-radius: 8px;
@@ -312,7 +354,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 5px;
       transition: all 0.15s;
     }
     .btn-next-round {
@@ -331,6 +373,121 @@
       border: 1px solid var(--card-border);
     }
 
+    /* ===================================================
+       📊 スコア一覧表ビュー (テーブル表示)
+       =================================================== */
+    #main-table-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 8px;
+      overflow: hidden;
+      margin: 2px 0;
+    }
+
+    .table-scroll-wrap {
+      flex: 1;
+      overflow: auto;
+      border-radius: 6px;
+      border: 1px solid #1c2e26;
+    }
+
+    .score-matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: right;
+    }
+    .score-matrix-table th,
+    .score-matrix-table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid #1a2c24;
+      white-space: nowrap;
+    }
+    .score-matrix-table th {
+      background: #0f1c17;
+      color: var(--accent-gold);
+      font-weight: 800;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      text-align: center;
+    }
+    .score-matrix-table th:first-child,
+    .score-matrix-table td:first-child {
+      text-align: center;
+      font-weight: 800;
+      color: var(--text-muted);
+      background: #0d1713;
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      width: 50px;
+    }
+    .score-matrix-table th:first-child {
+      z-index: 3;
+    }
+
+    .score-matrix-table tr.table-row-clickable {
+      cursor: pointer;
+    }
+    .score-matrix-table tr.table-row-clickable:hover {
+      background: #182b23;
+    }
+    .score-matrix-table tr.active-round-row {
+      background: rgba(16, 185, 129, 0.12);
+      border-left: 3px solid var(--accent);
+    }
+
+    /* 合計行 (SUM) */
+    .score-matrix-table tr.sum-row {
+      background: #172b22 !important;
+      border-top: 2px solid var(--accent);
+      font-weight: 800;
+      font-size: 0.88rem;
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+    }
+    .score-matrix-table tr.sum-row td {
+      border-bottom: none;
+      padding: 9px 6px;
+    }
+    .score-matrix-table tr.sum-row td:first-child {
+      background: #14241d !important;
+      color: var(--accent-gold);
+      z-index: 3;
+    }
+
+    .cell-val-plus { color: #34d399; font-weight: 700; }
+    .cell-val-minus { color: #f87171; font-weight: 700; }
+    .cell-val-zero { color: var(--text-muted); }
+    .cell-val-empty { color: #4b5563; }
+
+    .tag-status-ok {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      background: #0c3327;
+      color: #34d399;
+      font-weight: 700;
+    }
+    .tag-status-ng {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      background: #351414;
+      color: #f87171;
+      font-weight: 700;
+    }
+
+    /* モーダル */
     .modal-overlay {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -443,7 +600,7 @@
 
     <header>
       <div class="app-brand">
-        🀄 麻雀スコア <span class="brand-sub">リアルタイム共有</span>
+        🀄 麻雀スコア <span class="brand-sub">共有版</span>
       </div>
       <div class="header-actions">
         <button class="btn-header-sync" id="btn-room-sync" onclick="openRoomModal()">
@@ -457,28 +614,64 @@
       </div>
     </header>
 
-    <div class="round-bar">
-      <button class="round-nav-btn" id="btn-prev-round" onclick="navigateRound(-1)">◀ 前</button>
-      <div class="round-title" id="round-indicator">第 1 半荘</div>
-      <button class="round-nav-btn" id="btn-next-round-nav" onclick="navigateRound(1)">次 ▶</button>
-    </div>
-
-    <div class="players-grid" id="players-grid-container">
-      <!-- 4枚または3枚のカード -->
-    </div>
-
-    <div class="status-banner status-banner-wait" id="status-banner">
-      <span id="status-message">全員のスコアを入力してください</span>
-      <span id="status-badge" style="font-size: 0.95rem;">計 0.0</span>
-    </div>
-
-    <div class="bottom-bar">
-      <button class="action-btn btn-sub" onclick="openLeaderboard()">
-        🏆 通算成績
+    <!-- 🀄 入力 ⇄ 📊 スコア一覧表 切り替えバー -->
+    <div class="view-toggle-bar">
+      <button class="view-toggle-btn active" id="btn-view-input" onclick="switchMainView('input')">
+        🀄 半荘入力
       </button>
-      <button class="action-btn btn-next-round" id="btn-complete-round" onclick="completeAndNextRound()">
-        次へ進む (＋半荘) ❯
+      <button class="view-toggle-btn" id="btn-view-table" onclick="switchMainView('table')">
+        📊 スコア一覧表＆合計
       </button>
+    </div>
+
+    <!-- 1. メイン半荘入力ビュー -->
+    <div id="main-input-view">
+
+      <div class="round-bar">
+        <button class="round-nav-btn" id="btn-prev-round" onclick="navigateRound(-1)">◀ 前</button>
+        <div class="round-title" id="round-indicator">第 1 半荘</div>
+        <button class="round-nav-btn" id="btn-next-round-nav" onclick="navigateRound(1)">次 ▶</button>
+      </div>
+
+      <div class="players-grid" id="players-grid-container">
+        <!-- 4枚または3枚のカード -->
+      </div>
+
+      <div class="status-banner status-banner-wait" id="status-banner">
+        <span id="status-message">全員のスコアを入力してください</span>
+        <span id="status-badge" style="font-size: 0.95rem;">計 0.0</span>
+      </div>
+
+      <div class="bottom-bar">
+        <button class="action-btn btn-sub" onclick="openLeaderboard()">
+          🏆 通算成績
+        </button>
+        <button class="action-btn btn-next-round" id="btn-complete-round" onclick="completeAndNextRound()">
+          次へ進む (＋半荘) ❯
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 2. 全試合スコア一覧表ビュー -->
+    <div id="main-table-view">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span style="font-size:0.85rem; font-weight:800; color:var(--accent-gold);">📊 全半荘スコア推移 ＆ 合計</span>
+        <span style="font-size:0.7rem; color:var(--text-muted);">行タップでその半荘へジャンプ</span>
+      </div>
+      <div class="table-scroll-wrap">
+        <table class="score-matrix-table" id="score-matrix-table">
+          <!-- スクリプトで動的描画 -->
+        </table>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:8px;">
+        <button class="action-btn btn-sub" style="flex:1;" onclick="openLeaderboard()">
+          🏆 通算ランキングを見る
+        </button>
+        <button class="action-btn btn-next-round" style="flex:1;" onclick="switchMainView('input')">
+          🀄 入力画面へ戻る
+        </button>
+      </div>
     </div>
 
   </div>
@@ -550,6 +743,13 @@
         <button onclick="closeLeaderboard()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
       </div>
       <div class="modal-body">
+        <!-- モーダル内でも一覧表を開けるタブ -->
+        <div style="display:flex; gap:6px; margin-bottom:12px;">
+          <button class="action-btn btn-next-round" style="flex:1; padding:7px 0; font-size:0.8rem;" onclick="closeLeaderboard(); switchMainView('table');">
+            📊 スコア一覧表を開く
+          </button>
+        </div>
+
         <div id="modal-leaderboard-list"></div>
 
         <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
@@ -596,23 +796,20 @@
       }
     };
 
-    // 端末固有ID（個人用とは完全に分離）
     let deviceId = localStorage.getItem(STORAGE_KEY_DEV);
     if (!deviceId) {
       deviceId = 'dev_m_' + Math.random().toString(36).substring(2, 10);
       localStorage.setItem(STORAGE_KEY_DEV, deviceId);
     }
 
-    // 複数人共有専用のローカルステート
     let state = JSON.parse(localStorage.getItem(STORAGE_KEY_STATE)) || DEFAULT_DATA;
     let currentRoomId = localStorage.getItem(STORAGE_KEY_ROOM) || '';
+    let currentMainView = 'input'; // 'input' または 'table'
     
-    // SSE接続およびプレゼンス管理
     let sseSource = null;
     let presenceTimer = null;
     let activeDeviceCount = 1;
 
-    // 通信エンドポイント（共有版専用トピック prefix）
     const SYNC_ENDPOINT = 'https://ntfy.sh/mahjong_multi_room_';
     const PRESENCE_ENDPOINT = 'https://ntfy.sh/mahjong_multi_presence_';
 
@@ -620,7 +817,6 @@
        📡 リアルタイム SSE ストリーミング ＆ 差分同期エンジン
        =================================================== */
 
-    // 差分イベント送信関数 (セル更新やアクションのみをミリ秒送信)
     function emitSyncEvent(type, payload = {}) {
       if (!currentRoomId) return;
       const eventObj = {
@@ -638,7 +834,6 @@
       }).catch(err => console.error("Event Push Error:", err));
     }
 
-    // SSE常時接続ストリーミングの開始
     function startRoomSSE() {
       if (sseSource) {
         sseSource.close();
@@ -651,7 +846,6 @@
 
       sseSource.onopen = () => {
         updateRoomUI(true);
-        // 入室直後：既存参加者へフル同期をリクエスト
         emitSyncEvent('REQ_FULL_STATE');
       };
 
@@ -663,9 +857,7 @@
             const eventObj = JSON.parse(raw.message);
             handleRemoteSyncEvent(eventObj);
           }
-        } catch (err) {
-          // JSONパース不備は無視
-        }
+        } catch (err) {}
       };
 
       sseSource.onerror = (err) => {
@@ -680,31 +872,26 @@
       }
     }
 
-    // 受信した差分イベントのディスパッチ処理
     function handleRemoteSyncEvent(event) {
       if (!event || !event.type) return;
-      // 自分が送ったイベントは二重適用しない
       if (event.senderId === deviceId) return;
 
       const p = event.payload || {};
 
       switch (event.type) {
         case 'SET_SCORE': {
-          // セル単位の更新（同時入力時でも他セルを上書きしない）
           const { mode, roundIdx, seatIdx, score } = p;
           if (!mode || roundIdx === undefined || seatIdx === undefined) return;
 
-          // 対象半荘配列の拡張確保
           while (state.sheets[mode].length <= roundIdx) {
             state.sheets[mode].push(new Array(state.activeSeats[mode].length).fill(null));
           }
 
-          // 自分が今入力中のセルでなければ値を更新
           const activeEl = document.activeElement;
           const myEditingThisCell = activeEl && activeEl.id === `score-input-${seatIdx}` && state.mode === mode && getCurrentRoundIdx() === roundIdx;
 
           state.sheets[mode][roundIdx][seatIdx] = score;
-          saveState(false); // 送信はせずローカル保存のみ
+          saveState(false);
 
           if (state.mode === mode && getCurrentRoundIdx() === roundIdx) {
             if (!myEditingThisCell) {
@@ -718,11 +905,15 @@
             updateStatusBanner();
             renderUIWithoutInputs();
           }
+
+          // テーブル一覧表を開いている場合は即時再描画
+          if (currentMainView === 'table') {
+            renderScoreTable();
+          }
           break;
         }
 
         case 'NEXT_ROUND': {
-          // 次の半荘へ進む
           const { mode, roundIdx } = p;
           if (state.mode === mode) {
             while (state.sheets[mode].length <= roundIdx) {
@@ -736,7 +927,6 @@
         }
 
         case 'SET_SEAT_PLAYER': {
-          // 席のプレイヤー変更
           const { mode, seatIdx, playerName } = p;
           if (state.activeSeats[mode]) {
             state.activeSeats[mode][seatIdx] = playerName;
@@ -747,7 +937,6 @@
         }
 
         case 'ADD_PLAYER': {
-          // プレイヤー名簿追加
           const { name } = p;
           if (name && !state.playersMaster.includes(name)) {
             state.playersMaster.push(name);
@@ -761,7 +950,6 @@
         }
 
         case 'DEL_PLAYER': {
-          // プレイヤー名簿削除
           const { name } = p;
           if (name) {
             state.playersMaster = state.playersMaster.filter(x => x !== name);
@@ -775,7 +963,6 @@
         }
 
         case 'SWITCH_MODE': {
-          // 四麻/三麻切替
           if (p.mode === '4p' || p.mode === '3p') {
             state.mode = p.mode;
             document.getElementById('tab-4p').classList.toggle('active', state.mode === '4p');
@@ -787,7 +974,6 @@
         }
 
         case 'RESET_MODE': {
-          // モード全クリア
           if (p.mode && state.sheets[p.mode]) {
             state.sheets[p.mode] = [new Array(state.activeSeats[p.mode].length).fill(null)];
             state.currentRoundIdx[p.mode] = 0;
@@ -798,15 +984,12 @@
         }
 
         case 'REQ_FULL_STATE': {
-          // 新規入室端末からの全同期要求 → 自分の状態全体を応答
           emitSyncEvent('RES_FULL_STATE', { fullState: state });
           break;
         }
 
         case 'RES_FULL_STATE': {
-          // 最新のフルステートを受信
           if (p.fullState && p.fullState.sheets) {
-            // 既存のシートよりも半荘数が多いか、空でない場合に採用
             state = p.fullState;
             saveState(false);
             renderAll();
@@ -816,7 +999,6 @@
       }
     }
 
-    /* 手動で既存端末からフル同期を再取得 */
     function requestFullSyncFromPeers(isManual = false) {
       if (!currentRoomId) return;
       emitSyncEvent('REQ_FULL_STATE');
@@ -843,14 +1025,12 @@
       if (!currentRoomId) return;
       const topicUrl = PRESENCE_ENDPOINT + encodeURIComponent(currentRoomId);
       
-      // 端末存在パルス送信
       fetch(topicUrl, {
         method: 'POST',
         mode: 'cors',
         body: deviceId
       }).catch(() => {});
 
-      // 直近35秒のユニーク端末集計
       const sinceSec = Math.floor(Date.now() / 1000) - 35;
       fetch(topicUrl + '/json?poll=1&since=' + sinceSec, { mode: 'cors' })
       .then(res => res.text())
@@ -911,6 +1091,29 @@
         if (text) text.textContent = '部屋未接続';
         if (input) input.value = '';
         if (statusCard) statusCard.style.display = 'none';
+      }
+    }
+
+    /* メインビュー切り替え (入力 ⇄ 一覧表) */
+    function switchMainView(view) {
+      currentMainView = view;
+      const inputView = document.getElementById('main-input-view');
+      const tableView = document.getElementById('main-table-view');
+      const btnInput = document.getElementById('btn-view-input');
+      const btnTable = document.getElementById('btn-view-table');
+
+      if (view === 'table') {
+        inputView.style.display = 'none';
+        tableView.style.display = 'flex';
+        btnInput.classList.remove('active');
+        btnTable.classList.add('active');
+        renderScoreTable();
+      } else {
+        inputView.style.display = 'flex';
+        tableView.style.display = 'none';
+        btnInput.classList.add('active');
+        btnTable.classList.remove('active');
+        renderAll();
       }
     }
 
@@ -993,13 +1196,11 @@
       }
     }
 
-    // スコア入力受付（セル単位の差分イベントを発行）
     function handleScoreInput(seatIdx, rawVal) {
       const mode = state.mode;
       const rIdx = getCurrentRoundIdx();
       const trimmed = rawVal.trim();
 
-      // "-" や "-." などの入力途中はそのまま維持
       if (trimmed === '-' || trimmed === '-.' || trimmed === '.') {
         const input = document.getElementById(`score-input-${seatIdx}`);
         if (input) input.className = 'score-input-field val-minus';
@@ -1019,7 +1220,6 @@
       saveState(false);
       updateStatusBanner();
 
-      // 差分イベントを送信（対象セルのみ更新）
       emitSyncEvent('SET_SCORE', {
         mode: mode,
         roundIdx: rIdx,
@@ -1046,7 +1246,6 @@
       }
       setCurrentRoundIdx(nextIdx);
 
-      // 全員へ次の半荘への進行を通知
       emitSyncEvent('NEXT_ROUND', {
         mode: mode,
         roundIdx: nextIdx
@@ -1057,6 +1256,9 @@
       renderRoundNav();
       renderPlayerCards();
       updateStatusBanner();
+      if (currentMainView === 'table') {
+        renderScoreTable();
+      }
     }
 
     function renderUIWithoutInputs() {
@@ -1102,7 +1304,6 @@
       const rIdx = getCurrentRoundIdx();
       const currentScores = state.sheets[mode][rIdx] || new Array(seats.length).fill(null);
 
-      // 入力中のエレメントとその文字（- 等の途中入力）を退避
       const activeEl = document.activeElement;
       let activeInputId = null;
       let activeInputValue = null;
@@ -1161,7 +1362,6 @@
         container.appendChild(card);
       });
 
-      // 入力中フォーカス復元
       if (activeInputId) {
         const restoredInput = document.getElementById(activeInputId);
         if (restoredInput && activeInputValue !== null) {
@@ -1221,6 +1421,104 @@
         badge.innerText = `計 ${roundedSum > 0 ? '+' : ''}${roundedSum}`;
         nextBtn.disabled = true;
       }
+    }
+
+    /* ===================================================
+       📊 スコア一覧表＆合計（マトリクス描画ロジック）
+       =================================================== */
+    function renderScoreTable() {
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const rows = state.sheets[mode];
+      const curRound = getCurrentRoundIdx();
+      const table = document.getElementById('score-matrix-table');
+      if (!table) return;
+
+      // ヘッダー生成
+      let html = `<thead><tr><th>半荘</th>`;
+      seats.forEach((pName, sIdx) => {
+        const windNames = ['東', '南', '西', '北'];
+        const wind = windNames[sIdx] || '';
+        html += `<th>${pName}<br><span style="font-size:0.68rem; color:#9ca3af;">(${wind})</span></th>`;
+      });
+      html += `<th>判定</th></tr></thead><tbody>`;
+
+      // 累計SUM用配列
+      const seatTotals = new Array(seats.length).fill(0);
+
+      // 各半荘行の描画
+      rows.forEach((row, rIdx) => {
+        const isCurrent = (rIdx === curRound);
+        let rowSum = 0;
+        let isComplete = true;
+
+        let rowCells = '';
+        seats.forEach((_, sIdx) => {
+          const val = row[sIdx];
+          if (val === null || isNaN(val)) {
+            isComplete = false;
+            rowCells += `<td class="cell-val-empty">-</td>`;
+          } else {
+            rowSum += val;
+            seatTotals[sIdx] += val;
+            const sign = val > 0 ? '+' : '';
+            const cls = val > 0 ? 'cell-val-plus' : (val < 0 ? 'cell-val-minus' : 'cell-val-zero');
+            rowCells += `<td class="${cls}">${sign}${val.toFixed(1)}</td>`;
+          }
+        });
+
+        const roundedSum = Math.round(rowSum * 10) / 10;
+        let statusTag = '';
+        if (isComplete) {
+          if (Math.abs(roundedSum) < 0.001) {
+            statusTag = `<span class="tag-status-ok">✅ ±0</span>`;
+          } else {
+            statusTag = `<span class="tag-status-ng">❌ ${roundedSum > 0 ? '+' : ''}${roundedSum}</span>`;
+          }
+        } else {
+          statusTag = `<span style="font-size:0.68rem; color:#6b7280;">入力中</span>`;
+        }
+
+        html += `
+          <tr class="table-row-clickable ${isCurrent ? 'active-round-row' : ''}" onclick="jumpToRound(${rIdx})" title="タップして第 ${rIdx + 1} 半荘の入力へ">
+            <td>#${rIdx + 1} ${isCurrent ? '🟢' : ''}</td>
+            ${rowCells}
+            <td style="text-align:center;">${statusTag}</td>
+          </tr>
+        `;
+      });
+
+      // 最下部 合計 (SUM) 行の描画
+      let sumCells = '';
+      let grandTotal = 0;
+      seatTotals.forEach(tot => {
+        grandTotal += tot;
+        const rounded = Math.round(tot * 10) / 10;
+        const sign = rounded > 0 ? '+' : '';
+        const cls = rounded > 0 ? 'cell-val-plus' : (rounded < 0 ? 'cell-val-minus' : 'cell-val-zero');
+        sumCells += `<td class="${cls}">${sign}${rounded.toFixed(1)}</td>`;
+      });
+      const roundedGrand = Math.round(grandTotal * 10) / 10;
+      const grandStatus = Math.abs(roundedGrand) < 0.001 ? '✅ ±0' : `${roundedGrand > 0 ? '+' : ''}${roundedGrand}`;
+
+      html += `
+        <tr class="sum-row">
+          <td>合計</td>
+          ${sumCells}
+          <td style="text-align:center; font-size:0.75rem; color:${Math.abs(roundedGrand) < 0.001 ? '#34d399' : '#f87171'};">
+            ${grandStatus}
+          </td>
+        </tr>
+      `;
+
+      html += `</tbody>`;
+      table.innerHTML = html;
+    }
+
+    /* 一覧表から指定の半荘入力へジャンプ */
+    function jumpToRound(rIdx) {
+      setCurrentRoundIdx(rIdx);
+      switchMainView('input');
     }
 
     /* モーダル表示操作 */
