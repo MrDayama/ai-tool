@@ -898,6 +898,22 @@
       if (!event || !event.type) return;
       if (event.senderId === deviceId) return;
 
+      // 送信元の最新スナップショットからプレイヤー名簿および着席情報を自動完全同期
+      if (event.fullSnapshot) {
+        let seatChanged = false;
+        if (event.fullSnapshot.activeSeats && JSON.stringify(state.activeSeats) !== JSON.stringify(event.fullSnapshot.activeSeats)) {
+          state.activeSeats = event.fullSnapshot.activeSeats;
+          seatChanged = true;
+        }
+        if (event.fullSnapshot.playersMaster && JSON.stringify(state.playersMaster) !== JSON.stringify(event.fullSnapshot.playersMaster)) {
+          state.playersMaster = event.fullSnapshot.playersMaster;
+          seatChanged = true;
+        }
+        if (seatChanged) {
+          saveState(false);
+        }
+      }
+
       const p = event.payload || {};
 
       switch (event.type) {
@@ -926,6 +942,16 @@
             }
             updateStatusBanner();
             renderUIWithoutInputs();
+
+            // カードのプレイヤー名表示を最新の activeSeats に合わせて即時更新
+            const currentSeats = state.activeSeats[state.mode] || [];
+            currentSeats.forEach((pName, sIdx) => {
+              const card = document.querySelectorAll('.player-card')[sIdx];
+              if (card) {
+                const btn = card.querySelector('.player-select-btn');
+                if (btn) btn.innerHTML = `${pName} ▾`;
+              }
+            });
           }
 
           if (currentMainView === 'table') {
@@ -1287,7 +1313,7 @@
         card.className = 'player-card';
         card.innerHTML = `
           <div class="card-top-row">
-            <button class="player-select-btn" onclick="openPlayerModal()" title="タップしてプレイヤー変更">
+            <button class="player-select-btn" onclick="editPlayerNameDirect(${sIdx})" title="タップしてプレイヤー名を変更">
               ${pName} ▾
             </button>
             <span class="player-total-badge" id="total-badge-${sIdx}">通算: ${totalFormatted}</span>
@@ -1546,9 +1572,32 @@
       });
     }
 
+    function editPlayerNameDirect(seatIdx) {
+      const mode = state.mode;
+      const currentName = state.activeSeats[mode][seatIdx] || `席 ${seatIdx + 1}`;
+      const newName = prompt(`席 ${seatIdx + 1} のプレイヤー名を入力してください:`, currentName);
+      if (newName === null) return;
+      const trimmed = newName.trim();
+      if (!trimmed || trimmed === currentName) return;
+
+      if (!state.playersMaster.includes(trimmed)) {
+        state.playersMaster.push(trimmed);
+      }
+      state.activeSeats[mode][seatIdx] = trimmed;
+      saveState(false);
+      renderAll();
+
+      emitSyncEvent('SET_SEAT_PLAYER', {
+        mode: mode,
+        seatIdx: seatIdx,
+        playerName: trimmed
+      });
+    }
+
     function changeSeatPlayer(seatIdx, newPlayerName) {
       state.activeSeats[state.mode][seatIdx] = newPlayerName;
       saveState(false);
+      renderAll();
       emitSyncEvent('SET_SEAT_PLAYER', {
         mode: state.mode,
         seatIdx: seatIdx,
