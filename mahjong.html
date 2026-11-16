@@ -590,27 +590,53 @@
     let lastStateHash = "";
     let roomSyncTimer = null;
 
-    function getActivePresenceCount() {
-      if (!state.presence) return 1;
-      const now = Date.now();
-      let count = 0;
-      for (const id in state.presence) {
-        if (now - state.presence[id] < 25000) {
-          count++;
-        }
-      }
-      return Math.max(1, count);
+    let presenceTimer = null;
+    let activeDeviceCount = 1;
+
+    function startPresenceHeartbeat() {
+      if (presenceTimer) clearInterval(presenceTimer);
+      sendPresenceHeartbeat();
+      presenceTimer = setInterval(sendPresenceHeartbeat, 5000);
     }
 
-    function updatePresence() {
-      if (!state.presence) state.presence = {};
-      state.presence[deviceId] = Date.now();
-      const now = Date.now();
-      for (const id in state.presence) {
-        if (now - state.presence[id] > 60000) {
-          delete state.presence[id];
+    function stopPresenceHeartbeat() {
+      if (presenceTimer) clearInterval(presenceTimer);
+      activeDeviceCount = 1;
+    }
+
+    function sendPresenceHeartbeat() {
+      if (!currentRoomId) return;
+      const topicUrl = 'https://ntfy.sh/mahjong_presence_' + encodeURIComponent(currentRoomId);
+      
+      // 自分の端末IDを存在信号として送信
+      fetch(topicUrl, {
+        method: 'POST',
+        mode: 'cors',
+        body: deviceId
+      }).catch(err => console.error("Presence Push Error:", err));
+
+      // 過去35秒以内のユニーク端末数を集計
+      const sinceSec = Math.floor(Date.now() / 1000) - 35;
+      fetch(topicUrl + '/json?poll=1&since=' + sinceSec, { mode: 'cors' })
+      .then(res => res.text())
+      .then(text => {
+        if (!text || !text.trim()) return;
+        const lines = text.trim().split('\n');
+        const uniqueDevices = new Set();
+        lines.forEach(line => {
+          try {
+            const obj = JSON.parse(line);
+            if (obj && obj.message) {
+              uniqueDevices.add(obj.message);
+            }
+          } catch(e) {}
+        });
+        if (uniqueDevices.size > 0) {
+          activeDeviceCount = uniqueDevices.size;
+          updateRoomUI(true);
         }
-      }
+      })
+      .catch(err => console.error("Presence Pull Error:", err));
     }
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -619,13 +645,13 @@
         updateRoomUI(true);
         pullFromRoom(true);
         startRoomPolling();
+        startPresenceHeartbeat();
       } else {
         updateRoomUI(false);
       }
     });
 
     function saveState(shouldPush = true) {
-      updatePresence();
       localStorage.setItem('mahjong_app_state_v4', JSON.stringify(state));
       renderUIWithoutInputs(); // 入力中のフォーカスを壊さずにUI更新
       if (shouldPush && currentRoomId) {
@@ -648,12 +674,11 @@
       const statusText = document.getElementById('current-room-text');
 
       if (isConnected && currentRoomId) {
-        const count = getActivePresenceCount();
         if (icon) icon.textContent = '🟢';
-        if (text) text.textContent = `部屋:${currentRoomId} (${count}人)`;
+        if (text) text.textContent = `部屋:${currentRoomId} (${activeDeviceCount}人)`;
         if (input) input.value = currentRoomId;
         if (statusCard) statusCard.style.display = 'block';
-        if (statusText) statusText.textContent = `接続中: 部屋 [ ${currentRoomId} ] (現在 ${count}台の端末が参加中)`;
+        if (statusText) statusText.textContent = `接続中: 部屋 [ ${currentRoomId} ] (現在 ${activeDeviceCount}台の端末が参加中)`;
       } else {
         if (icon) icon.textContent = '🔗';
         if (text) text.textContent = '部屋未接続';
@@ -681,6 +706,7 @@
       updateRoomUI(true);
       pullFromRoom(true);
       startRoomPolling();
+      startPresenceHeartbeat();
       alert(`部屋「${currentRoomId}」に接続しました！\n同じ合言葉を入れた全員の端末でリアルタイム同期されます。`);
       closeRoomModal();
     }
@@ -689,6 +715,7 @@
       currentRoomId = '';
       localStorage.removeItem('mahjong_room_id');
       if (roomSyncTimer) clearInterval(roomSyncTimer);
+      stopPresenceHeartbeat();
       updateRoomUI(false);
       alert('部屋から切断しました。（スマホ本体の保存モードに戻りました）');
     }

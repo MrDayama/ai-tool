@@ -2,10 +2,10 @@
   "project": "mahjong-score",
   "description": "麻雀スコアアプリ スマホ対応 四麻/三麻切り替え 合計0チェック",
   "status": "✅ Done",
-  "ai_model": "Claude Sonnet 4.6 Thinking",
+  "ai_model": "Gemini 3.8 Flash",
   "phase": "Phase 4: 実装・検証完了",
   "started_at": "2026-09-29",
-  "last_updated": "2026-11-13 12:07",
+  "last_updated": "2026-11-16 16:00",
   "tasks": [
     {
       "title": "Phase1: HTML骨格・モバイルファーストCSS作成",
@@ -208,6 +208,10 @@
     {
       "timestamp": "2026-11-13 12:07",
       "message": "スコアの合計と各試合のスコア一覧表の切り替え確認機能を実装・デプロイ完了"
+    },
+    {
+      "timestamp": "2026-11-16 16:00",
+      "message": "複数人リアルタイム共有版(mahjong-multi.html)の集計タイポ修正(val→rounded)、ワンタップ即時再同期UI軽量化、実通信複数端末同期検証の合格確認、および本番デプロイ反映"
     }
   ],
   "questions": [],

@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
   <title>麻雀スコアシート (複数人リアルタイム共有版)</title>
   <style>
     :root {
@@ -91,6 +94,9 @@
       display: flex;
       align-items: center;
       gap: 4px;
+    }
+    .btn-header-sync:active {
+      background: #174a38;
     }
 
     .btn-header-manage {
@@ -487,6 +493,30 @@
       font-weight: 700;
     }
 
+    /* トースト通知 */
+    .toast-notice {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10b981;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      z-index: 999;
+      display: none;
+      animation: fadeInOut 2.5s forwards;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translate(-50%, -10px); }
+      15% { opacity: 1; transform: translate(-50%, 0); }
+      85% { opacity: 1; transform: translate(-50%, 0); }
+      100% { opacity: 0; transform: translate(-50%, -10px); }
+    }
+
     /* モーダル */
     .modal-overlay {
       position: fixed;
@@ -524,14 +554,6 @@
       padding: 14px;
       overflow-y: auto;
       flex: 1;
-    }
-
-    .sync-card {
-      background: #0d1613;
-      border: 1px solid #23382f;
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 12px;
     }
 
     .form-inline {
@@ -596,6 +618,8 @@
 </head>
 <body>
 
+  <div class="toast-notice" id="toast-notice">🟢 最新スコアを同期しました</div>
+
   <div class="app-viewport">
 
     <header>
@@ -603,8 +627,8 @@
         🀄 麻雀スコア <span class="brand-sub">リアルタイム同期</span>
       </div>
       <div class="header-actions">
-        <!-- 開いた瞬間から自動同期 (合言葉入力不要) -->
-        <button class="btn-header-sync" id="btn-room-sync" onclick="openSyncInfoModal()">
+        <!-- 開いた瞬間から自動同期・タップで即時再取得 -->
+        <button class="btn-header-sync" id="btn-room-sync" onclick="fetchLatestCloudState(true)" title="タップして最新スコアを再同期">
           <span id="room-sync-icon">🟢</span> <span id="room-sync-text">同期中</span>
         </button>
         <button class="btn-header-manage" onclick="openPlayerModal()">👥 名簿</button>
@@ -677,31 +701,6 @@
 
   </div>
 
-  <!-- 同期ステータス・手動再取得モーダル -->
-  <div class="modal-overlay" id="sync-info-modal" onclick="closeModalOnBackdrop(event)">
-    <div class="modal-content">
-      <div class="modal-header">
-        <div style="font-weight: 800; color: var(--accent-gold);">📡 リアルタイム同期ステータス</div>
-        <button onclick="closeSyncInfoModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
-      </div>
-      <div class="modal-body">
-        <div class="sync-card">
-          <div style="font-size:0.9rem; color:#fff; font-weight:bold; margin-bottom:6px;" id="sync-modal-status-text">
-            🟢 全自動リアルタイム同期中
-          </div>
-          <div style="font-size:0.78rem; color:#9ca3af; line-height:1.5;">
-            合言葉の入力は不要です！このページを開いている全員のスマホ・PC間で、スコアがミリ秒単位で常時自動同期されています。
-          </div>
-          <div style="margin-top:12px; display:flex; gap:6px;">
-            <button class="action-btn btn-next-round" style="width:100%;" onclick="fetchLatestCloudState(true)">
-              🔄 クラウドから最新スコアを再取得
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- プレイヤー管理モーダル -->
   <div class="modal-overlay" id="player-modal" onclick="closeModalOnBackdrop(event)">
     <div class="modal-content">
@@ -765,7 +764,6 @@
     const STORAGE_KEY_STATE = 'mahjong_multi_state_v1';
     const STORAGE_KEY_DEV   = 'mahjong_multi_device_id';
 
-    // デフォルト共通ルーム (URLクエリ ?room=... があれば優先)
     const urlParams = new URLSearchParams(window.location.search);
     const currentRoomId = urlParams.get('room') || 'mahjong_multi_shared_room_dayama';
 
@@ -810,14 +808,13 @@
        📡 リアルタイム SSE ストリーミング ＆ 差分同期エンジン
        =================================================== */
 
-    // 差分イベント送信 (同時に直近ステートスナップショットもクラウドへ通知)
     function emitSyncEvent(type, payload = {}) {
       const eventObj = {
         type: type,
         senderId: deviceId,
         timestamp: Date.now(),
         payload: payload,
-        fullSnapshot: state // 後から入室した端末が即座に復元できるようスナップショットを同封
+        fullSnapshot: state
       };
 
       fetch(SYNC_ENDPOINT + encodeURIComponent(currentRoomId), {
@@ -828,16 +825,24 @@
       }).catch(err => console.error("Event Push Error:", err));
     }
 
-    // ページ起動時：クラウド上の最新メッセージを取得して初期同期
+    function showToast(msg) {
+      const toast = document.getElementById('toast-notice');
+      if (toast) {
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 2500);
+      }
+    }
+
+    // 起動時＆手動更新：クラウド最新データをフェッチ
     function fetchLatestCloudState(isManual = false) {
-      fetch(SYNC_ENDPOINT + encodeURIComponent(currentRoomId) + '/json?poll=1', {
+      fetch(SYNC_ENDPOINT + encodeURIComponent(currentRoomId) + '/json?poll=1&t=' + Date.now(), {
         mode: 'cors'
       })
       .then(res => res.text())
       .then(text => {
         if (!text || !text.trim()) return;
         const lines = text.trim().split('\n');
-        // 直近のメッセージから最新の有効スナップショットを探す
         for (let i = lines.length - 1; i >= 0; i--) {
           try {
             const raw = JSON.parse(lines[i]);
@@ -847,19 +852,19 @@
                 state = eventObj.fullSnapshot;
                 saveState(false);
                 renderAll();
-                if (isManual) alert('🟢 クラウドから最新スコアを取得しました！');
+                if (isManual) showToast('🟢 クラウド最新スコアを同期しました');
                 return;
               }
             }
           } catch(e) {}
         }
+        if (isManual) showToast('🟢 最新状態です');
       })
       .catch(err => {
         console.warn("Cloud poll error:", err);
       });
     }
 
-    // SSE常時接続ストリーミングの開始 (開いた瞬間に自動接続)
     function startRoomSSE() {
       if (sseSource) {
         sseSource.close();
@@ -1044,7 +1049,6 @@
        =================================================== */
     document.addEventListener('DOMContentLoaded', () => {
       renderAll();
-      // 開いた瞬間から自動接続
       updateRoomUI(true);
       fetchLatestCloudState(false);
       startRoomSSE();
@@ -1059,23 +1063,14 @@
     function updateRoomUI(isConnected) {
       const icon = document.getElementById('room-sync-icon');
       const text = document.getElementById('room-sync-text');
-      const modalText = document.getElementById('sync-modal-status-text');
 
       if (isConnected) {
         if (icon) icon.textContent = '🟢';
         if (text) text.textContent = `同期中 (${activeDeviceCount}人)`;
-        if (modalText) modalText.textContent = `🟢 リアルタイム自動同期中 (${activeDeviceCount}台が接続中)`;
       } else {
         if (icon) icon.textContent = '🟡';
         if (text) text.textContent = '接続中...';
       }
-    }
-
-    function openSyncInfoModal() {
-      document.getElementById('sync-info-modal').classList.add('open');
-    }
-    function closeSyncInfoModal() {
-      document.getElementById('sync-info-modal').classList.remove('open');
     }
 
     function switchMainView(view) {
@@ -1171,7 +1166,6 @@
       saveState(false);
       updateStatusBanner();
 
-      // ミリ秒差分イベントを発行（全端末へ即時同期）
       emitSyncEvent('SET_SCORE', {
         mode: mode,
         roundIdx: rIdx,
@@ -1618,7 +1612,6 @@
     }
 
     function closeModalOnBackdrop(e) {
-      if (e.target.id === 'sync-info-modal') closeSyncInfoModal();
       if (e.target.id === 'player-modal') closePlayerModal();
       if (e.target.id === 'leaderboard-modal') closeLeaderboard();
     }
