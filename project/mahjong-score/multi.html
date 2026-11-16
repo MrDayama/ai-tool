@@ -1,0 +1,1693 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>麻雀スコアシート (複数人リアルタイム共有版)</title>
+  <style>
+    :root {
+      --bg: #090e0c;
+      --card-bg: #131c18;
+      --card-border: #1f3029;
+      --accent: #10b981;
+      --accent-gold: #f59e0b;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --danger: #ef4444;
+      --danger-bg: #351414;
+      --success: #10b981;
+      --success-bg: #0c3327;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100dvh;
+      overflow: hidden;
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+
+    .app-viewport {
+      display: flex;
+      flex-direction: column;
+      height: 100dvh;
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 6px 10px calc(8px + var(--safe-bottom)) 10px;
+      justify-content: space-between;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2px 0;
+      flex-shrink: 0;
+    }
+
+    .app-brand {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .brand-sub {
+      font-size: 0.65rem;
+      color: var(--accent);
+      background: #0d2b20;
+      padding: 1px 5px;
+      border-radius: 4px;
+      border: 1px solid #1f503e;
+      margin-left: 2px;
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-header-sync {
+      background: #0d2b20;
+      border: 1px solid var(--accent);
+      color: #34d399;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 7px;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-header-sync:active {
+      background: #174a38;
+    }
+
+    .btn-header-manage {
+      background: #14201c;
+      border: 1px solid var(--card-border);
+      color: #d1d5db;
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 6px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .tab-pills {
+      display: flex;
+      background: #111a17;
+      padding: 2px;
+      border-radius: 6px;
+      border: 1px solid var(--card-border);
+    }
+    .tab-pill {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 4px 6px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .tab-pill.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    /* ビュー切り替えバー (入力 ⇄ 一覧表) */
+    .view-toggle-bar {
+      display: flex;
+      background: #0c1613;
+      border: 1px solid #1f332a;
+      border-radius: 8px;
+      padding: 3px;
+      margin: 2px 0 3px 0;
+      flex-shrink: 0;
+      gap: 4px;
+    }
+    .view-toggle-btn {
+      flex: 1;
+      padding: 6px 0;
+      font-size: 0.82rem;
+      font-weight: 800;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .view-toggle-btn.active {
+      background: #1b382d;
+      color: #34d399;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+    }
+
+    .round-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 5px 10px;
+      margin: 2px 0;
+      flex-shrink: 0;
+    }
+
+    .round-nav-btn {
+      background: #1a2923;
+      border: 1px solid #283e35;
+      color: var(--text);
+      border-radius: 4px;
+      padding: 4px 10px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .round-nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .round-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: var(--accent-gold);
+    }
+
+    /* メイン入力コンテナ */
+    #main-input-view {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      justify-content: space-between;
+      min-height: 0;
+    }
+
+    .players-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      flex: 1;
+      margin: 3px 0;
+      align-content: stretch;
+    }
+    .grid-3p {
+      grid-template-columns: 1fr;
+      grid-template-rows: repeat(3, 1fr);
+    }
+
+    .player-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+    }
+    .player-card:focus-within {
+      border-color: var(--accent);
+      background: #16241f;
+    }
+
+    .card-top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .player-select-btn {
+      background: #0d1613;
+      border: 1px solid #273d34;
+      color: var(--accent-gold);
+      font-size: 0.9rem;
+      font-weight: 800;
+      border-radius: 6px;
+      padding: 3px 6px;
+      cursor: pointer;
+      max-width: 65%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .player-total-badge {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .score-input-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 4px 0;
+    }
+
+    .score-input-field {
+      width: 100%;
+      background: #0b1310;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1.45rem;
+      font-weight: 800;
+      text-align: center;
+      padding: 6px 2px;
+      -moz-appearance: textfield;
+    }
+    .score-input-field::-webkit-outer-spin-button,
+    .score-input-field::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .score-input-field:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.25);
+    }
+
+    .val-plus { color: #34d399 !important; }
+    .val-minus { color: #f87171 !important; }
+    .val-zero { color: var(--text-muted) !important; }
+
+    .btn-toggle-sign {
+      background: #1c2b24;
+      border: 1px solid var(--card-border);
+      color: var(--accent-gold);
+      font-size: 1.1rem;
+      font-weight: 800;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      touch-action: manipulation;
+      flex-shrink: 0;
+    }
+    .btn-toggle-sign:active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .status-banner {
+      border-radius: 8px;
+      padding: 7px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.86rem;
+      font-weight: 700;
+      margin: 2px 0;
+      flex-shrink: 0;
+    }
+    .status-banner-ok {
+      background: var(--success-bg);
+      border: 1px solid var(--success);
+      color: #a7f3d0;
+    }
+    .status-banner-error {
+      background: var(--danger-bg);
+      border: 1px solid var(--danger);
+      color: #fecaca;
+    }
+    .status-banner-wait {
+      background: #131c19;
+      border: 1px solid var(--card-border);
+      color: var(--text-muted);
+    }
+
+    .bottom-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 3px;
+      flex-shrink: 0;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px 0;
+      font-size: 0.88rem;
+      font-weight: 800;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .btn-next-round {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-next-round:disabled {
+      background: #1c2b25;
+      color: #52635c;
+      cursor: not-allowed;
+    }
+    .btn-sub {
+      flex: 0.6;
+      background: #141f1b;
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+    }
+
+    /* ===================================================
+       📊 スコア一覧表ビュー (テーブル表示)
+       =================================================== */
+    #main-table-view {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 8px;
+      overflow: hidden;
+      margin: 2px 0;
+    }
+
+    .table-scroll-wrap {
+      flex: 1;
+      overflow: auto;
+      border-radius: 6px;
+      border: 1px solid #1c2e26;
+    }
+
+    .score-matrix-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+      text-align: right;
+    }
+    .score-matrix-table th,
+    .score-matrix-table td {
+      padding: 8px 6px;
+      border-bottom: 1px solid #1a2c24;
+      white-space: nowrap;
+    }
+    .score-matrix-table th {
+      background: #0f1c17;
+      color: var(--accent-gold);
+      font-weight: 800;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      text-align: center;
+    }
+    .score-matrix-table th:first-child,
+    .score-matrix-table td:first-child {
+      text-align: center;
+      font-weight: 800;
+      color: var(--text-muted);
+      background: #0d1713;
+      position: sticky;
+      left: 0;
+      z-index: 1;
+      width: 50px;
+    }
+    .score-matrix-table th:first-child {
+      z-index: 3;
+    }
+
+    .score-matrix-table tr.table-row-clickable {
+      cursor: pointer;
+    }
+    .score-matrix-table tr.table-row-clickable:hover {
+      background: #182b23;
+    }
+    .score-matrix-table tr.active-round-row {
+      background: rgba(16, 185, 129, 0.12);
+      border-left: 3px solid var(--accent);
+    }
+
+    /* 合計行 (SUM) */
+    .score-matrix-table tr.sum-row {
+      background: #172b22 !important;
+      border-top: 2px solid var(--accent);
+      font-weight: 800;
+      font-size: 0.88rem;
+      position: sticky;
+      bottom: 0;
+      z-index: 2;
+    }
+    .score-matrix-table tr.sum-row td {
+      border-bottom: none;
+      padding: 9px 6px;
+    }
+    .score-matrix-table tr.sum-row td:first-child {
+      background: #14241d !important;
+      color: var(--accent-gold);
+      z-index: 3;
+    }
+
+    .cell-val-plus { color: #34d399; font-weight: 700; }
+    .cell-val-minus { color: #f87171; font-weight: 700; }
+    .cell-val-zero { color: var(--text-muted); }
+    .cell-val-empty { color: #4b5563; }
+
+    .tag-status-ok {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      background: #0c3327;
+      color: #34d399;
+      font-weight: 700;
+    }
+    .tag-status-ng {
+      display: inline-block;
+      font-size: 0.65rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      background: #351414;
+      color: #f87171;
+      font-weight: 700;
+    }
+
+    /* トースト通知 */
+    .toast-notice {
+      position: fixed;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10b981;
+      color: #fff;
+      font-size: 0.8rem;
+      font-weight: 800;
+      padding: 6px 14px;
+      border-radius: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      z-index: 999;
+      display: none;
+      animation: fadeInOut 2.5s forwards;
+    }
+    @keyframes fadeInOut {
+      0% { opacity: 0; transform: translate(-50%, -10px); }
+      15% { opacity: 1; transform: translate(-50%, 0); }
+      85% { opacity: 1; transform: translate(-50%, 0); }
+      100% { opacity: 0; transform: translate(-50%, -10px); }
+    }
+
+    /* モーダル */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      z-index: 99;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .modal-overlay.open {
+      display: flex;
+    }
+    .modal-content {
+      background: #131f1a;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--card-border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-body {
+      padding: 14px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .form-inline {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .form-input {
+      flex: 1;
+      background: #09120f;
+      border: 1px solid var(--card-border);
+      border-radius: 6px;
+      color: #fff;
+      padding: 8px 10px;
+      font-size: 0.9rem;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .player-tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 8px 0 14px 0;
+    }
+    .player-tag {
+      background: #182620;
+      border: 1px solid #293f35;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 700;
+    }
+    .btn-tag-del {
+      background: none;
+      border: none;
+      color: #9ca3af;
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0 2px;
+    }
+    .btn-tag-del:hover {
+      color: var(--danger);
+    }
+
+    .leaderboard-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: #0d1613;
+      border-radius: 8px;
+      margin-bottom: 6px;
+      border: 1px solid #1c2c25;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="toast-notice" id="toast-notice">🟢 最新スコアを同期しました</div>
+
+  <div class="app-viewport">
+
+    <header>
+      <div class="app-brand">
+        🀄 麻雀スコア <span class="brand-sub">リアルタイム同期</span>
+      </div>
+      <div class="header-actions">
+        <!-- 開いた瞬間から自動同期・タップで即時再取得 -->
+        <button class="btn-header-sync" id="btn-room-sync" onclick="fetchLatestCloudState(true)" title="タップして最新スコアを再同期">
+          <span id="room-sync-icon">🟢</span> <span id="room-sync-text">同期中</span>
+        </button>
+        <button class="btn-header-manage" onclick="openPlayerModal()">👥 名簿</button>
+        <div class="tab-pills">
+          <button class="tab-pill active" id="tab-4p" onclick="switchMode('4p')">四麻</button>
+          <button class="tab-pill" id="tab-3p" onclick="switchMode('3p')">三麻</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- 🀄 入力 ⇄ 📊 スコア一覧表 切り替えバー -->
+    <div class="view-toggle-bar">
+      <button class="view-toggle-btn active" id="btn-view-input" onclick="switchMainView('input')">
+        🀄 半荘入力
+      </button>
+      <button class="view-toggle-btn" id="btn-view-table" onclick="switchMainView('table')">
+        📊 スコア一覧表＆合計
+      </button>
+    </div>
+
+    <!-- 1. メイン半荘入力ビュー -->
+    <div id="main-input-view">
+
+      <div class="round-bar">
+        <button class="round-nav-btn" id="btn-prev-round" onclick="navigateRound(-1)">◀ 前</button>
+        <div class="round-title" id="round-indicator">第 1 半荘</div>
+        <button class="round-nav-btn" id="btn-next-round-nav" onclick="navigateRound(1)">次 ▶</button>
+      </div>
+
+      <div class="players-grid" id="players-grid-container">
+        <!-- 4枚または3枚のカード -->
+      </div>
+
+      <div class="status-banner status-banner-wait" id="status-banner">
+        <span id="status-message">全員のスコアを入力してください</span>
+        <span id="status-badge" style="font-size: 0.95rem;">計 0.0</span>
+      </div>
+
+      <div class="bottom-bar">
+        <button class="action-btn btn-sub" onclick="openLeaderboard()">
+          🏆 通算成績
+        </button>
+        <button class="action-btn btn-next-round" id="btn-complete-round" onclick="completeAndNextRound()">
+          次へ進む (＋半荘) ❯
+        </button>
+      </div>
+
+    </div>
+
+    <!-- 2. 全試合スコア一覧表ビュー -->
+    <div id="main-table-view">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span style="font-size:0.85rem; font-weight:800; color:var(--accent-gold);">📊 全半荘スコア推移 ＆ 合計</span>
+        <span style="font-size:0.7rem; color:var(--text-muted);">行タップでその半荘へジャンプ</span>
+      </div>
+      <div class="table-scroll-wrap">
+        <table class="score-matrix-table" id="score-matrix-table">
+          <!-- スクリプトで動的描画 -->
+        </table>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:8px;">
+        <button class="action-btn btn-sub" style="flex:1;" onclick="openLeaderboard()">
+          🏆 通算ランキングを見る
+        </button>
+        <button class="action-btn btn-next-round" style="flex:1;" onclick="switchMainView('input')">
+          🀄 入力画面へ戻る
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- プレイヤー管理モーダル -->
+  <div class="modal-overlay" id="player-modal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="font-weight: 800; color: var(--accent-gold);">👥 プレイヤー名簿</div>
+        <button onclick="closePlayerModal()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="font-size:0.8rem; color:#9ca3af;">新規プレイヤー追加:</div>
+        <div class="form-inline">
+          <input type="text" id="new-player-input" class="form-input" placeholder="例: 佐藤、プロA">
+          <button class="action-btn btn-next-round" style="flex:0.4; padding:8px 12px;" onclick="addPlayerFromModal()">追加</button>
+        </div>
+
+        <div style="font-size:0.8rem; color:#9ca3af; margin-top:10px;">登録プレイヤー一覧 (✕で削除):</div>
+        <div class="player-tag-row" id="modal-player-tags"></div>
+
+        <div style="margin-top:16px; border-top:1px solid var(--card-border); padding-top:12px;">
+          <div style="font-size:0.8rem; color:var(--accent-gold); font-weight:700; margin-bottom:6px;">対局メンバー席替え:</div>
+          <div id="modal-seat-selectors" style="display:flex; flex-direction:column; gap:8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 通算成績モーダル -->
+  <div class="modal-overlay" id="leaderboard-modal" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div style="font-weight: 800; color: var(--accent-gold);">🏆 プレイヤー別 通算スコア</div>
+        <button onclick="closeLeaderboard()" style="background:none; border:none; color:#9ca3af; font-size:1.2rem; cursor:pointer;">✕</button>
+      </div>
+      <div class="modal-body">
+        <div style="display:flex; gap:6px; margin-bottom:12px;">
+          <button class="action-btn btn-next-round" style="flex:1; padding:7px 0; font-size:0.8rem;" onclick="closeLeaderboard(); switchMainView('table');">
+            📊 スコア一覧表を開く
+          </button>
+        </div>
+
+        <div id="modal-leaderboard-list"></div>
+
+        <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 8px;">
+          <button class="action-btn btn-sub" style="width: 100%;" onclick="exportText()">
+            📋 成績をテキストコピー
+          </button>
+          <button class="action-btn btn-sub" style="width: 100%;" onclick="exportSql()">
+            💾 DB Browser用SQL保存
+          </button>
+          <button class="action-btn btn-sub" style="width: 100%; color:#f87171;" onclick="resetAllRounds()">
+            🗑️ 現在のモードを全クリア
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ===================================================
+       🀄 全自動リアルタイム同期仕様 (合言葉不要・開くだけで即同期)
+       =================================================== */
+    const STORAGE_KEY_STATE = 'mahjong_multi_state_v1';
+    const STORAGE_KEY_DEV   = 'mahjong_multi_device_id';
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const currentRoomId = urlParams.get('room') || 'mahjong_multi_shared_room_dayama';
+
+    const DEFAULT_DATA = {
+      mode: '4p',
+      playersMaster: ['東家', '南家', '西家', '北家'],
+      activeSeats: {
+        '4p': ['東家', '南家', '西家', '北家'],
+        '3p': ['東家', '南家', '西家']
+      },
+      currentRoundIdx: {
+        '4p': 0,
+        '3p': 0
+      },
+      sheets: {
+        '4p': [
+          [null, null, null, null]
+        ],
+        '3p': [
+          [null, null, null]
+        ]
+      }
+    };
+
+    let deviceId = localStorage.getItem(STORAGE_KEY_DEV);
+    if (!deviceId) {
+      deviceId = 'dev_m_' + Math.random().toString(36).substring(2, 10);
+      localStorage.setItem(STORAGE_KEY_DEV, deviceId);
+    }
+
+    let state = JSON.parse(localStorage.getItem(STORAGE_KEY_STATE)) || DEFAULT_DATA;
+    let currentMainView = 'input';
+    
+    let sseSource = null;
+    let presenceTimer = null;
+    let activeDeviceCount = 1;
+
+    const SYNC_ENDPOINT = 'https://ntfy.sh/mahjong_multi_room_';
+    const PRESENCE_ENDPOINT = 'https://ntfy.sh/mahjong_multi_presence_';
+
+    /* ===================================================
+       📡 リアルタイム SSE ストリーミング ＆ 差分同期エンジン
+       =================================================== */
+
+    function emitSyncEvent(type, payload = {}) {
+      const eventObj = {
+        type: type,
+        senderId: deviceId,
+        timestamp: Date.now(),
+        payload: payload,
+        fullSnapshot: state
+      };
+
+      fetch(SYNC_ENDPOINT + encodeURIComponent(currentRoomId), {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(eventObj)
+      }).catch(err => console.error("Event Push Error:", err));
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-notice');
+      if (toast) {
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        setTimeout(() => { toast.style.display = 'none'; }, 2500);
+      }
+    }
+
+    // 起動時＆手動更新：クラウド最新データをフェッチ
+    function fetchLatestCloudState(isManual = false) {
+      fetch(SYNC_ENDPOINT + encodeURIComponent(currentRoomId) + '/json?poll=1&t=' + Date.now(), {
+        mode: 'cors'
+      })
+      .then(res => res.text())
+      .then(text => {
+        if (!text || !text.trim()) return;
+        const lines = text.trim().split('\n');
+        for (let i = lines.length - 1; i >= 0; i--) {
+          try {
+            const raw = JSON.parse(lines[i]);
+            if (raw && raw.message) {
+              const eventObj = JSON.parse(raw.message);
+              if (eventObj && eventObj.fullSnapshot && eventObj.fullSnapshot.sheets) {
+                state = eventObj.fullSnapshot;
+                saveState(false);
+                renderAll();
+                if (isManual) showToast('🟢 クラウド最新スコアを同期しました');
+                return;
+              }
+            }
+          } catch(e) {}
+        }
+        if (isManual) showToast('🟢 最新状態です');
+      })
+      .catch(err => {
+        console.warn("Cloud poll error:", err);
+      });
+    }
+
+    function startRoomSSE() {
+      if (sseSource) {
+        sseSource.close();
+        sseSource = null;
+      }
+
+      const sseUrl = SYNC_ENDPOINT + encodeURIComponent(currentRoomId) + '/sse';
+      sseSource = new EventSource(sseUrl);
+
+      sseSource.onopen = () => {
+        updateRoomUI(true);
+      };
+
+      sseSource.onmessage = (e) => {
+        if (!e.data) return;
+        try {
+          const raw = JSON.parse(e.data);
+          if (raw && raw.message) {
+            const eventObj = JSON.parse(raw.message);
+            handleRemoteSyncEvent(eventObj);
+          }
+        } catch (err) {}
+      };
+
+      sseSource.onerror = (err) => {
+        console.warn("SSE reconnecting...", err);
+      };
+    }
+
+    function handleRemoteSyncEvent(event) {
+      if (!event || !event.type) return;
+      if (event.senderId === deviceId) return;
+
+      const p = event.payload || {};
+
+      switch (event.type) {
+        case 'SET_SCORE': {
+          const { mode, roundIdx, seatIdx, score } = p;
+          if (!mode || roundIdx === undefined || seatIdx === undefined) return;
+
+          while (state.sheets[mode].length <= roundIdx) {
+            state.sheets[mode].push(new Array(state.activeSeats[mode].length).fill(null));
+          }
+
+          const activeEl = document.activeElement;
+          const myEditingThisCell = activeEl && activeEl.id === `score-input-${seatIdx}` && state.mode === mode && getCurrentRoundIdx() === roundIdx;
+
+          state.sheets[mode][roundIdx][seatIdx] = score;
+          saveState(false);
+
+          if (state.mode === mode && getCurrentRoundIdx() === roundIdx) {
+            if (!myEditingThisCell) {
+              const input = document.getElementById(`score-input-${seatIdx}`);
+              if (input) {
+                const colorClass = getColorClass(score);
+                input.className = 'score-input-field ' + colorClass;
+                input.value = (score !== null && !isNaN(score)) ? (score > 0 ? `+${score}` : score) : '';
+              }
+            }
+            updateStatusBanner();
+            renderUIWithoutInputs();
+          }
+
+          if (currentMainView === 'table') {
+            renderScoreTable();
+          }
+          break;
+        }
+
+        case 'NEXT_ROUND': {
+          const { mode, roundIdx } = p;
+          if (state.mode === mode) {
+            while (state.sheets[mode].length <= roundIdx) {
+              state.sheets[mode].push(new Array(state.activeSeats[mode].length).fill(null));
+            }
+            state.currentRoundIdx[mode] = roundIdx;
+            saveState(false);
+            renderAll();
+          }
+          break;
+        }
+
+        case 'SET_SEAT_PLAYER': {
+          const { mode, seatIdx, playerName } = p;
+          if (state.activeSeats[mode]) {
+            state.activeSeats[mode][seatIdx] = playerName;
+            saveState(false);
+            renderAll();
+          }
+          break;
+        }
+
+        case 'ADD_PLAYER': {
+          const { name } = p;
+          if (name && !state.playersMaster.includes(name)) {
+            state.playersMaster.push(name);
+            saveState(false);
+            if (document.getElementById('player-modal').classList.contains('open')) {
+              renderModalPlayerList();
+              renderModalSeatSelectors();
+            }
+          }
+          break;
+        }
+
+        case 'DEL_PLAYER': {
+          const { name } = p;
+          if (name) {
+            state.playersMaster = state.playersMaster.filter(x => x !== name);
+            saveState(false);
+            if (document.getElementById('player-modal').classList.contains('open')) {
+              renderModalPlayerList();
+              renderModalSeatSelectors();
+            }
+          }
+          break;
+        }
+
+        case 'SWITCH_MODE': {
+          if (p.mode === '4p' || p.mode === '3p') {
+            state.mode = p.mode;
+            document.getElementById('tab-4p').classList.toggle('active', state.mode === '4p');
+            document.getElementById('tab-3p').classList.toggle('active', state.mode === '3p');
+            saveState(false);
+            renderAll();
+          }
+          break;
+        }
+
+        case 'RESET_MODE': {
+          if (p.mode && state.sheets[p.mode]) {
+            state.sheets[p.mode] = [new Array(state.activeSeats[p.mode].length).fill(null)];
+            state.currentRoundIdx[p.mode] = 0;
+            saveState(false);
+            renderAll();
+          }
+          break;
+        }
+      }
+    }
+
+    /* ===================================================
+       👥 プレゼンス管理（接続人数カウント）
+       =================================================== */
+    function startPresenceHeartbeat() {
+      if (presenceTimer) clearInterval(presenceTimer);
+      sendPresenceHeartbeat();
+      presenceTimer = setInterval(sendPresenceHeartbeat, 5000);
+    }
+
+    function sendPresenceHeartbeat() {
+      const topicUrl = PRESENCE_ENDPOINT + encodeURIComponent(currentRoomId);
+      
+      fetch(topicUrl, {
+        method: 'POST',
+        mode: 'cors',
+        body: deviceId
+      }).catch(() => {});
+
+      const sinceSec = Math.floor(Date.now() / 1000) - 35;
+      fetch(topicUrl + '/json?poll=1&since=' + sinceSec, { mode: 'cors' })
+      .then(res => res.text())
+      .then(text => {
+        if (!text || !text.trim()) return;
+        const lines = text.trim().split('\n');
+        const uniqueDevices = new Set();
+        lines.forEach(line => {
+          try {
+            const obj = JSON.parse(line);
+            if (obj && obj.message) uniqueDevices.add(obj.message);
+          } catch(e) {}
+        });
+        if (uniqueDevices.size > 0) {
+          activeDeviceCount = uniqueDevices.size;
+          updateRoomUI(true);
+        }
+      }).catch(() => {});
+    }
+
+    /* ===================================================
+       🀄 ライフサイクル ＆ UI操作
+       =================================================== */
+    document.addEventListener('DOMContentLoaded', () => {
+      renderAll();
+      updateRoomUI(true);
+      fetchLatestCloudState(false);
+      startRoomSSE();
+      startPresenceHeartbeat();
+    });
+
+    function saveState(shouldEmit = false) {
+      localStorage.setItem(STORAGE_KEY_STATE, JSON.stringify(state));
+      renderUIWithoutInputs();
+    }
+
+    function updateRoomUI(isConnected) {
+      const icon = document.getElementById('room-sync-icon');
+      const text = document.getElementById('room-sync-text');
+
+      if (isConnected) {
+        if (icon) icon.textContent = '🟢';
+        if (text) text.textContent = `同期中 (${activeDeviceCount}人)`;
+      } else {
+        if (icon) icon.textContent = '🟡';
+        if (text) text.textContent = '接続中...';
+      }
+    }
+
+    function switchMainView(view) {
+      currentMainView = view;
+      const inputView = document.getElementById('main-input-view');
+      const tableView = document.getElementById('main-table-view');
+      const btnInput = document.getElementById('btn-view-input');
+      const btnTable = document.getElementById('btn-view-table');
+
+      if (view === 'table') {
+        inputView.style.display = 'none';
+        tableView.style.display = 'flex';
+        btnInput.classList.remove('active');
+        btnTable.classList.add('active');
+        renderScoreTable();
+      } else {
+        inputView.style.display = 'flex';
+        tableView.style.display = 'none';
+        btnInput.classList.add('active');
+        btnTable.classList.remove('active');
+        renderAll();
+      }
+    }
+
+    function toggleSign(seatIdx) {
+      const input = document.getElementById(`score-input-${seatIdx}`);
+      if (!input) return;
+      let valStr = input.value.trim();
+
+      if (!valStr || valStr === '0') {
+        valStr = '-';
+      } else if (valStr.startsWith('-')) {
+        valStr = valStr.substring(1);
+      } else if (valStr.startsWith('+')) {
+        valStr = '-' + valStr.substring(1);
+      } else {
+        valStr = '-' + valStr;
+      }
+      input.value = valStr;
+      handleScoreInput(seatIdx, valStr);
+    }
+
+    function switchMode(newMode) {
+      state.mode = newMode;
+      document.getElementById('tab-4p').classList.toggle('active', newMode === '4p');
+      document.getElementById('tab-3p').classList.toggle('active', newMode === '3p');
+      saveState(false);
+      emitSyncEvent('SWITCH_MODE', { mode: newMode });
+      renderAll();
+    }
+
+    function getCurrentRoundIdx() {
+      return state.currentRoundIdx[state.mode] || 0;
+    }
+
+    function setCurrentRoundIdx(idx) {
+      state.currentRoundIdx[state.mode] = idx;
+      saveState(false);
+      renderAll();
+    }
+
+    function navigateRound(delta) {
+      const mode = state.mode;
+      const current = getCurrentRoundIdx();
+      const total = state.sheets[mode].length;
+      const target = current + delta;
+      if (target >= 0 && target < total) {
+        setCurrentRoundIdx(target);
+      }
+    }
+
+    function handleScoreInput(seatIdx, rawVal) {
+      const mode = state.mode;
+      const rIdx = getCurrentRoundIdx();
+      const trimmed = rawVal.trim();
+
+      if (trimmed === '-' || trimmed === '-.' || trimmed === '.') {
+        const input = document.getElementById(`score-input-${seatIdx}`);
+        if (input) input.className = 'score-input-field val-minus';
+        return;
+      }
+
+      const parsed = trimmed === '' ? null : parseFloat(trimmed);
+      const finalVal = (parsed !== null && !isNaN(parsed)) ? parsed : null;
+
+      state.sheets[mode][rIdx][seatIdx] = finalVal;
+
+      const input = document.getElementById(`score-input-${seatIdx}`);
+      if (input) {
+        input.className = 'score-input-field ' + getColorClass(finalVal);
+      }
+
+      saveState(false);
+      updateStatusBanner();
+
+      emitSyncEvent('SET_SCORE', {
+        mode: mode,
+        roundIdx: rIdx,
+        seatIdx: seatIdx,
+        score: finalVal
+      });
+    }
+
+    function getColorClass(val) {
+      if (val === null || isNaN(val)) return 'val-zero';
+      if (val > 0) return 'val-plus';
+      if (val < 0) return 'val-minus';
+      return 'val-zero';
+    }
+
+    function completeAndNextRound() {
+      const mode = state.mode;
+      const current = getCurrentRoundIdx();
+      const seatsCount = state.activeSeats[mode].length;
+
+      let nextIdx = current + 1;
+      if (current === state.sheets[mode].length - 1) {
+        state.sheets[mode].push(new Array(seatsCount).fill(null));
+      }
+      setCurrentRoundIdx(nextIdx);
+
+      emitSyncEvent('NEXT_ROUND', {
+        mode: mode,
+        roundIdx: nextIdx
+      });
+    }
+
+    function renderAll() {
+      renderRoundNav();
+      renderPlayerCards();
+      updateStatusBanner();
+      if (currentMainView === 'table') {
+        renderScoreTable();
+      }
+    }
+
+    function renderUIWithoutInputs() {
+      renderRoundNav();
+      updateStatusBanner();
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const totalMap = {};
+      seats.forEach(s => totalMap[s] = 0);
+      state.sheets[mode].forEach(row => {
+        if (row.every(v => v !== null && !isNaN(v))) {
+          const sum = Math.round(row.reduce((a, b) => a + b, 0) * 10) / 10;
+          if (Math.abs(sum) < 0.001) {
+            row.forEach((pt, sIdx) => {
+              const pName = seats[sIdx];
+              totalMap[pName] = (totalMap[pName] || 0) + pt;
+            });
+          }
+        }
+      });
+      seats.forEach((pName, sIdx) => {
+        const badge = document.getElementById(`total-badge-${sIdx}`);
+        if (badge) {
+          const totalPt = (Math.round((totalMap[pName] || 0) * 10) / 10).toFixed(1);
+          badge.innerText = `通算: ${totalPt > 0 ? '+' : ''}${totalPt}`;
+        }
+      });
+    }
+
+    function renderRoundNav() {
+      const mode = state.mode;
+      const current = getCurrentRoundIdx();
+      const total = state.sheets[mode].length;
+
+      document.getElementById('round-indicator').innerText = `第 ${current + 1} / ${total} 半荘`;
+      document.getElementById('btn-prev-round').disabled = (current === 0);
+      document.getElementById('btn-next-round-nav').disabled = (current === total - 1);
+    }
+
+    function renderPlayerCards() {
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const rIdx = getCurrentRoundIdx();
+      const currentScores = state.sheets[mode][rIdx] || new Array(seats.length).fill(null);
+
+      const activeEl = document.activeElement;
+      let activeInputId = null;
+      let activeInputValue = null;
+      if (activeEl && activeEl.id && activeEl.id.startsWith('score-input-')) {
+        activeInputId = activeEl.id;
+        activeInputValue = activeEl.value;
+      }
+
+      const totalMap = {};
+      seats.forEach(s => totalMap[s] = 0);
+      state.sheets[mode].forEach(row => {
+        if (row.every(v => v !== null && !isNaN(v))) {
+          const sum = Math.round(row.reduce((a, b) => a + b, 0) * 10) / 10;
+          if (Math.abs(sum) < 0.001) {
+            row.forEach((pt, sIdx) => {
+              const pName = seats[sIdx];
+              totalMap[pName] = (totalMap[pName] || 0) + pt;
+            });
+          }
+        }
+      });
+
+      const container = document.getElementById('players-grid-container');
+      container.className = `players-grid ${mode === '3p' ? 'grid-3p' : ''}`;
+      container.innerHTML = '';
+
+      seats.forEach((pName, sIdx) => {
+        const val = currentScores[sIdx];
+        const colorClass = getColorClass(val);
+        const displayVal = (val !== null && !isNaN(val)) ? (val > 0 ? `+${val}` : val) : '';
+        const totalPt = (Math.round((totalMap[pName] || 0) * 10) / 10).toFixed(1);
+        const totalFormatted = totalPt > 0 ? `+${totalPt}` : totalPt;
+
+        const card = document.createElement('div');
+        card.className = 'player-card';
+        card.innerHTML = `
+          <div class="card-top-row">
+            <button class="player-select-btn" onclick="openPlayerModal()" title="タップしてプレイヤー変更">
+              ${pName} ▾
+            </button>
+            <span class="player-total-badge" id="total-badge-${sIdx}">通算: ${totalFormatted}</span>
+          </div>
+          <div class="score-input-wrap" style="display:flex; gap:4px; align-items:center;">
+            <button type="button" class="btn-toggle-sign" onclick="toggleSign(${sIdx})" title="符号反転 (＋/－)">±</button>
+            <input type="text" inputmode="decimal"
+              class="score-input-field ${colorClass}"
+              id="score-input-${sIdx}"
+              value="${displayVal}"
+              placeholder="0"
+              oninput="handleScoreInput(${sIdx}, this.value)">
+          </div>
+          <div style="font-size: 0.68rem; color: var(--text-muted); text-align: center;">
+            スコア(pt)を直接入力
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      if (activeInputId) {
+        const restoredInput = document.getElementById(activeInputId);
+        if (restoredInput && activeInputValue !== null) {
+          restoredInput.value = activeInputValue;
+          restoredInput.focus();
+        }
+      }
+    }
+
+    function updateStatusBanner() {
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const rIdx = getCurrentRoundIdx();
+      const currentScores = state.sheets[mode][rIdx] || [];
+
+      let sum = 0;
+      let filledCount = 0;
+
+      currentScores.forEach(v => {
+        if (v !== null && !isNaN(v)) {
+          sum += v;
+          filledCount++;
+        }
+      });
+
+      const banner = document.getElementById('status-banner');
+      const msg = document.getElementById('status-message');
+      const badge = document.getElementById('status-badge');
+      const nextBtn = document.getElementById('btn-complete-round');
+
+      const roundedSum = Math.round(sum * 10) / 10;
+
+      if (filledCount === 0) {
+        banner.className = 'status-banner status-banner-wait';
+        msg.innerText = 'スコアを入力してください';
+        badge.innerText = '計 0.0';
+        nextBtn.disabled = true;
+        return;
+      }
+
+      if (filledCount === seats.length) {
+        if (Math.abs(roundedSum) < 0.001) {
+          banner.className = 'status-banner status-banner-ok';
+          msg.innerText = '✅ 合計 0.0 (整合性OK)';
+          badge.innerText = '±0 pt';
+          nextBtn.disabled = false;
+        } else {
+          const sign = roundedSum > 0 ? `+${roundedSum}` : `${roundedSum}`;
+          banner.className = 'status-banner status-banner-error';
+          msg.innerText = `❌ 合計が0ではありません (${sign})`;
+          badge.innerText = `${sign} pt`;
+          nextBtn.disabled = true;
+        }
+      } else {
+        banner.className = 'status-banner status-banner-wait';
+        msg.innerText = `入力中 (${filledCount}/${seats.length}名)`;
+        badge.innerText = `計 ${roundedSum > 0 ? '+' : ''}${roundedSum}`;
+        nextBtn.disabled = true;
+      }
+    }
+
+    /* ===================================================
+       📊 スコア一覧表＆合計（マトリクス描画ロジック）
+       =================================================== */
+    function renderScoreTable() {
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const rows = state.sheets[mode];
+      const curRound = getCurrentRoundIdx();
+      const table = document.getElementById('score-matrix-table');
+      if (!table) return;
+
+      let html = `<thead><tr><th>半荘</th>`;
+      seats.forEach((pName, sIdx) => {
+        const windNames = ['東', '南', '西', '北'];
+        const wind = windNames[sIdx] || '';
+        html += `<th>${pName}<br><span style="font-size:0.68rem; color:#9ca3af;">(${wind})</span></th>`;
+      });
+      html += `<th>判定</th></tr></thead><tbody>`;
+
+      const seatTotals = new Array(seats.length).fill(0);
+
+      rows.forEach((row, rIdx) => {
+        const isCurrent = (rIdx === curRound);
+        let rowSum = 0;
+        let isComplete = true;
+
+        let rowCells = '';
+        seats.forEach((_, sIdx) => {
+          const val = row[sIdx];
+          if (val === null || isNaN(val)) {
+            isComplete = false;
+            rowCells += `<td class="cell-val-empty">-</td>`;
+          } else {
+            rowSum += val;
+            seatTotals[sIdx] += val;
+            const sign = val > 0 ? '+' : '';
+            const cls = val > 0 ? 'cell-val-plus' : (val < 0 ? 'cell-val-minus' : 'cell-val-zero');
+            rowCells += `<td class="${cls}">${sign}${val.toFixed(1)}</td>`;
+          }
+        });
+
+        const roundedSum = Math.round(rowSum * 10) / 10;
+        let statusTag = '';
+        if (isComplete) {
+          if (Math.abs(roundedSum) < 0.001) {
+            statusTag = `<span class="tag-status-ok">✅ ±0</span>`;
+          } else {
+            statusTag = `<span class="tag-status-ng">❌ ${roundedSum > 0 ? '+' : ''}${roundedSum}</span>`;
+          }
+        } else {
+          statusTag = `<span style="font-size:0.68rem; color:#6b7280;">入力中</span>`;
+        }
+
+        html += `
+          <tr class="table-row-clickable ${isCurrent ? 'active-round-row' : ''}" onclick="jumpToRound(${rIdx})" title="タップして第 ${rIdx + 1} 半荘の入力へ">
+            <td>#${rIdx + 1} ${isCurrent ? '🟢' : ''}</td>
+            ${rowCells}
+            <td style="text-align:center;">${statusTag}</td>
+          </tr>
+        `;
+      });
+
+      let sumCells = '';
+      let grandTotal = 0;
+      seatTotals.forEach(tot => {
+        grandTotal += tot;
+        const rounded = Math.round(tot * 10) / 10;
+        const sign = rounded > 0 ? '+' : '';
+        const cls = rounded > 0 ? 'cell-val-plus' : (rounded < 0 ? 'cell-val-minus' : 'cell-val-zero');
+        sumCells += `<td class="${cls}">${sign}${rounded.toFixed(1)}</td>`;
+      });
+      const roundedGrand = Math.round(grandTotal * 10) / 10;
+      const grandStatus = Math.abs(roundedGrand) < 0.001 ? '✅ ±0' : `${roundedGrand > 0 ? '+' : ''}${roundedGrand}`;
+
+      html += `
+        <tr class="sum-row">
+          <td>合計</td>
+          ${sumCells}
+          <td style="text-align:center; font-size:0.75rem; color:${Math.abs(roundedGrand) < 0.001 ? '#34d399' : '#f87171'};">
+            ${grandStatus}
+          </td>
+        </tr>
+      `;
+
+      html += `</tbody>`;
+      table.innerHTML = html;
+    }
+
+    function jumpToRound(rIdx) {
+      setCurrentRoundIdx(rIdx);
+      switchMainView('input');
+    }
+
+    function openPlayerModal() { renderModalPlayerList(); renderModalSeatSelectors(); document.getElementById('player-modal').classList.add('open'); }
+    function closePlayerModal() { document.getElementById('player-modal').classList.remove('open'); renderAll(); }
+
+    function addPlayerFromModal() {
+      const input = document.getElementById('new-player-input');
+      const name = input.value.trim();
+      if (!name) return;
+      if (state.playersMaster.includes(name)) {
+        alert('そのプレイヤー名は既に登録されています');
+        return;
+      }
+      state.playersMaster.push(name);
+      input.value = '';
+      saveState(false);
+      emitSyncEvent('ADD_PLAYER', { name: name });
+      renderModalPlayerList();
+      renderModalSeatSelectors();
+    }
+
+    function deletePlayerFromModal(targetName) {
+      const minRequired = state.mode === '4p' ? 4 : 3;
+      if (state.playersMaster.length <= minRequired) {
+        alert(`${state.mode === '4p' ? '四人' : '三人'}麻雀では最低${minRequired}名のプレイヤーが必要です`);
+        return;
+      }
+      if (confirm(`プレイヤー「${targetName}」を削除しますか？`)) {
+        state.playersMaster = state.playersMaster.filter(p => p !== targetName);
+        ['4p', '3p'].forEach(m => {
+          state.activeSeats[m] = state.activeSeats[m].map((sName, sIdx) => {
+            if (sName === targetName) {
+              return state.playersMaster.find(p => !state.activeSeats[m].includes(p)) || state.playersMaster[sIdx] || `P${sIdx+1}`;
+            }
+            return sName;
+          });
+        });
+        saveState(false);
+        emitSyncEvent('DEL_PLAYER', { name: targetName });
+        renderModalPlayerList();
+        renderModalSeatSelectors();
+      }
+    }
+
+    function renderModalPlayerList() {
+      const container = document.getElementById('modal-player-tags');
+      container.innerHTML = '';
+      state.playersMaster.forEach(p => {
+        const tag = document.createElement('span');
+        tag.className = 'player-tag';
+        tag.innerHTML = `
+          <span>${p}</span>
+          <button class="btn-tag-del" onclick="deletePlayerFromModal('${p.replace(/'/g, "\\'")}')">✕</button>
+        `;
+        container.appendChild(tag);
+      });
+    }
+
+    function renderModalSeatSelectors() {
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const container = document.getElementById('modal-seat-selectors');
+      container.innerHTML = '';
+
+      seats.forEach((currentP, sIdx) => {
+        const row = document.createElement('div');
+        row.style.display = 'flex';
+        row.style.alignItems = 'center';
+        row.style.justifyContent = 'space-between';
+
+        let options = '';
+        state.playersMaster.forEach(p => {
+          options += `<option value="${p}" ${p === currentP ? 'selected' : ''}>${p}</option>`;
+        });
+
+        row.innerHTML = `
+          <span style="font-size:0.85rem; color:#9ca3af;">席 ${sIdx + 1}:</span>
+          <select style="background:#09120f; border:1px solid var(--card-border); color:var(--accent-gold); padding:6px; border-radius:6px; font-weight:700; width:70%;"
+            onchange="changeSeatPlayer(${sIdx}, this.value)">
+            ${options}
+          </select>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function changeSeatPlayer(seatIdx, newPlayerName) {
+      state.activeSeats[state.mode][seatIdx] = newPlayerName;
+      saveState(false);
+      emitSyncEvent('SET_SEAT_PLAYER', {
+        mode: state.mode,
+        seatIdx: seatIdx,
+        playerName: newPlayerName
+      });
+    }
+
+    function openLeaderboard() {
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const listEl = document.getElementById('modal-leaderboard-list');
+
+      const stats = {};
+      state.playersMaster.forEach(p => stats[p] = { total: 0, count: 0 });
+
+      let validMatches = 0;
+      state.sheets[mode].forEach(row => {
+        if (row.every(v => v !== null && !isNaN(v))) {
+          const sum = Math.round(row.reduce((a, b) => a + b, 0) * 10) / 10;
+          if (Math.abs(sum) < 0.001) {
+            validMatches++;
+            row.forEach((pt, idx) => {
+              const name = seats[idx];
+              if (stats[name]) {
+                stats[name].total += pt;
+                stats[name].count++;
+              }
+            });
+          }
+        }
+      });
+
+      const sorted = Object.keys(stats).sort((a, b) => stats[b].total - stats[a].total);
+
+      let html = `<div style="font-size:0.8rem; color:#9ca3af; margin-bottom:8px;">有効半荘: ${validMatches} 半荘</div>`;
+      sorted.forEach((name, rank) => {
+        const item = stats[name];
+        const rounded = Math.round(item.total * 10) / 10;
+        const color = rounded > 0 ? '#34d399' : (rounded < 0 ? '#f87171' : '#9ca3af');
+        const formatted = rounded > 0 ? `+${rounded.toFixed(1)}` : rounded.toFixed(1);
+        const avg = item.count > 0 ? (item.total / item.count).toFixed(1) : '0.0';
+
+        html += `
+          <div class="leaderboard-row">
+            <div>
+              <span style="color:var(--accent-gold); font-weight:800; margin-right:6px;">${rank + 1}位</span>
+              <strong style="color:#fff;">${name}</strong>
+              <div style="font-size:0.7rem; color:#9ca3af;">${item.count}回 (平均 ${avg}pt)</div>
+            </div>
+            <div style="font-size:1.15rem; font-weight:800; color:${color};">${formatted} <span style="font-size:0.75rem;">pt</span></div>
+          </div>
+        `;
+      });
+
+      listEl.innerHTML = html;
+      document.getElementById('leaderboard-modal').classList.add('open');
+    }
+
+    function closeLeaderboard() {
+      document.getElementById('leaderboard-modal').classList.remove('open');
+    }
+
+    function closeModalOnBackdrop(e) {
+      if (e.target.id === 'player-modal') closePlayerModal();
+      if (e.target.id === 'leaderboard-modal') closeLeaderboard();
+    }
+
+    function exportText() {
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const rows = state.sheets[mode];
+
+      let text = `【麻雀スコア (${mode === '4p' ? '四麻' : '三麻'}) 共有版】\n`;
+      let valid = 0;
+      rows.forEach((row, idx) => {
+        if (row.every(v => v !== null && !isNaN(v)) && Math.abs(row.reduce((a,b)=>a+b,0)) < 0.001) {
+          valid++;
+          const rowStr = row.map((p, sIdx) => `${seats[sIdx]}:${p > 0 ? '+' : ''}${p}`).join('  ');
+          text += `#${idx + 1}: ${rowStr}\n`;
+        }
+      });
+
+      navigator.clipboard.writeText(text).then(() => {
+        alert('クリップボードにコピーしました！');
+      }).catch(() => {
+        prompt('コピーしてください:', text);
+      });
+    }
+
+    function exportSql() {
+      const mode = state.mode;
+      const seats = state.activeSeats[mode];
+      const rows = state.sheets[mode];
+      const now = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+      let sql = `BEGIN TRANSACTION;\n`;
+      sql += `INSERT INTO sessions (session_name, rule_type, created_at) VALUES ('スマホ記録 (共有版 ${mode})', '${mode}', '${now}');\n`;
+      sql += `DROP TABLE IF EXISTS _temp_s;\n`;
+      sql += `CREATE TEMP TABLE _temp_s AS SELECT last_insert_rowid() AS s_id;\n`;
+
+      seats.forEach(p => {
+        sql += `INSERT OR IGNORE INTO players (name, created_at) VALUES ('${p.replace(/'/g, "''")}', '${now}');\n`;
+      });
+
+      let mNum = 1;
+      rows.forEach(row => {
+        if (row.every(v => v !== null && !isNaN(v))) {
+          const sum = Math.round(row.reduce((a, b) => a + b, 0) * 10) / 10;
+          sql += `INSERT INTO matches (session_id, round_number, total_score_sum, is_valid_zero, recorded_at) SELECT s_id, ${mNum}, ${sum}, ${Math.abs(sum)<0.001?1:0}, '${now}' FROM _temp_s;\n`;
+          sql += `DROP TABLE IF EXISTS _temp_m; CREATE TEMP TABLE _temp_m AS SELECT last_insert_rowid() AS m_id;\n`;
+          row.forEach((pt, idx) => {
+            sql += `INSERT INTO match_scores (match_id, player_id, score_point) SELECT m.m_id, p.player_id, ${pt} FROM _temp_m m, players p WHERE p.name = '${seats[idx].replace(/'/g, "''")}';\n`;
+          });
+          mNum++;
+        }
+      });
+      sql += `COMMIT;\n`;
+
+      const blob = new Blob([sql], { type: 'text/sql;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mahjong_multi_score_${mode}.sql`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    }
+
+    function resetAllRounds() {
+      if (confirm('現在のモードの全半荘記録を初期化しますか？')) {
+        const mode = state.mode;
+        state.sheets[mode] = [new Array(state.activeSeats[mode].length).fill(null)];
+        state.currentRoundIdx[mode] = 0;
+        saveState(false);
+        emitSyncEvent('RESET_MODE', { mode: mode });
+        closeLeaderboard();
+        renderAll();
+      }
+    }
+  </script>
+</body>
+</html>

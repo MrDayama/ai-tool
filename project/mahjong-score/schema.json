@@ -1,0 +1,77 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "MahjongScoreApp",
+  "description": "麻雀スコア管理アプリ（四麻/三麻・リアルタイムルーム同期）データ構造定義",
+  "type": "object",
+  "properties": {
+    "mode": {
+      "type": "string",
+      "enum": ["4p", "3p"],
+      "description": "対局モード (4人麻雀 / 3人麻雀)"
+    },
+    "playersMaster": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "登録済み全プレイヤー名簿リスト"
+    },
+    "activeSeats": {
+      "type": "object",
+      "properties": {
+        "4p": { "type": "array", "items": { "type": "string" }, "minItems": 4, "maxItems": 4 },
+        "3p": { "type": "array", "items": { "type": "string" }, "minItems": 3, "maxItems": 3 }
+      },
+      "required": ["4p", "3p"],
+      "description": "現在席に着いているプレイヤー名"
+    },
+    "currentRoundIdx": {
+      "type": "object",
+      "properties": {
+        "4p": { "type": "integer", "minimum": 0 },
+        "3p": { "type": "integer", "minimum": 0 }
+      },
+      "required": ["4p", "3p"],
+      "description": "現在選択されている半荘のインデックス"
+    },
+    "sheets": {
+      "type": "object",
+      "properties": {
+        "4p": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": ["number", "null"] }
+          }
+        },
+        "3p": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": { "type": ["number", "null"] }
+          }
+        }
+      },
+      "required": ["4p", "3p"],
+      "description": "各半荘ごとの各プレイヤーのスコア記録 (pt)"
+    }
+  },
+  "required": ["mode", "playersMaster", "activeSeats", "currentRoundIdx", "sheets"],
+  "definitions": {
+    "SyncEvent": {
+      "type": "object",
+      "description": "複数人リアルタイム共有用 差分同期イベント定義 (SSE/PubSub)",
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["SET_SCORE", "NEXT_ROUND", "SET_SEAT_PLAYER", "ADD_PLAYER", "DEL_PLAYER", "SWITCH_MODE", "RESET_MODE", "REQ_FULL_STATE", "RES_FULL_STATE"]
+        },
+        "senderId": { "type": "string", "description": "送信元端末固有ID" },
+        "timestamp": { "type": "integer", "description": "イベント発行エポックミリ秒" },
+        "payload": {
+          "type": "object",
+          "description": "アクションに応じた差分データ（セル位置、スコア値、プレイヤー名等）"
+        }
+      },
+      "required": ["type", "senderId", "timestamp", "payload"]
+    }
+  }
+}
